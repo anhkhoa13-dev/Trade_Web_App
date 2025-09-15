@@ -1,3 +1,4 @@
+'use client'
 import React from 'react'
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from '../../shadcn/navigation-menu'
 import { Menu } from '@/app/types/Menu'

@@ -1,7 +1,9 @@
+import Image from "next/image";
 import "./globals.css";
 
 import Header from "./ui/my_components/Header";
 import { ThemeProvider } from "./ui/my_components/Theme/theme-provider";
+import Footer from "./ui/my_components/Footer";
 
 export default function RootLayout({
   children,
@@ -11,15 +13,18 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        {/* <ThemeProvider
+        <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
-        > */}
-        <Header />
-        {children}
-        {/* </ThemeProvider> */}
+        >
+          <Header />
+          <main>{children}</main>
+          <Footer
+            className="px-20" />
+        </ThemeProvider>
+
       </body>
     </html>
   );
