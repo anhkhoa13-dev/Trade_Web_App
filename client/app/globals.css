@@ -227,3 +227,6 @@
   }
 }
 
+.tradingview-widget-container {
+  height: auto !important;
+}

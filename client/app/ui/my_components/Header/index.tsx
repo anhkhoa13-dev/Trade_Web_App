@@ -4,17 +4,21 @@ import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
 import { Menu, X } from "lucide-react"
-
 import NavMenu from "./NavMenu"
 import { menuData } from "./menuData"
 import { ModeToggle } from "../Theme/ModeToggle"
 import { Button } from "../../shadcn/button"
+import TickerTape from "../../widgets/TicketTape"
 
 export default function Header() {
     const [mobileOpen, setMobileOpen] = useState(false)
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+
+            <div className="sticky top-0">
+                <TickerTape />
+            </div>
             <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-8">
                 {/* Left: Logo + Nav */}
                 <div className="flex items-center gap-6">
@@ -73,6 +77,7 @@ export default function Header() {
                     </div>
                 </div>
             )}
+
         </header>
     )
 }
