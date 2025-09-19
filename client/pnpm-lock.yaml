@@ -11,6 +11,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.62.0(react@19.1.0))
+      '@radix-ui/react-accordion':
+        specifier: ^1.2.12
+        version: 1.2.12(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@radix-ui/react-dropdown-menu':
         specifier: ^2.1.16
         version: 2.1.16(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -35,6 +38,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      lightweight-charts:
+        specifier: ^5.0.8
+        version: 5.0.8
       lucide-react:
         specifier: ^0.544.0
         version: 0.544.0(react@19.1.0)
@@ -325,8 +331,34 @@ packages:
   '@radix-ui/primitive@1.1.3':
     resolution: {integrity: sha512-JTF99U/6XIjCBo0wqkU5sK10glYe27MRRsfwoiq5zzOEZLHU3A3KCMa5X/azekYRCJ0HlwI0crAXS/5dEHTzDg==}
 
+  '@radix-ui/react-accordion@1.2.12':
+    resolution: {integrity: sha512-T4nygeh9YE9dLRPhAHSeOZi7HBXo+0kYIPJXayZfvWOWA0+n3dESrZbjfDPUABkUNym6Hd+f2IR113To8D2GPA==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+      react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+
   '@radix-ui/react-arrow@1.1.7':
     resolution: {integrity: sha512-F+M1tLhO+mlQaOWspE8Wstg+z6PwxwRd8oQ8IXceWz92kfAmalTRf0EjrouQeo7QssEPfCn05B4Ihs1K9WQ/7w==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+      react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+
+  '@radix-ui/react-collapsible@1.1.12':
+    resolution: {integrity: sha512-Uu+mSh4agx2ib1uIGPP4/CKNULyajb3p92LsVXmH2EHVMTfZWpll88XJ0j4W0z3f8NK1eYl1+Mf/szHPmcHzyA==}
     peerDependencies:
       '@types/react': '*'
       '@types/react-dom': '*'
@@ -816,6 +848,9 @@ packages:
     resolution: {integrity: sha512-d4lC8xfavMeBjzGr2vECC3fsGXziXZQyJxD868h2M/mBI3PwAuODxAkLkq5HYuvrPYcUtiLzsTo8U3PgX3Ocww==}
     engines: {node: '>=10.13.0'}
 
+  fancy-canvas@2.1.0:
+    resolution: {integrity: sha512-nifxXJ95JNLFR2NgRV4/MxVP45G9909wJTEKz5fg/TZS20JJZA6hfgRVh/bC9bwl2zBtBNcYPjiBE4njQHVBwQ==}
+
   framer-motion@12.23.12:
     resolution: {integrity: sha512-6e78rdVtnBvlEVgu6eFEAgG9v3wLnYEboM8I5O5EXvfKC8gxGQB8wXJdhkMy10iVcn05jl6CNw7/HTsTCfwcWg==}
     peerDependencies:
@@ -907,6 +942,9 @@ packages:
   lightningcss@1.30.1:
     resolution: {integrity: sha512-xi6IyHML+c9+Q3W0S4fCQJOym42pyurFiJUHEcEyHS0CeKzia4yZDEsLlqOFykxOdHpNy0NmvVO31vcSqAxJCg==}
     engines: {node: '>= 12.0.0'}
+
+  lightweight-charts@5.0.8:
+    resolution: {integrity: sha512-dNBK5TlNcG78RUnxYRAZP4XpY5bkp3EE0PPjFFPkdIZ8RvnvL2JLgTb1BLh40trHhgJl51b1bCz8678GpnKvIw==}
 
   lucide-react@0.544.0:
     resolution: {integrity: sha512-t5tS44bqd825zAW45UQxpG2CvcC4urOwn2TrwSH8u+MjeE+1NnWl6QqeQ/6NdjMqdOygyiT9p3Ev0p1NJykxjw==}
@@ -1381,9 +1419,42 @@ snapshots:
 
   '@radix-ui/primitive@1.1.3': {}
 
+  '@radix-ui/react-accordion@1.2.12(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      '@radix-ui/primitive': 1.1.3
+      '@radix-ui/react-collapsible': 1.1.12(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@radix-ui/react-collection': 1.1.7(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.1.13)(react@19.1.0)
+      '@radix-ui/react-context': 1.1.2(@types/react@19.1.13)(react@19.1.0)
+      '@radix-ui/react-direction': 1.1.1(@types/react@19.1.13)(react@19.1.0)
+      '@radix-ui/react-id': 1.1.1(@types/react@19.1.13)(react@19.1.0)
+      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@radix-ui/react-use-controllable-state': 1.2.2(@types/react@19.1.13)(react@19.1.0)
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+    optionalDependencies:
+      '@types/react': 19.1.13
+      '@types/react-dom': 19.1.9(@types/react@19.1.13)
+
   '@radix-ui/react-arrow@1.1.7(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
       '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+    optionalDependencies:
+      '@types/react': 19.1.13
+      '@types/react-dom': 19.1.9(@types/react@19.1.13)
+
+  '@radix-ui/react-collapsible@1.1.12(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      '@radix-ui/primitive': 1.1.3
+      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.1.13)(react@19.1.0)
+      '@radix-ui/react-context': 1.1.2(@types/react@19.1.13)(react@19.1.0)
+      '@radix-ui/react-id': 1.1.1(@types/react@19.1.13)(react@19.1.0)
+      '@radix-ui/react-presence': 1.1.5(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@radix-ui/react-use-controllable-state': 1.2.2(@types/react@19.1.13)(react@19.1.0)
+      '@radix-ui/react-use-layout-effect': 1.1.1(@types/react@19.1.13)(react@19.1.0)
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
     optionalDependencies:
@@ -1840,6 +1911,8 @@ snapshots:
       graceful-fs: 4.2.11
       tapable: 2.2.3
 
+  fancy-canvas@2.1.0: {}
+
   framer-motion@12.23.12(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       motion-dom: 12.23.12
@@ -1902,6 +1975,10 @@ snapshots:
       lightningcss-linux-x64-musl: 1.30.1
       lightningcss-win32-arm64-msvc: 1.30.1
       lightningcss-win32-x64-msvc: 1.30.1
+
+  lightweight-charts@5.0.8:
+    dependencies:
+      fancy-canvas: 2.1.0
 
   lucide-react@0.544.0(react@19.1.0):
     dependencies:
