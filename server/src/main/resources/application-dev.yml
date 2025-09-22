@@ -33,4 +33,5 @@ application:
     jwt:
       secret-key: 7a6e7732dfeab6fea710c19dbaaebb3dd4a609729aa68773de35f42ca0325fbe
       access-expiration: 86400
-      refresh-expiration: 86400000
+      # access-expiration: 10
+      refresh-expiration: 8640000

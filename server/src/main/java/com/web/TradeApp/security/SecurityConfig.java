@@ -32,7 +32,9 @@ import com.web.TradeApp.utils.JwtUtil;
 @EnableWebSecurity
 public class SecurityConfig {
         private final String[] WHITELIST = {
-                        "/", "/auth/login",
+                        "/",
+                        "/auth/login",
+                        "/auth/register",
                         "/auth/refresh",
                         "/swagger-ui.html",
                         "/swagger-ui/**",
