@@ -1,26 +1,37 @@
 package com.web.TradeApp.controller;
 
 import java.util.List;
+import java.util.UUID;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.web.TradeApp.dto.AuthDTO.LoginResponse;
+import com.web.TradeApp.dto.UserDTO.ProfileResponse;
+import com.web.TradeApp.dto.UserDTO.ProfileUpdateRequest;
 import com.web.TradeApp.model.user.User;
+import com.web.TradeApp.service.interfaces.UserProfileService;
 import com.web.TradeApp.service.interfaces.UserService;
 import com.web.TradeApp.utils.SecurityUtil;
 import com.web.TradeApp.utils.Annotation.ApiMessage;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("user")
+@RequestMapping("users")
 @RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
+    private final UserProfileService profileService;
 
     @GetMapping("/account")
     @ApiMessage("fetch account")
@@ -46,5 +57,29 @@ public class UserController {
         }
 
         return ResponseEntity.ok().body(userGetAccount);
+    }
+
+    @GetMapping("/profile")
+    @ApiMessage("User profile fetched successfully")
+    public ResponseEntity<ProfileResponse> getProfile() {
+        UUID userId = SecurityUtil.getCurrentUserId().isPresent() ? SecurityUtil.getCurrentUserId().get() : null;
+        return ResponseEntity.ok(profileService.getProfile(userId));
+    }
+
+    @PutMapping(path = "/profile", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ApiMessage("User profile updated successfully")
+    public ResponseEntity<ProfileResponse> updateProfile(
+            @Valid @RequestBody ProfileUpdateRequest request) {
+        UUID userId = SecurityUtil.getCurrentUserId().isPresent() ? SecurityUtil.getCurrentUserId().get() : null;
+        return ResponseEntity.ok(profileService.updateProfile(userId, request));
+    }
+
+    @PutMapping(path = "/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ApiMessage("Avatar updated successfully")
+    public ResponseEntity<ProfileResponse> uploadImage(
+            @RequestPart("file") MultipartFile file) {
+        UUID userId = SecurityUtil.getCurrentUserId().isPresent() ? SecurityUtil.getCurrentUserId().get() : null;
+        ProfileResponse response = this.profileService.uploadAvatar(userId, file);
+        return ResponseEntity.ok().body(response);
     }
 }

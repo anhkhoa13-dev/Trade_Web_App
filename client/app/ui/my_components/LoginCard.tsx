@@ -33,7 +33,7 @@ export default function LoginCard() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.1 }}
           layout
         >
           <CardHeader className="pb-4">
@@ -76,8 +76,8 @@ export default function LoginCard() {
             </div>
 
             <div className="flex justify-center gap-4 mt-3">
-              <GoogleButton onClick={() => { }} />
-              <GithubButton onClick={() => { }} />
+              <GoogleButton onClick={() => {}} />
+              <GithubButton onClick={() => {}} />
             </div>
           </CardContent>
         </motion.div>

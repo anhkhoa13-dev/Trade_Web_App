@@ -1,6 +1,7 @@
 package com.web.TradeApp.model.user;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.web.TradeApp.model.BaseEntity;
@@ -55,6 +56,8 @@ public class User extends BaseEntity {
     private String phoneNum;
 
     private String profilePhotoUrl;
+    private String profilePhotoPublicId; // canonical
+    private Long profilePhotoVersion;
 
     @Column(columnDefinition = "text")
     private String refreshToken;
@@ -73,6 +76,12 @@ public class User extends BaseEntity {
 
     public String getFullName() {
         return firstName + " " + lastName;
+    }
+
+    public List<String> getRoleNames() {
+        return roles.stream()
+                .map(Enum::name) // or Role::name
+                .toList(); // Java 16+ (or use Collectors.toList() for older versions)
     }
 
 }

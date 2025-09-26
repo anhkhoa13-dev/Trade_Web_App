@@ -1,4 +1,6 @@
 spring:
+  config:
+    import: optional:file:.env.properties
   datasource:
     url: jdbc:mysql://localhost:3306/trade_app
     username: root
@@ -15,8 +17,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: tradethk@gmail.com
-    password: tsxe fyad iqnt iapl
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -31,6 +33,11 @@ spring:
 application:
   security:
     jwt:
-      secret-key: 7a6e7732dfeab6fea710c19dbaaebb3dd4a609729aa68773de35f42ca0325fbe
-      access-expiration: 86400
-      refresh-expiration: 86400000
+      secret-key: ${JWT_SECRET_KEY}
+      access-expiration: ${JWT_ACCESS_EXPIRATION}
+      refresh-expiration: ${JWT_REFRESH_EXPIRATION}
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
