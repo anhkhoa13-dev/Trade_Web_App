@@ -1,9 +1,11 @@
 package com.web.TradeApp.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -25,7 +27,7 @@ public class GlobalExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
         problem.setTitle("Resource Not Found");
         problem.setDetail(ex.getMessage());
-        problem.setType(URI.create("https://api.example.com/errors/not-found"));
+        problem.setType(URI.create(""));
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }
@@ -35,7 +37,57 @@ public class GlobalExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED);
         problem.setTitle("Authentication failed");
         problem.setDetail("Invalid username or password");
-        problem.setType(URI.create("https://api.example.com/errors/authentication-failed"));
+        problem.setType(URI.create(""));
+        return problem;
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ProblemDetail handleValidationException(MethodArgumentNotValidException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        problem.setTitle("Validation Failed");
+
+        // Collect only field + message
+        String errorSummary = ex.getBindingResult().getFieldErrors().stream()
+                .map(err -> err.getField() + ": " + err.getDefaultMessage())
+                .reduce((a, b) -> a + ", " + b)
+                .orElse("Invalid request payload");
+
+        problem.setDetail(errorSummary);
+        problem.setType(URI.create(""));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        // Log full exception internally for developers
+        ex.printStackTrace();
+
+        String cause = ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : "";
+        String detailMessage = "A data conflict occurred.";
+
+        // Extract a human-readable cause from the DB message (basic heuristic)
+        if (cause.toLowerCase().contains("duplicate")) {
+            // Show which value caused the conflict without leaking table/constraint names
+            int start = cause.indexOf("Duplicate entry");
+            if (start != -1) {
+                // Get the quoted value if possible
+                int quoteStart = cause.indexOf("'", start);
+                int quoteEnd = cause.indexOf("'", quoteStart + 1);
+                if (quoteStart != -1 && quoteEnd > quoteStart) {
+                    String value = cause.substring(quoteStart + 1, quoteEnd);
+                    detailMessage = String.format("Value '%s' already exists.", value);
+                } else {
+                    detailMessage = "Duplicate value detected.";
+                }
+            }
+        }
+
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.CONFLICT);
+        problem.setTitle("Data Integrity Violation");
+        problem.setDetail(detailMessage);
+        problem.setType(URI.create("https://api.example.com/errors/conflict"));
+        problem.setProperty("timestamp", Instant.now());
         return problem;
     }
 
@@ -44,7 +96,7 @@ public class GlobalExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
         problem.setTitle("Internal Server Error");
         problem.setDetail(ex.getMessage());
-        problem.setType(URI.create("https://api.example.com/errors/internal"));
+        problem.setType(URI.create(""));
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }

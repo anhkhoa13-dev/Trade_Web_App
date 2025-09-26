@@ -1,6 +1,8 @@
 package com.web.TradeApp.utils;
 
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -24,6 +26,32 @@ public class SecurityUtil {
     public static Optional<String> getCurrentUserLogin() {
         SecurityContext securityContext = SecurityContextHolder.getContext();
         return Optional.ofNullable(extractPrincipal(securityContext.getAuthentication()));
+    }
+
+    public static Optional<UUID> getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
+            return Optional.empty();
+        }
+
+        // Extract the nested "user" claim
+        Object userClaim = jwt.getClaims().get("user");
+        if (!(userClaim instanceof Map<?, ?> userMap)) {
+            return Optional.empty();
+        }
+
+        Object idObj = userMap.get("id");
+        if (idObj == null) {
+            return Optional.empty();
+        }
+
+        try {
+            return Optional.of(UUID.fromString(idObj.toString()));
+        } catch (IllegalArgumentException e) {
+            // In case the ID is not a valid UUID
+            return Optional.empty();
+        }
     }
 
     private static String extractPrincipal(Authentication authentication) {
