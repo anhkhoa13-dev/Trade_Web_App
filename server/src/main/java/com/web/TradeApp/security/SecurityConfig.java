@@ -61,7 +61,7 @@ public class SecurityConfig {
                                 .cors(Customizer.withDefaults())
                                 .authorizeHttpRequests(authz -> authz
                                                 .requestMatchers(WHITELIST).permitAll()
-                                                .requestMatchers(ADMIN).hasRole("ADMIN")
+                                                .requestMatchers(ADMIN).hasAuthority("ADMIN")
                                                 .anyRequest().authenticated())
 
                                 .oauth2ResourceServer(oauth2 -> oauth2
