@@ -2,6 +2,7 @@ package com.web.TradeApp.service.interfaces;
 
 import java.util.UUID;
 
+import com.web.TradeApp.dto.UserDTO.ChangePasswordRequest;
 import com.web.TradeApp.model.user.User;
 
 public interface UserService {
@@ -14,4 +15,6 @@ public interface UserService {
     void updateUserToken(String token, String email);
 
     User getUserByRefreshTokenAndEmail(String refresh_token, String email);
+
+    void changePassword(ChangePasswordRequest request);
 }
