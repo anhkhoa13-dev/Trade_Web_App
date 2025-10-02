@@ -3,12 +3,16 @@ package com.web.TradeApp.service;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.web.TradeApp.dto.UserDTO.ChangePasswordRequest;
+import com.web.TradeApp.exception.FunctionErrorException;
 import com.web.TradeApp.exception.UserNotFoundException;
 import com.web.TradeApp.model.user.User;
 import com.web.TradeApp.repository.UserRepository;
 import com.web.TradeApp.service.interfaces.UserService;
+import com.web.TradeApp.utils.SecurityUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -16,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public User fetchUserById(UUID id) {
@@ -56,5 +61,26 @@ public class UserServiceImpl implements UserService {
                     String.format("User with email %s and refresh token not found", email));
         }
         return optUser.get();
+    }
+
+    @Override
+    public void changePassword(ChangePasswordRequest request) {
+        UUID userId = SecurityUtil.getCurrentUserId().orElse(null);
+        Optional<User> optUser = (userId != null)
+                ? this.userRepository.findById(userId)
+                : Optional.empty();
+        if (optUser.isEmpty()) {
+            throw new UserNotFoundException("Invalid User ID");
+        }
+        User user = optUser.get();
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            throw new FunctionErrorException("Wrong password");
+        }
+        if (passwordEncoder.matches(request.newPassword(), user.getPassword())) {
+            throw new FunctionErrorException("New password must not equal to old password!");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
     }
 }

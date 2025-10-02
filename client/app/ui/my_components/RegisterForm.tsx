@@ -14,8 +14,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "../shadcn/button";
 import { useSignUp } from "@/hooks/useSignUp";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useActivateAcc from "@/hooks/useActivateAcc";
+import { useSearchParams } from "next/navigation";
 
 export const registerSchema = z
   .object({
@@ -46,8 +47,16 @@ const verificationSchema = z.object({
 export default function RegisterForm() {
   const registerMutation = useSignUp();
   const activate = useActivateAcc();
+  const mode = useSearchParams().get("mode");
   const [step, setStep] = useState<"register" | "verify">("register");
   const [email, setEmail] = useState("");
+
+  // remount
+  useEffect(() => {
+    if (mode === "register") {
+      setStep("register");
+    }
+  }, [mode]);
 
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
@@ -65,8 +74,9 @@ export default function RegisterForm() {
     resolver: zodResolver(verificationSchema),
     defaultValues: { code: "" },
   });
-  const { isSubmitting } = form.formState;
-  const { isSubmitting: isVerifying } = verifyForm.formState;
+
+  const { isPending: isRegistering } = registerMutation;
+  const { isPending: isVerifying } = activate;
 
   const handleRegister = async (values: z.infer<typeof registerSchema>) => {
     registerMutation.mutate(
@@ -203,9 +213,9 @@ export default function RegisterForm() {
             <Button
               type="submit"
               className="w-full cursor-pointer"
-              disabled={isSubmitting}
+              disabled={isRegistering}
             >
-              {isSubmitting ? "Processing..." : "Register"}
+              {isRegistering ? "Processing..." : "Register"}
             </Button>
           </form>
         </Form>

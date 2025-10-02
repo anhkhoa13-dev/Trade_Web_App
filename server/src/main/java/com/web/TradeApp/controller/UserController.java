@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.web.TradeApp.dto.AuthDTO.LoginResponse;
+import com.web.TradeApp.dto.UserDTO.ChangePasswordRequest;
 import com.web.TradeApp.dto.UserDTO.ProfileResponse;
 import com.web.TradeApp.dto.UserDTO.ProfileUpdateRequest;
 import com.web.TradeApp.model.user.User;
@@ -81,5 +83,13 @@ public class UserController {
         UUID userId = SecurityUtil.getCurrentUserId().isPresent() ? SecurityUtil.getCurrentUserId().get() : null;
         ProfileResponse response = this.profileService.uploadAvatar(userId, file);
         return ResponseEntity.ok().body(response);
+    }
+
+    @PatchMapping("/change-password")
+    @ApiMessage("Password changed successfully")
+    public ResponseEntity<?> changePassword(
+            @RequestBody ChangePasswordRequest req) {
+        userService.changePassword(req);
+        return ResponseEntity.accepted().build();
     }
 }
