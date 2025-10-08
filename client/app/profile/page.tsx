@@ -9,8 +9,6 @@ import {
   CardDescription,
 } from "@/app/ui/shadcn/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/ui/shadcn/avatar";
-import { Badge } from "@/app/ui/shadcn/badge";
-import { Separator } from "@/app/ui/shadcn/separator";
 import { Tabs, TabsList, TabsTrigger } from "../ui/shadcn/tabs";
 import { TabsContent } from "@radix-ui/react-tabs";
 import { motion, AnimatePresence } from "framer-motion";
