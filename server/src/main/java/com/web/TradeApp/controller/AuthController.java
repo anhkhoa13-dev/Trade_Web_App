@@ -53,7 +53,7 @@ public class AuthController {
         @PostMapping("/activate")
         @ApiMessage("Account activate successfully")
         public ResponseEntity<Void> confirm(@RequestBody TokenRequest request) throws MessagingException {
-                authService.activateAccount(request.getToken());
+                authService.activateAccount(request.getActivateCode(), request.getUrlToken());
                 return ResponseEntity.ok().body(null);
         }
 

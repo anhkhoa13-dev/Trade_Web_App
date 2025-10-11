@@ -1,6 +1,7 @@
 package com.web.TradeApp.config;
 
 import com.web.TradeApp.model.user.User;
+import com.web.TradeApp.model.user.UserEnum.AuthProvider;
 import com.web.TradeApp.model.user.UserEnum.Role;
 import com.web.TradeApp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class DataSeeder {
                         .phoneNum("1234567890")
                         .enabled(true)
                         .accountLocked(false)
+                        .authProvider(AuthProvider.CREDENTIALS)
                         .build();
 
                 userRepository.save(admin);

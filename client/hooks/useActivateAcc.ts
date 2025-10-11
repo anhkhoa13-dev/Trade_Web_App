@@ -9,10 +9,16 @@ export default function useActivateAcc() {
   const router = useRouter();
 
   return useMutation({
-    mutationFn: (code: string) => AuthService.activate(code),
+    mutationFn: ({
+      urlToken,
+      activateCode,
+    }: {
+      urlToken: string;
+      activateCode: string;
+    }) => AuthService.activate(urlToken, activateCode),
     onSuccess: () => {
       toast.success("Account activated! You can now log in.");
-      router.push("/login");
+      router.push("/auth/login");
     },
     onError: (error: any) => {
       const message =

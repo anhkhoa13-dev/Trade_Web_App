@@ -1,6 +1,5 @@
 "use client";
 
-import api from "@/lib/api";
 import { AuthService, RegisterRequest } from "@/services/authService";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -15,7 +14,7 @@ export function useSignUp() {
     onSuccess: (res) => {
       if (res.statusCode === 201) {
         toast.success("🎉 Registration successful! Please log in.");
-        // router.push("/login?mode=login");
+        router.push(`verify?token=${res.data?.urlToken}`);
       } else {
         toast.error(res.message || "Registration failed.");
       }

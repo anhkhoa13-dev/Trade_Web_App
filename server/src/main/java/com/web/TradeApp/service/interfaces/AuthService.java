@@ -11,7 +11,7 @@ import jakarta.mail.MessagingException;
 public interface AuthService {
     RegisterResponse register(RegisterRequest request);
 
-    void activateAccount(String token) throws MessagingException;
+    void activateAccount(String codeRequest, String urlTokenRequest) throws MessagingException;
 
     LoginResponse login(LoginRequest request);
 
