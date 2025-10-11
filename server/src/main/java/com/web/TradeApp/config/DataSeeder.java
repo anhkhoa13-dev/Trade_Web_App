@@ -1,6 +1,7 @@
 package com.web.TradeApp.config;
 
 import com.web.TradeApp.model.user.User;
+import com.web.TradeApp.model.user.UserEnum.AuthProvider;
 import com.web.TradeApp.model.user.UserEnum.Role;
 import com.web.TradeApp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class DataSeeder {
                         .roles(Set.of(Role.ADMIN, Role.TRADER)) // Assuming you have Role enum with ADMIN
                         .enabled(true)
                         .accountLocked(false)
+                        .authProvider(AuthProvider.CREDENTIALS)
                         .build();
 
                 userRepository.save(admin);

@@ -17,9 +17,6 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import java.net.URI;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.NoSuchElementException;
 
 @ControllerAdvice
@@ -90,7 +87,7 @@ public class GlobalExceptionHandler {
                 int quoteEnd = cause.indexOf("'", quoteStart + 1);
                 if (quoteStart != -1 && quoteEnd > quoteStart) {
                     String value = cause.substring(quoteStart + 1, quoteEnd);
-                    detailMessage = String.format("Value '%s' already exists.", value);
+                    detailMessage = String.format("'%s' already taken. Pls try another one.", value);
                 } else {
                     detailMessage = "Duplicate value detected.";
                 }
@@ -118,36 +115,58 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AuthorizationDeniedException.class)
-    public ResponseEntity<Map<String, Object>> handleAccessDenied(
+    public ResponseEntity<ProblemDetail> handleAccessDenied(
             AuthorizationDeniedException ex, HttpServletRequest request) {
         ex.printStackTrace();
 
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("title", "Access Denied");
-        body.put("status", HttpStatus.FORBIDDEN.value());
-        body.put("detail", "You do not have permission to access this resource.");
-        body.put("instance", request.getRequestURI());
-        body.put("timestamp", Instant.now().toString());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.FORBIDDEN,
+                "You do not have permission to access this resource.");
+        problem.setTitle("Access Denied");
+        problem.setInstance(URI.create(request.getRequestURI()));
+        problem.setProperty("timestamp", Instant.now());
 
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(problem);
     }
 
     @ExceptionHandler(InvalidGoogleTokenException.class)
-    public ResponseEntity<Map<String, Object>> handleInvalidGoogleToken(InvalidGoogleTokenException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                "timestamp", LocalDateTime.now(),
-                "status", HttpStatus.UNAUTHORIZED.value(),
-                "error", "Unauthorized",
-                "message", ex.getMessage()));
+    public ResponseEntity<ProblemDetail> handleInvalidGoogleToken(InvalidGoogleTokenException ex,
+            HttpServletRequest request) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNAUTHORIZED,
+                ex.getMessage());
+        problem.setTitle("Invalid Google Token");
+        problem.setInstance(URI.create(request.getRequestURI()));
+        problem.setProperty("timestamp", Instant.now());
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problem);
     }
 
     @ExceptionHandler(GoogleUserCreationException.class)
-    public ResponseEntity<Map<String, Object>> handleUserCreation(GoogleUserCreationException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                "timestamp", LocalDateTime.now(),
-                "status", HttpStatus.BAD_REQUEST.value(),
-                "error", "User Creation Failed",
-                "message", ex.getMessage()));
+    public ResponseEntity<ProblemDetail> handleUserCreation(GoogleUserCreationException ex,
+            HttpServletRequest request) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage());
+        problem.setTitle("User Creation Failed");
+        problem.setInstance(URI.create(request.getRequestURI()));
+        problem.setProperty("timestamp", Instant.now());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problem);
+    }
+
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidTokenException(
+            InvalidTokenException ex, HttpServletRequest request) {
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage());
+        problem.setTitle("Invalid Token");
+        problem.setInstance(URI.create(request.getRequestURI()));
+        problem.setProperty("timestamp", Instant.now());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problem);
     }
 
     @ExceptionHandler(Exception.class)

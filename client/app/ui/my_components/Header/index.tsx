@@ -89,10 +89,10 @@ export default function Header() {
             ) : (
               <div className="hidden sm:flex gap-2">
                 <Button asChild variant="outline" size="sm">
-                  <Link href="/login?mode=login">Login</Link>
+                  <Link href="/auth/login">Login</Link>
                 </Button>
                 <Button asChild size="sm">
-                  <Link href="/login?mode=register">Sign Up</Link>
+                  <Link href="/auth/register">Sign Up</Link>
                 </Button>
               </div>
             )}

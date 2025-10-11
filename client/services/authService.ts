@@ -28,20 +28,29 @@ export type LoginResponse = {
     roles: string[];
   };
 };
+export interface RegisterResponse {
+  id: string;
+  email: string;
+  urlToken: string;
+  createdAt: string;
+}
 
 export type RefreshResponse = LoginResponse;
 
 export const AuthService = {
-  async register(payload: RegisterRequest): Promise<ApiResponse<null>> {
-    const { data } = await api.post<ApiResponse<null>>(
+  async register(
+    payload: RegisterRequest,
+  ): Promise<ApiResponse<RegisterResponse>> {
+    const { data } = await api.post<ApiResponse<RegisterResponse>>(
       "/auth/register",
       payload,
     );
     return data;
   },
-  async activate(token: string) {
+  async activate(urlToken: string, activateCode: string) {
     await api.post<ApiResponse<null>>("/auth/activate", {
-      token,
+      urlToken,
+      activateCode,
     });
   },
 

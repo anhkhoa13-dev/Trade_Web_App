@@ -1,5 +1,6 @@
 package com.web.TradeApp.model.user;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -7,6 +8,7 @@ import java.util.Set;
 import com.web.TradeApp.model.BaseEntity;
 import com.web.TradeApp.model.user.UserEnum.*;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -15,6 +17,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.ForeignKey;
 import jakarta.validation.constraints.Email;
@@ -64,7 +67,7 @@ public class User extends BaseEntity {
     private String refreshToken;
 
     @ElementCollection(fetch = FetchType.EAGER, targetClass = Role.class)
-    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_user_roles_user")))
+    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_user_roles_user", foreignKeyDefinition = "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE")))
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 64)
     @Builder.Default
@@ -76,7 +79,11 @@ public class User extends BaseEntity {
     private boolean enabled;
 
     @Column(nullable = false)
-    private AuthProvider authProvider; // "local", "google", "github"..
+    private AuthProvider authProvider;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Token> tokens = new ArrayList<>();;
 
     public String getFullName() {
         return firstName + " " + lastName;

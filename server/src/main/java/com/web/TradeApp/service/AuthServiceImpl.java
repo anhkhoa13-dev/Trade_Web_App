@@ -2,14 +2,17 @@ package com.web.TradeApp.service;
 
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,11 +21,14 @@ import com.web.TradeApp.dto.AuthDTO.LoginRequest;
 import com.web.TradeApp.dto.AuthDTO.LoginResponse;
 import com.web.TradeApp.dto.AuthDTO.RegisterRequest;
 import com.web.TradeApp.dto.AuthDTO.RegisterResponse;
+import com.web.TradeApp.exception.FunctionErrorException;
+import com.web.TradeApp.exception.InvalidTokenException;
 import com.web.TradeApp.exception.UserNotFoundException;
 import com.web.TradeApp.model.user.Token;
 import com.web.TradeApp.model.user.User;
 import com.web.TradeApp.model.user.UserEnum.AuthProvider;
 import com.web.TradeApp.model.user.UserEnum.Role;
+import com.web.TradeApp.model.user.UserEnum.TokenType;
 import com.web.TradeApp.repository.TokenRepository;
 import com.web.TradeApp.repository.UserRepository;
 import com.web.TradeApp.service.interfaces.AuthService;
@@ -32,8 +38,10 @@ import com.web.TradeApp.utils.JwtUtil;
 
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
@@ -47,70 +55,85 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public RegisterResponse register(RegisterRequest request) {
+        // Check if a user already exists with this email
+        var optUser = userRepository.findByEmail(request.email());
         String hashPassword = passwordEncoder.encode(request.password());
+        User user = null;
+        if (optUser.isPresent()) {
+            user = optUser.get();
+            if (user.isEnabled()) {
+                throw new DataIntegrityViolationException("Email already taken. Pls try another one");
+            }
+            user.getTokens().clear();
 
-        var user = User.builder()
-                .firstName(request.firstName())
-                .lastName(request.lastName())
-                .username(request.username())
-                .email(request.email())
-                .password(hashPassword)
-                .accountLocked(false)
-                .enabled(false)
-                .roles(Set.of(Role.TRADER))
-                .authProvider(AuthProvider.CREDENTIALS)
+            // override old value
+            user.setFirstName(request.firstName());
+            user.setLastName(request.lastName());
+            user.setUsername(request.username());
+            user.setPassword(hashPassword);
+            user.setAccountLocked(false);
+            user.setEnabled(false);
+            user.setAuthProvider(AuthProvider.CREDENTIALS);
+            user.setRoles(new HashSet<>(List.of(Role.TRADER)));
+
+        } else {
+            user = User.builder()
+                    .firstName(request.firstName())
+                    .lastName(request.lastName())
+                    .username(request.username())
+                    .email(request.email())
+                    .password(hashPassword)
+                    .accountLocked(false)
+                    .enabled(false)
+                    .roles(Set.of(Role.TRADER))
+                    .authProvider(AuthProvider.CREDENTIALS)
+                    .build();
+        }
+        User createdUser = userRepository.save(user);
+        String urlToken = generateAndSaveUrlToken(createdUser);
+        sendValidationEmail(createdUser, urlToken);
+
+        return RegisterResponse.builder()
+                .id(createdUser.getId())
+                .email(createdUser.getEmail())
+                .createdAt(createdUser.getCreatedAt())
+                .urlToken(urlToken)
                 .build();
-
-        userRepository.save(user);
-        sendValidationEmail(user);
-
-        return null;
-    }
-
-    @Override
-    public LoginResponse login(LoginRequest request) {
-        // Nạp input gồm username/password vào Security
-        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                request.email(),
-                request.password());
-
-        // xác thực người dùng => cần viết hàm loadUserByUsername trong
-        // UserDetailsService
-        Authentication authentication = authenticationManagerBuilder.getObject()
-                .authenticate(authToken);
-
-        // set thông tin người dùng đăng nhập vào context (for others to use)
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        User currentUser = this.userService.fetchUserByEmail(request.email());
-        if (currentUser == null)
-            throw new UserNotFoundException("User not found");
-
-        return createLoginRes(currentUser, request.email());
     }
 
     @Transactional
     @Override
-    public void activateAccount(String token) throws MessagingException {
-        Token savedToken = tokenRepository.findByToken(token)
-                // todo exception has to be defined
-                .orElseThrow(() -> new RuntimeException("Invalid token"));
-        if (Instant.now().isAfter(savedToken.getExpiresAt())) {
-            // sendValidationEmail(savedToken.getUser());
-            throw new RuntimeException(
-                    "Activation token has Invalid/Expired!");
+    public void activateAccount(String codeRequest, String urlTokenRequest) throws MessagingException {
+        // verify Token url
+        Token urlToken = tokenRepository.findByTokenAndType(urlTokenRequest, TokenType.TOKEN_URL)
+                .orElseThrow(() -> new InvalidTokenException("Invalid or expired verification link"));
+        if (urlToken.isUsed() || Instant.now().isAfter(urlToken.getExpiresAt())) {
+            throw new InvalidTokenException("Verification link expired or already used");
+        }
+        User user = urlToken.getUser();
+
+        // verify 6-digit code
+        Token activateCode = tokenRepository.findByUserAndType(user, TokenType.ACTIVATE_CODE)
+                .orElseThrow(() -> new InvalidTokenException("Invalid code or expired"));
+        if (activateCode.isUsed() || Instant.now().isAfter(activateCode.getExpiresAt())) {
+            throw new InvalidTokenException("Activation code expired or already used");
+        }
+        if (!activateCode.getToken().equals(codeRequest)) {
+            throw new RuntimeException("Invalid verification code");
         }
 
-        var user = userRepository.findById(savedToken.getUser().getId())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         user.setEnabled(true);
         userRepository.save(user);
 
-        savedToken.setValidatedAt(Instant.now());
-        tokenRepository.save(savedToken);
+        urlToken.setValidatedAt(Instant.now());
+        urlToken.setUsed(true);
+
+        activateCode.setValidatedAt(Instant.now());
+        activateCode.setUsed(true);
+        tokenRepository.saveAll(List.of(urlToken, activateCode));
     }
 
-    private void sendValidationEmail(User user) {
+    private void sendValidationEmail(User user, String urlToken) {
         var newToken = generateAndSaveActivationToken(user);
         // send email
         emailService.sendConfirmationEmail(
@@ -118,12 +141,15 @@ public class AuthServiceImpl implements AuthService {
                 user.getFullName(),
                 newToken,
                 "Account activation");
+
     }
 
     private String generateAndSaveActivationToken(User user) {
         String generatedToken = generateActivationCode(6);
         var token = Token.builder()
                 .token(generatedToken)
+                .type(TokenType.ACTIVATE_CODE)
+                .used(false)
                 .expiresAt(Instant.now().plusSeconds(900)) // 15 min
                 .user(user)
                 .build();
@@ -141,6 +167,19 @@ public class AuthServiceImpl implements AuthService {
             stringBuilder.append(characters.charAt(randomIndex));
         }
         return stringBuilder.toString();
+    }
+
+    private String generateAndSaveUrlToken(User user) {
+        String urlTokenString = UUID.randomUUID().toString();
+        Token token = Token.builder()
+                .type(TokenType.TOKEN_URL)
+                .token(urlTokenString)
+                .user(user)
+                .expiresAt(Instant.now().plus(15, ChronoUnit.MINUTES))
+                .used(false)
+                .build();
+        tokenRepository.save(token);
+        return urlTokenString;
     }
 
     public LoginResponse createLoginRes(User user, String email) {
@@ -172,6 +211,28 @@ public class AuthServiceImpl implements AuthService {
         res.setAccessToken(access_token);
 
         return res;
+    }
+
+    @Override
+    public LoginResponse login(LoginRequest request) {
+        // Nạp input gồm username/password vào Security
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                request.email(),
+                request.password());
+
+        // xác thực người dùng => cần viết hàm loadUserByUsername trong
+        // UserDetailsService
+        Authentication authentication = authenticationManagerBuilder.getObject()
+                .authenticate(authToken);
+
+        // set thông tin người dùng đăng nhập vào context (for others to use)
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        User currentUser = this.userService.fetchUserByEmail(request.email());
+        if (currentUser == null)
+            throw new UserNotFoundException("User not found");
+
+        return createLoginRes(currentUser, request.email());
     }
 
 }
