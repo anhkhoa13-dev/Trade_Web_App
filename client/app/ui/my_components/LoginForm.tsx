@@ -31,22 +31,22 @@ export default function LoginForm() {
 
     try {
       // Call backend login directly from browser
-      const res = await AuthService.login({ email, password });
+      // const res = await AuthService.login({ email, password });
 
-      if (res.statusCode !== 200 || !res.data) {
-        toast.error(res.message ?? "Invalid credentials");
-        return;
-      }
+      // if (res.statusCode !== 200 || !res.data) {
+      //   toast.error(res.message ?? "Invalid credentials");
+      //   return;
+      // }
 
       // browser will store refresh_token cookie automatically
       // Tell NextAuth to store accessToken + user data in session
       // persist data
-      await signIn("credentials", {
-        redirect: false,
-        callbackUrl: "/", // where to redirect after login
-        accessToken: res.data.accessToken,
-        user: JSON.stringify(res.data.user), // send user object as string
-      });
+      // await signIn("credentials", {
+      //   redirect: false,
+      //   callbackUrl: "/", // where to redirect after login
+      //   accessToken: res.data.accessToken,
+      //   user: JSON.stringify(res.data.user), // send user object as string
+      // });
 
       router.push("/");
       toast.success("Logged in successfully");

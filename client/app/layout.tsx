@@ -7,12 +7,21 @@ import Footer from "./ui/my_components/Footer";
 import { SessionProvider } from "next-auth/react";
 import QueryProvider from "@/context/QueryProvider";
 import { Toaster } from "react-hot-toast";
+import { usePathname } from "next/navigation";
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = usePathname();
+
+  const noRootLayoutRoutes = ["/dashboard"];
+
+  const shouldHideLayout = noRootLayoutRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
@@ -25,9 +34,15 @@ export default function RootLayout({
           <Toaster position="top-center" />
           <SessionProvider>
             <QueryProvider>
-              <Header />
-              <main className="overflow-x-hidden">{children}</main>
-              <Footer className="px-20" />
+              {shouldHideLayout ? (
+                children
+              ) : (
+                <>
+                  <Header />
+                  <main className="overflow-x-hidden">{children}</main>
+                  <Footer className="px-20" />
+                </>
+              )}
             </QueryProvider>
           </SessionProvider>
         </ThemeProvider>
