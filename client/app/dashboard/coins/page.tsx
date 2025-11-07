@@ -3,6 +3,7 @@ import AssetsCard from './_components/AssetsCard'
 import { mockCoins } from '@/entities/Coin'
 import PortfolioPerformanceChart from './_components/PortfolioPerformanceChart'
 import { mockPortfolioPerformance } from '@/entities/mockPortfolioPerformance'
+import PortfolioTable from './_components/PortfolioTable'
 
 
 // export const getServerSideProps = async () => {
@@ -24,9 +25,9 @@ export default function page() {
             {/* Chart */}
             <PortfolioPerformanceChart data={mockPortfolioPerformance} />
 
-            {/* Watchlist */}
+            {/* Table */}
             <div>
-
+                <PortfolioTable />
             </div>
         </div>
     )

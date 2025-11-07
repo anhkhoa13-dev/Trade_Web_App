@@ -1,14 +1,15 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../shadcn/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../../ui/shadcn/card";
 import LoginForm from "./LoginForm";
-import RegisterForm from "./RegisterForm";
-import { Separator } from "../shadcn/separator";
+import { Separator } from "../../ui/shadcn/separator";
 import { motion, AnimatePresence } from "framer-motion";
-import { GithubButton, GoogleButton } from "./OAuth2Button";
+
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { GoogleButton, GithubButton } from "./OAuth2Button";
+import RegisterForm from "./RegisterForm";
 
 type mode = "login" | "register";
 
@@ -76,8 +77,8 @@ export default function LoginCard() {
             </div>
 
             <div className="flex justify-center gap-4 mt-3">
-              <GoogleButton onClick={() => {}} />
-              <GithubButton onClick={() => {}} />
+              <GoogleButton onClick={() => { }} />
+              <GithubButton onClick={() => { }} />
             </div>
           </CardContent>
         </motion.div>

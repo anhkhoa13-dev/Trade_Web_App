@@ -1,3 +1,5 @@
+import { PortfolioCoin } from "@/app/dashboard/coins/_components/PortfolioColumn"
+
 export interface Coin {
     id: string
     symbol: string
@@ -78,3 +80,59 @@ export const mockCoins: Coin[] = [
         lastUpdated: "2025-11-05T10:00:00Z",
     },
 ]
+
+
+const baseCoins = [
+    {
+        symbol: "BTC",
+        name: "Bitcoin",
+        image: "https://assets.coingecko.com/coins/images/1/large/bitcoin.png?1696501400",
+    },
+    {
+        symbol: "ETH",
+        name: "Ethereum",
+        image: "https://assets.coingecko.com/coins/images/279/large/ethereum.png?1696501628",
+    },
+    {
+        symbol: "BNB",
+        name: "Binance Coin",
+        image: "https://assets.coingecko.com/coins/images/825/large/binance-coin-logo.png?1595341481",
+    },
+    {
+        symbol: "XRP",
+        name: "Ripple",
+        image: "https://assets.coingecko.com/coins/images/44/large/xrp-symbol-white-128.png?1605778731",
+    },
+    {
+        symbol: "ADA",
+        name: "Cardano",
+        image: "https://assets.coingecko.com/coins/images/975/large/cardano.png?1547034860",
+    },
+    {
+        symbol: "DOGE",
+        name: "Dogecoin",
+        image: "https://assets.coingecko.com/coins/images/5/large/dogecoin.png?1565158816",
+    },
+    {
+        symbol: "DOT",
+        name: "Polkadot",
+        image: "https://assets.coingecko.com/coins/images/12171/large/polkadot.png?1653507074",
+    },
+]
+
+export const mockPortfolio: PortfolioCoin[] = Array.from({ length: 100 }, (_, i) => {
+    const base = baseCoins[i % baseCoins.length]
+    const randomAmount = parseFloat((Math.random() * 10 + 0.1).toFixed(3)) // 0.1 – 10
+    const randomValue = parseFloat((Math.random() * 10000 + 500).toFixed(2)) // 500 – 10500 USD
+    const randomSellFee = parseFloat((Math.random() * 0.3 + 0.05).toFixed(2)) // 0.05 – 0.35%
+
+    return {
+        id: (i + 1).toString(),
+        symbol: base.symbol,
+        name: base.name,
+        image: base.image,
+        amount: randomAmount,
+        value: randomValue,
+        sellFee: randomSellFee,
+    }
+})

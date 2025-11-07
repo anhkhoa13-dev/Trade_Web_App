@@ -7,12 +7,12 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "../shadcn/form";
-import { Input, PasswordInput } from "../shadcn/input";
+} from "../../ui/shadcn/form";
+import { Input, PasswordInput } from "../../ui/shadcn/input";
 import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "../shadcn/button";
+import { Button } from "../../ui/shadcn/button";
 import { useSignUp } from "@/hooks/useSignUp";
 import { useEffect, useState } from "react";
 import useActivateAcc from "@/hooks/useActivateAcc";

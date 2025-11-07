@@ -6,11 +6,11 @@ import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { Button } from "@/app/ui/shadcn/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/app/ui/shadcn/card";
-
 const ReactApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 const ranges = ["Monthly", "Quarterly", "Annually"] as const;
 type Range = (typeof ranges)[number];
+
 
 interface PortfolioPerformanceChartProps {
     data: { month: string; totalValue: number }[];
@@ -80,7 +80,7 @@ export default function PortfolioPerformanceChart({
                     <CardTitle className="text-lg font-semibold">
                         {title}
                     </CardTitle>
-                    <CardDescription className="mt-1 text-sm ">
+                    <CardDescription className="mt-1 text-sm">
                         Here is your performance stats of each month
                     </CardDescription>
                 </div>
@@ -91,7 +91,9 @@ export default function PortfolioPerformanceChart({
                             key={r}
                             variant="subtle"
                             className={
-                                cn(range === r ? "shadow-sm text-gray-900 " : "text-gray-500  hover:text-gray-900 ")}
+                                cn(range === r ? "shadow-sm text-foreground"
+                                    : "shadow-sm text-muted-foreground hover:text-foreground")
+                            }
                             onClick={() => setRange(r)}
                         >
                             {r}

@@ -3,8 +3,6 @@
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from '@/app/ui/shadcn/sidebar'
 import React from 'react'
 import NavMain from './nav_main'
-import { title } from 'process'
-import { ur } from 'zod/v4/locales'
 import { LucideLayoutDashboard } from 'lucide-react'
 
 const navData = {
