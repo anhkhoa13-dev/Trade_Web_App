@@ -20,10 +20,10 @@ export default function RootLayout({
 
   const pathname = usePathname();
 
-  const noRootLayoutRoutes = ["/dashboard"];
+  const noRootLayoutRoutes = ["/my"];
 
   const shouldHideLayout = noRootLayoutRoutes.some((route) =>
-    pathname.startsWith(route)
+    pathname.startsWith(route),
   );
 
   return (
@@ -45,7 +45,8 @@ export default function RootLayout({
                 <>
                   <Header />
                   <main
-                    className="flex flex-col justify-center overflow-x-hidden py-5"
+                    className="flex flex-col justify-center overflow-x-hidden
+                      py-5"
                   >
                     {children}
                   </main>
