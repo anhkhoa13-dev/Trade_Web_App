@@ -65,7 +65,7 @@ export default function Header() {
             {status === "authenticated" ? (
               <div className="flex items-center gap-3">
                 {/* User Avatar + Name */}
-                <Link href="/profile">
+                <Link href="my/profile">
                   <div className="flex items-center gap-2">
                     <UserAvatar
                       avatarUrl={session.user.avatarUrl}

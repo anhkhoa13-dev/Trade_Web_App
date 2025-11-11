@@ -2,12 +2,12 @@
 
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/ui/shadcn/avatar";
-import { Tabs, TabsList, TabsTrigger } from "../ui/shadcn/tabs";
 import { TabsContent } from "@radix-ui/react-tabs";
-import ProfileCard from "./ProfileCard";
-import AccountCard from "./AccountCard";
-import SecurityCard from "./SecurityCard";
 import { useUpdateProfile } from "@/hooks/useUserUpdateProfile";
+import { Tabs, TabsList, TabsTrigger } from "@/app/ui/shadcn/tabs";
+import ProfileCard from "./_components/ProfileCard";
+import AccountCard from "./_components/AccountCard";
+import SecurityCard from "./_components/SecurityCard";
 
 export default function ProfilePage() {
   const { data: profile, isLoading, error } = useUserProfile();

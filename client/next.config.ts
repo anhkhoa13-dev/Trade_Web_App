@@ -13,6 +13,16 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "lh3.googleusercontent.com",
       },
+      {
+        protocol: "https",
+        hostname: "assets.coingecko.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "via.placeholder.com", // (for fallback)
+        pathname: "/**",
+      },
     ],
   },
 };
