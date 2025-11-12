@@ -8,6 +8,7 @@ export interface MarketTicker {
   changePercent: number;
   history: number[]; // sparkline data
   lastUpdate: number;
+  quoteVolume: number;
 }
 
 export function useLiveMarketStream(symbols: string[], historyLength = 20) {
@@ -37,6 +38,7 @@ export function useLiveMarketStream(symbols: string[], historyLength = 20) {
         const existing = prev[symbol];
         const price = parseFloat(t.c);
         const changePercent = parseFloat(t.P);
+        const quoteVolume = parseFloat(t.q);
         const history = existing
           ? [...existing.history.slice(-historyLength + 1), price]
           : Array(historyLength).fill(price);
@@ -49,6 +51,7 @@ export function useLiveMarketStream(symbols: string[], historyLength = 20) {
             changePercent,
             history,
             lastUpdate: t.E,
+            quoteVolume,
           },
         };
       });

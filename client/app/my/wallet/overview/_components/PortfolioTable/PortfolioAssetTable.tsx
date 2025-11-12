@@ -49,12 +49,13 @@ export default function PortfolioAssetTable() {
         </Button>
       </div>
 
-      {/* Table */}
+      {/* Table (overview only) */}
       <DataTable
         columns={userPortfolioColumns}
         data={topFive}
-        showSearch={false}
-        showPagination={false}
+        enableSearch={false}
+        enablePagination={false}
+        enableSorting={false}
       />
     </div>
   );

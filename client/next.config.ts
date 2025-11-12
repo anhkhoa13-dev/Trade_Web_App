@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "via.placeholder.com", // (for fallback)
+        hostname: "coin-images.coingecko.com",
         pathname: "/**",
       },
     ],

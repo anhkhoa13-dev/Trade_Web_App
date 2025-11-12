@@ -32,9 +32,12 @@ export default function page() {
       {/* Row 4: Market + AI Trade Status */}
       <div className="col-span-1 md:col-span-8 w-full">
         <MarketTable
-          symbols={["BTC", "ETH", "BNB", "DOGE", "TRX"]}
-          showLimit={5}
-          showActions={true}
+          symbols={["BTC", "ETH", "BNB", "DOGE", "TRX", "XRP"]}
+          showLimit={6}
+          enableActions={true}
+          enablePagination={false}
+          enableSearch={false}
+          enableSorting={false}
         />
       </div>
       <div className="col-span-1 md:col-span-4 w-full">

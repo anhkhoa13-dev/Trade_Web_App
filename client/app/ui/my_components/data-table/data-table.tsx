@@ -7,6 +7,8 @@ import {
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
+  getSortedRowModel,
+  SortingState,
   useReactTable,
 } from "@tanstack/react-table";
 
@@ -25,27 +27,37 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   title?: string;
-  showSearch?: boolean;
-  showPagination?: boolean;
+  enableSearch?: boolean;
+  enablePagination?: boolean;
+  enableSorting?: boolean;
+  fallback?: string;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   title,
-  showSearch = true,
-  showPagination = true,
+  enableSearch = true,
+  enablePagination = true,
+  enableSorting = true,
+  fallback = "No results.", // loading
 }: DataTableProps<TData, TValue>) {
   const [globalFilter, setGlobalFilter] = React.useState("");
+  const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
     getFilteredRowModel: getFilteredRowModel(),
-    state: { globalFilter },
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: enableSorting ? getSortedRowModel() : undefined,
+    onSortingChange: enableSorting ? setSorting : undefined,
+    onGlobalFilterChange: setGlobalFilter,
+    state: {
+      globalFilter,
+      sorting,
+    },
   });
 
   return (
@@ -56,7 +68,7 @@ export function DataTable<TData, TValue>({
           border-border/50"
       >
         <h1 className="text-lg font-semibold px-2">{title}</h1>
-        {showSearch && (
+        {enableSearch && (
           <Input
             placeholder="Search..."
             value={globalFilter ?? ""}
@@ -72,20 +84,41 @@ export function DataTable<TData, TValue>({
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className="h-12 text-left font-medium text-muted-foreground
-                      bg-muted/30 px-10"
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
+                {headerGroup.headers.map((header) => {
+                  const sorted = header.column.getIsSorted();
+
+                  return (
+                    <TableHead
+                      key={header.id}
+                      className="h-12 text-left font-medium
+                        text-muted-foreground bg-muted/30 px-10 select-none"
+                      onClick={
+                        enableSorting && header.column.getCanSort()
+                          ? header.column.getToggleSortingHandler()
+                          : undefined
+                      }
+                    >
+                      <div className="flex items-center gap-1 cursor-pointer">
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                        {/* Sorting indicators */}
+                        {enableSorting && header.column.getCanSort() && (
+                          <span className="ml-1 text-xs">
+                            {sorted === "asc"
+                              ? "↑"
+                              : sorted === "desc"
+                                ? "↓"
+                                : "↕"}
+                          </span>
                         )}
-                  </TableHead>
-                ))}
+                      </div>
+                    </TableHead>
+                  );
+                })}
               </TableRow>
             ))}
           </TableHeader>
@@ -114,7 +147,7 @@ export function DataTable<TData, TValue>({
                   colSpan={table.getAllColumns().length}
                   className="h-24 text-center text-muted-foreground"
                 >
-                  No results.
+                  {fallback}
                 </TableCell>
               </TableRow>
             )}
@@ -123,7 +156,7 @@ export function DataTable<TData, TValue>({
       </div>
 
       {/* Pagination */}
-      {showPagination && (
+      {enablePagination && (
         <div className="border-t border-border bg-muted/10">
           <DataTablePagination table={table} />
         </div>

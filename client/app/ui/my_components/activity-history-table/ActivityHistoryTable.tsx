@@ -59,8 +59,8 @@ export default function ActivityHistoryTable({
           title=""
           columns={activityColumns}
           data={displayed}
-          showSearch={variant === "full"}
-          showPagination={variant === "full"}
+          enableSearch={variant === "full"}
+          enablePagination={variant === "full"}
         />
       </CardContent>
     </Card>
