@@ -1,3 +1,5 @@
+import { mockCoins } from "./Coin";
+
 export interface Bot {
   id: string;
   name: string;
@@ -17,7 +19,14 @@ export interface Bot {
   winRate?: number;
   sharpeRatio?: number;
   avgDailyTrades?: number;
+  status: string;
+  coin: string;
 }
+
+const getRandomCoinSymbol = () => {
+  if (!mockCoins || mockCoins.length === 0) return "BTC";
+  return mockCoins[Math.floor(Math.random() * mockCoins.length)].symbol;
+};
 
 export const botDatabase: Bot[] = [
   {
@@ -40,6 +49,8 @@ export const botDatabase: Bot[] = [
     winRate: 68.5,
     sharpeRatio: 2.34,
     avgDailyTrades: 4.2,
+    status: "healthy",
+    coin: getRandomCoinSymbol(),
   },
   {
     id: "2",
@@ -61,6 +72,8 @@ export const botDatabase: Bot[] = [
     winRate: 72.3,
     sharpeRatio: 1.89,
     avgDailyTrades: 12.7,
+    status: "healthy",
+    coin: getRandomCoinSymbol(),
   },
   {
     id: "3",
@@ -82,6 +95,8 @@ export const botDatabase: Bot[] = [
     winRate: 65.8,
     sharpeRatio: 2.87,
     avgDailyTrades: 3.5,
+    status: "healthy",
+    coin: getRandomCoinSymbol(),
   },
   {
     id: "4",
@@ -103,6 +118,8 @@ export const botDatabase: Bot[] = [
     winRate: 70.1,
     sharpeRatio: 2.15,
     avgDailyTrades: 5.8,
+    status: "healthy",
+    coin: getRandomCoinSymbol(),
   },
   {
     id: "5",
@@ -124,6 +141,8 @@ export const botDatabase: Bot[] = [
     winRate: 78.4,
     sharpeRatio: 3.12,
     avgDailyTrades: 2.1,
+    status: "healthy",
+    coin: getRandomCoinSymbol(),
   },
   {
     id: "6",
@@ -145,6 +164,8 @@ export const botDatabase: Bot[] = [
     winRate: 64.2,
     sharpeRatio: 1.76,
     avgDailyTrades: 6.3,
+    status: "healthy",
+    coin: getRandomCoinSymbol(),
   },
   {
     id: "7",
@@ -165,6 +186,8 @@ export const botDatabase: Bot[] = [
     winRate: 69.7,
     sharpeRatio: 1.92,
     avgDailyTrades: 15.4,
+    status: "healthy",
+    coin: getRandomCoinSymbol(),
   },
   {
     id: "8",
@@ -186,6 +209,8 @@ export const botDatabase: Bot[] = [
     winRate: 73.9,
     sharpeRatio: 3.45,
     avgDailyTrades: 2.8,
+    status: "healthy",
+    coin: getRandomCoinSymbol(),
   },
   {
     id: "9",
@@ -206,6 +231,8 @@ export const botDatabase: Bot[] = [
     winRate: 76.5,
     sharpeRatio: 2.58,
     avgDailyTrades: 8.9,
+    status: "healthy",
+    coin: getRandomCoinSymbol(),
   },
   {
     id: "10",
@@ -227,6 +254,8 @@ export const botDatabase: Bot[] = [
     winRate: 81.2,
     sharpeRatio: 3.34,
     avgDailyTrades: 1.9,
+    status: "healthy",
+    coin: getRandomCoinSymbol(),
   },
   {
     id: "11",
@@ -248,6 +277,8 @@ export const botDatabase: Bot[] = [
     winRate: 67.3,
     sharpeRatio: 2.08,
     avgDailyTrades: 4.7,
+    status: "healthy",
+    coin: getRandomCoinSymbol(),
   },
   {
     id: "12",
@@ -268,5 +299,7 @@ export const botDatabase: Bot[] = [
     winRate: 71.8,
     sharpeRatio: 1.85,
     avgDailyTrades: 18.3,
+    status: "healthy",
+    coin: getRandomCoinSymbol(),
   },
 ];

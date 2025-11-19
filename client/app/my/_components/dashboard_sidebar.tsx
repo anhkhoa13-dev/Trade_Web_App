@@ -41,7 +41,7 @@ const navData: NavMainProps = {
         },
         {
           title: "AI bots",
-          url: "/ai-bots",
+          url: "/ai-bots/overview",
           adminOnly: true,
         },
       ],

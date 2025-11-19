@@ -86,7 +86,7 @@ export function MarketTable({
           params.value == null
             ? ""
             : Number(params.value).toLocaleString(undefined, {
-                maximumFractionDigits: 2,
+                maximumFractionDigits: 7,
               }),
       },
       {
