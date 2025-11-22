@@ -1,6 +1,7 @@
 "use client";
 
 import { Card } from "@/app/ui/shadcn/card";
+import { formatDate } from "@/lib/utils";
 
 interface Props {
   createdAt: string;
@@ -22,7 +23,7 @@ export const EditStatistics = ({
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-lg border border-border bg-muted p-4">
           <p className="text-xs text-muted-foreground mb-1">Created</p>
-          <p>{createdAt}</p>
+          <p>{formatDate(createdAt)}</p>
         </div>
 
         <div className="rounded-lg border border-border bg-muted p-4">

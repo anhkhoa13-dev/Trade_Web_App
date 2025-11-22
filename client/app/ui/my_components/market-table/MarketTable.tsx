@@ -15,7 +15,7 @@ import {
 } from "@/hooks/ws/useLiveMarketStream";
 
 import { MarketSparkline } from "../charts/MarketSparkline";
-import { COIN_LOGOS } from "../../widgets/constant";
+import { COIN_LOGOS } from "../../../../services/constants/coinConstant";
 import DataTable from "../data-table/AgDataTable";
 
 interface MarketTableProps {

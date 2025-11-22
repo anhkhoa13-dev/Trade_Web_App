@@ -10,100 +10,108 @@ import {
   SelectContent,
   SelectItem,
 } from "@/app/ui/shadcn/select";
-import { TagInput } from "@/app/ui/my_components/Input/TagInput";
 import { SectionCard } from "@/app/ui/my_components/Card/SectionCard";
-import { RiskLevel } from "@/entities/mockAdminAiBots";
+import { BotFormInputs } from "@/services/schemas/bot";
+import { useForm, Controller, UseFormReturn } from "react-hook-form";
+import { RISK_LEVELS } from "@/services/constants/botConstant";
 
 interface Props {
-  name: string;
-  setName: (v: string) => void;
-
-  description: string;
-  setDescription: (v: string) => void;
-
-  category: string;
-  setCategory: (v: string) => void;
-
-  tags: string[];
-  setTags: (v: string[]) => void;
-
-  riskLevel: RiskLevel;
-  setRiskLevel: (v: RiskLevel) => void;
+  form: UseFormReturn<BotFormInputs>;
 }
 
-export function BasicInformationSection({
-  name,
-  setName,
-  description,
-  setDescription,
-  category,
-  setCategory,
-  tags,
-  setTags,
-  riskLevel,
-  setRiskLevel,
-}: Props) {
+export function BasicInformationSection({ form }: Props) {
+  const {
+    control,
+    register,
+    formState: { errors },
+  } = form;
+
   return (
     <SectionCard title="Basic Information">
-      <div className="grid gap-6 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label>Bot Name *</Label>
+      <div className="flex flex-col gap-6 md:flex-row md:gap-4">
+        {/* 1. Bot Name: 50% width */}
+        <div className="space-y-2 w-full md:w-1/2">
+          <Label htmlFor="name">Bot Name *</Label>
           <Input
+            id="name"
             placeholder="Alpha Trend Pro"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            {...register("name")}
           />
+          {errors.name && (
+            <p className="text-sm text-red-500">{errors.name.message}</p>
+          )}
         </div>
 
-        <div className="space-y-2">
-          <Label>Category *</Label>
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="AI Predictive">AI Predictive</SelectItem>
-              <SelectItem value="Trend Following">Trend Following</SelectItem>
-              <SelectItem value="DCA">DCA</SelectItem>
-              <SelectItem value="Scalping">Scalping</SelectItem>
-              <SelectItem value="Grid Trading">Grid Trading</SelectItem>
-              <SelectItem value="Mean Reversion">Mean Reversion</SelectItem>
-              <SelectItem value="Arbitrage">Arbitrage</SelectItem>
-            </SelectContent>
-          </Select>
+        {/* 2. Category: 25% width */}
+        <div className="space-y-2 w-full md:w-1/4">
+          <Label htmlFor="category">Category *</Label>
+          <Controller
+            control={control}
+            name="category"
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger id="category" className="w-full">
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="AI_PREDICTIVE">AI Predictive</SelectItem>
+                  <SelectItem value="TREND_FOLLOWING">
+                    Trend Following
+                  </SelectItem>
+                  <SelectItem value="DCA">
+                    Dollar Cost Averaging (DCA)
+                  </SelectItem>
+                  <SelectItem value="SCALPING">Scalping</SelectItem>
+                  <SelectItem value="GRID_TRADING">Grid Trading</SelectItem>
+                  <SelectItem value="MEAN_REVERSION">Mean Reversion</SelectItem>
+                  <SelectItem value="ARBITRAGE">Arbitrage</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {errors.category && (
+            <p className="text-sm text-red-500">{errors.category.message}</p>
+          )}
+        </div>
+
+        {/* 3. Risk Level: 25% width */}
+        <div className="space-y-2 w-full md:w-1/4">
+          <Label htmlFor="riskLevel">Risk Level *</Label>
+          <Controller
+            control={control}
+            name="riskLevel"
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger id="riskLevel" className="w-full">
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  {RISK_LEVELS.map((level) => (
+                    <SelectItem key={level} value={level}>
+                      {level}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {errors.riskLevel && (
+            <p className="text-sm text-red-500">{errors.riskLevel.message}</p>
+          )}
         </div>
       </div>
 
+      {/* Description */}
       <div className="space-y-2">
-        <Label>Description</Label>
+        <Label htmlFor="description">Description</Label>
         <Textarea
+          id="description"
           placeholder="Describe the bot strategy…"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          {...register("description")}
         />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Tags</Label>
-        <TagInput
-          tags={tags}
-          onAdd={(tag) => setTags([...tags, tag])}
-          onRemove={(tag) => setTags(tags.filter((t) => t !== tag))}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Risk Level</Label>
-        <Select value={riskLevel} onValueChange={setRiskLevel}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select level" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Low">Low</SelectItem>
-            <SelectItem value="Medium">Medium</SelectItem>
-            <SelectItem value="High">High</SelectItem>
-          </SelectContent>
-        </Select>
+        {errors.description && (
+          <p className="text-sm text-red-500">{errors.description.message}</p>
+        )}
       </div>
     </SectionCard>
   );

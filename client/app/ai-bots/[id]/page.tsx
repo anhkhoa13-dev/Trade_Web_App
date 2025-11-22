@@ -2,15 +2,18 @@
 import { notFound } from "next/navigation";
 import { botDatabase } from "@/entities/mockAiBots";
 import BotDetailsContent from "./_components/BotDetailsContent";
-// import BotDetailsView from "./BotDetailsView";
 
 interface Props {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
-export default function BotDetailsPage({ params }: Props) {
-  const botId = params.id;
-  const bot = botDatabase.find((b) => b.id === botId);
+// 2. Make the component async
+export default async function BotDetailsPage({ params }: Props) {
+  // 3. Await the params before using properties
+  const { id } = await params;
+
+  // Now use 'id' normally
+  const bot = botDatabase.find((b) => b.id === id);
 
   if (!bot) return notFound();
 

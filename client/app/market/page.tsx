@@ -3,8 +3,8 @@
 import React, { useMemo } from "react";
 import { useLiveMarketStream } from "@/hooks/ws/useLiveMarketStream";
 import { MarketTable } from "../ui/my_components/market-table/MarketTable";
-import { SYMBOLS } from "../ui/widgets/constant";
 import TopBox from "./_components/TopBox";
+import { SYMBOLS } from "@/services/constants/coinConstant";
 
 export default function MarketPage() {
   const tickers = useLiveMarketStream(SYMBOLS);

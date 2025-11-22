@@ -4,11 +4,12 @@ import { Card } from "@/app/ui/shadcn/card";
 import { Button } from "@/app/ui/shadcn/button";
 import { RefreshCw, Pause, Play, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { BotStatus } from "@/services/constants/botConstant";
 
 interface Props {
   botName: string;
-  botStatus: "healthy" | "warning" | "critical";
-  copyingUsers: number;
+  botStatus: BotStatus;
+  copyingUsers?: number;
 
   onResetApi: () => void;
   onPauseResume: () => void;
@@ -36,11 +37,11 @@ export const EditQuickActions = ({
 
         {/* Pause / Resume */}
         <Button
-          variant={botStatus === "healthy" ? "secondary" : "default"}
+          variant={botStatus === "ACTIVE" ? "secondary" : "default"}
           onClick={onPauseResume}
           className="gap-2"
         >
-          {botStatus === "healthy" ? (
+          {botStatus === "ACTIVE" ? (
             <>
               <Pause className="h-4 w-4" />
               Pause Bot

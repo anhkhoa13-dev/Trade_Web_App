@@ -1,10 +1,14 @@
-export type AdminBotStatus = "healthy" | "warning" | "critical";
+import {
+  BotStatus,
+  RiskLevel,
+  BotAction,
+} from "@/services/constants/botConstant";
 
 export interface AdminBot {
   id: string;
   name: string;
   coin: string;
-  status: AdminBotStatus;
+  status: BotStatus;
 
   roi1d: number; // ROI (24h)
   pnl1d: number; // PnL (24h)
@@ -21,7 +25,7 @@ export const adminBotDatabase: AdminBot[] = [
     id: "bot-001",
     name: "Alpha Scalper",
     coin: "BTC",
-    status: "healthy",
+    status: "ACTIVE",
     roi1d: 2.4,
     pnl1d: 125.75,
     copyingUsers: 842,
@@ -34,7 +38,7 @@ export const adminBotDatabase: AdminBot[] = [
     id: "bot-002",
     name: "Swing Master",
     coin: "ETH",
-    status: "warning",
+    status: "PAUSED",
     roi1d: -1.1,
     pnl1d: -48.32,
     copyingUsers: 421,
@@ -47,7 +51,7 @@ export const adminBotDatabase: AdminBot[] = [
     id: "bot-003",
     name: "Grid Titan",
     coin: "BNB",
-    status: "healthy",
+    status: "ACTIVE",
     roi1d: 3.7,
     pnl1d: 212.14,
     copyingUsers: 1290,
@@ -60,7 +64,7 @@ export const adminBotDatabase: AdminBot[] = [
     id: "bot-004",
     name: "Volatility Hunter",
     coin: "SOL",
-    status: "critical",
+    status: "ERROR",
     roi1d: -4.5,
     pnl1d: -202.55,
     copyingUsers: 184,
@@ -73,7 +77,7 @@ export const adminBotDatabase: AdminBot[] = [
     id: "bot-005",
     name: "Mean Reversion Pro",
     coin: "XRP",
-    status: "healthy",
+    status: "ACTIVE",
     roi1d: 1.3,
     pnl1d: 54.09,
     copyingUsers: 602,
@@ -86,7 +90,7 @@ export const adminBotDatabase: AdminBot[] = [
     id: "bot-006",
     name: "Trend Rider",
     coin: "ADA",
-    status: "warning",
+    status: "PAUSED",
     roi1d: 0.2,
     pnl1d: 6.45,
     copyingUsers: 293,
@@ -96,8 +100,6 @@ export const adminBotDatabase: AdminBot[] = [
     },
   },
 ];
-export type RiskLevel = "Low" | "Medium" | "High";
-export type TradeType = "Buy" | "Sell" | "Both";
 // More detailed admin bot model for create/edit pages
 export interface AdminBotDetail {
   id: string;
@@ -111,7 +113,7 @@ export interface AdminBotDetail {
   coin: string;
   allocationPercentage: number;
   tradingFrequency: string;
-  tradeType: TradeType;
+  tradeType: BotAction;
 
   apiUrl: string;
   websocketUrl?: string;
@@ -128,7 +130,7 @@ export interface AdminBotDetail {
   uptime: number; // %
   copyingUsers: number;
 
-  status: AdminBotStatus;
+  status: BotStatus;
 
   lastSignal: {
     type: "buy" | "sell";
@@ -143,15 +145,15 @@ export const adminBotDetailDatabase: AdminBotDetail[] = [
   {
     id: "bot-001",
     name: "Alpha Scalper",
-    description: "High-frequency scalping bot optimized for BTC volatility.",
+    description: "high-frequency scalping bot optimized for BTC volatility.",
     category: "Scalping",
     tags: ["HFT", "Momentum"],
-    riskLevel: "High",
+    riskLevel: "HIGH",
 
     coin: "BTC",
     allocationPercentage: 25,
     tradingFrequency: "1m",
-    tradeType: "Both",
+    tradeType: "BUY",
 
     apiUrl: "https://api.botengine.example/bot-001",
     websocketUrl: "wss://ws.botengine.example/bot-001",
@@ -168,7 +170,7 @@ export const adminBotDetailDatabase: AdminBotDetail[] = [
     uptime: 99.7,
     copyingUsers: 842,
 
-    status: "healthy",
+    status: "ACTIVE",
 
     lastSignal: {
       type: "buy",
@@ -183,14 +185,14 @@ export const adminBotDetailDatabase: AdminBotDetail[] = [
     id: "bot-002",
     name: "Swing Master",
     description: "ETH swing-trading bot using momentum reversal models.",
-    category: "Trend Following",
+    category: "Trend FolLOWing",
     tags: ["Swing", "ETH"],
-    riskLevel: "Medium",
+    riskLevel: "MEDIUM",
 
     coin: "ETH",
     allocationPercentage: 40,
     tradingFrequency: "4h",
-    tradeType: "Both",
+    tradeType: "SELL",
 
     apiUrl: "https://api.botengine.example/bot-002",
     websocketUrl: undefined,
@@ -207,7 +209,7 @@ export const adminBotDetailDatabase: AdminBotDetail[] = [
     uptime: 92.4,
     copyingUsers: 421,
 
-    status: "warning",
+    status: "PAUSED",
 
     lastSignal: {
       type: "sell",
@@ -224,12 +226,12 @@ export const adminBotDetailDatabase: AdminBotDetail[] = [
     description: "Automated grid bot for BNB with dynamic grid spacing.",
     category: "Grid Trading",
     tags: ["Grid", "Automation"],
-    riskLevel: "Low",
+    riskLevel: "LOW",
 
     coin: "BNB",
     allocationPercentage: 30,
     tradingFrequency: "15m",
-    tradeType: "Both",
+    tradeType: "SELL",
 
     apiUrl: "https://api.botengine.example/bot-003",
     websocketUrl: "wss://ws.botengine.example/bot-003",
@@ -246,7 +248,7 @@ export const adminBotDetailDatabase: AdminBotDetail[] = [
     uptime: 98.2,
     copyingUsers: 1290,
 
-    status: "healthy",
+    status: "ACTIVE",
 
     lastSignal: {
       type: "buy",
@@ -263,12 +265,12 @@ export const adminBotDetailDatabase: AdminBotDetail[] = [
     description: "SOL volatility bot using predictive breakout detection.",
     category: "AI Predictive",
     tags: ["AI", "Breakout"],
-    riskLevel: "High",
+    riskLevel: "HIGH",
 
     coin: "SOL",
     allocationPercentage: 20,
     tradingFrequency: "5m",
-    tradeType: "Both",
+    tradeType: "SELL",
 
     apiUrl: "https://api.botengine.example/bot-004",
     websocketUrl: undefined,
@@ -285,7 +287,7 @@ export const adminBotDetailDatabase: AdminBotDetail[] = [
     uptime: 76.9,
     copyingUsers: 184,
 
-    status: "critical",
+    status: "ERROR",
 
     lastSignal: {
       type: "sell",
@@ -302,12 +304,12 @@ export const adminBotDetailDatabase: AdminBotDetail[] = [
     description: "Statistical mean reversion engine for XRP cycles.",
     category: "Mean Reversion",
     tags: ["XRP", "Cycles"],
-    riskLevel: "Medium",
+    riskLevel: "MEDIUM",
 
     coin: "XRP",
     allocationPercentage: 35,
     tradingFrequency: "1h",
-    tradeType: "Buy",
+    tradeType: "BUY",
 
     apiUrl: "https://api.botengine.example/bot-005",
     websocketUrl: "wss://ws.botengine.example/bot-005",
@@ -324,7 +326,7 @@ export const adminBotDetailDatabase: AdminBotDetail[] = [
     uptime: 96.5,
     copyingUsers: 602,
 
-    status: "healthy",
+    status: "ACTIVE",
 
     lastSignal: {
       type: "buy",
@@ -339,14 +341,14 @@ export const adminBotDetailDatabase: AdminBotDetail[] = [
     id: "bot-006",
     name: "Trend Rider",
     description: "Momentum-based ADA trend detection bot.",
-    category: "Trend Following",
+    category: "Trend FolLOWing",
     tags: ["Momentum", "ADA"],
-    riskLevel: "Low",
+    riskLevel: "LOW",
 
     coin: "ADA",
     allocationPercentage: 15,
     tradingFrequency: "30m",
-    tradeType: "Both",
+    tradeType: "SELL",
 
     apiUrl: "https://api.botengine.example/bot-006",
     websocketUrl: undefined,
@@ -363,7 +365,7 @@ export const adminBotDetailDatabase: AdminBotDetail[] = [
     uptime: 88.1,
     copyingUsers: 293,
 
-    status: "warning",
+    status: "PAUSED",
 
     lastSignal: {
       type: "sell",

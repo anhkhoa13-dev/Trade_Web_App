@@ -13,7 +13,6 @@ export const SYMBOLS: string[] = [
   "TON",
   "TRX",
   "SHIB",
-  "ADA",
   "BCH",
   "LTC",
   "UNI",

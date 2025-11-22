@@ -10,17 +10,17 @@ import {
 } from "@/app/ui/shadcn/select";
 import { Button } from "@/app/ui/shadcn/button";
 
-import { AdminBotStatus } from "@/entities/mockAdminAiBots";
 import { useRouter } from "next/navigation";
+import { BotStatus } from "@/services/constants/botConstant";
 
 interface BotFilterBarProps {
   uniqueCoins: string[];
   coinFilter: string;
-  statusFilter: AdminBotStatus | "all";
+  statusFilter: BotStatus;
   sortBy: string;
 
   onCoinChange: (coin: string) => void;
-  onStatusChange: (status: AdminBotStatus | "all") => void;
+  onStatusChange: (status: BotStatus) => void;
   onSortChange: (sort: string) => void;
 }
 
@@ -60,7 +60,7 @@ export function BotFilterBar({
         {/* Status Filter */}
         <Select
           value={statusFilter}
-          onValueChange={(v) => onStatusChange(v as AdminBotStatus | "all")}
+          onValueChange={(v) => onStatusChange(v as BotStatus)}
         >
           <SelectTrigger className="w-[150px]">
             <SelectValue placeholder="Status" />

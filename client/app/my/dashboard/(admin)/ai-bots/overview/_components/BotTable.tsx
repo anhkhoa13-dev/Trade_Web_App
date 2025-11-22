@@ -1,13 +1,8 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useState } from "react";
 import { ColDef, ICellRendererParams } from "ag-grid-community";
-
-import DataTable from "@/app/ui/my_components/data-table/AgDataTable";
-import { AdminBot, AdminBotStatus } from "@/entities/mockAdminAiBots";
-import { type VariantProps } from "class-variance-authority";
-
-import { Button } from "@/app/ui/shadcn/button";
+import { useRouter } from "next/navigation";
 import {
   Eye,
   Pencil,
@@ -17,11 +12,20 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from "lucide-react";
-import { Badge, BadgeVariant, badgeVariants } from "@/app/ui/shadcn/badge";
-import { useRouter } from "next/navigation";
+
+import DataTable from "@/app/ui/my_components/data-table/AgDataTable";
+import { Button } from "@/app/ui/shadcn/button";
+import { Badge, BadgeVariant } from "@/app/ui/shadcn/badge";
+import { BotStatus } from "@/services/constants/botConstant";
+
+// FIX: Ensure date-fns import is present
+import { format, isValid } from "date-fns";
+import { BotResponse } from "@/services/botService";
+import { DeleteBotModal } from "./DeleteBotModal";
+import { useDeleteBot } from "@/hooks/bot/useBotHook";
 
 interface BotTableProps {
-  bots: AdminBot[];
+  bots: BotResponse[];
   enableSorting?: boolean;
   enableSearch?: boolean;
   enablePagination?: boolean;
@@ -36,26 +40,35 @@ export default function BotTable({
   paginationPageSize = 12,
 }: BotTableProps) {
   const router = useRouter();
-  const handlePauseResume = useCallback((bot: AdminBot) => {
-    console.log("pause/resume", bot);
-  }, []);
+  const { mutate: deleteBot, isPending: isDeleting } = useDeleteBot();
+  const [botToDelete, setBotToDelete] = useState<BotResponse | null>(null);
 
-  const handleDelete = useCallback((bot: AdminBot) => {
-    console.log("delete", bot);
-  }, []);
+  const handleEdit = useCallback(
+    (bot: BotResponse) => {
+      router.push(`/my/dashboard/ai-bots/${bot.id}/edit`);
+    },
+    [router],
+  );
 
-  const handleEdit = useCallback((bot: AdminBot) => {
-    router.push(`/my/dashboard/ai-bots/${bot.id}/edit`);
-    console.log("edit", bot);
-  }, []);
+  const handleDeleteClick = (bot: BotResponse) => {
+    setBotToDelete(bot); // Open Modal
+  };
+  const handleConfirmDelete = () => {
+    if (botToDelete) {
+      deleteBot(botToDelete.id, {
+        onSuccess: () => {
+          setBotToDelete(null); // Close Modal on success
+        },
+      });
+    }
+  };
 
-  const handleView = useCallback((bot: AdminBot) => {
-    console.log("view", bot);
-  }, []);
+  //TODOS: Handlers (Placeholder logic for now - not yet implements)
+  const handlePauseResume = (bot: BotResponse) => console.log("Toggle", bot.id);
+  const handleView = (bot: BotResponse) => console.log("View", bot.id);
 
-  const ActionsRenderer = (params: ICellRendererParams<AdminBot>) => {
+  const ActionsRenderer = (params: ICellRendererParams<BotResponse>) => {
     const bot = params.data;
-
     if (!bot) return null;
 
     return (
@@ -73,7 +86,7 @@ export default function BotTable({
           size="icon"
           onClick={() => handlePauseResume(bot)}
         >
-          {bot.status === "healthy" ? (
+          {bot.status === "PAUSED" ? (
             <Pause className="h-4 w-4" />
           ) : (
             <Play className="h-4 w-4" />
@@ -84,61 +97,55 @@ export default function BotTable({
           variant="ghost"
           size="icon"
           className="text-red-500 hover:text-red-500"
-          onClick={() => handleDelete(bot)}
+          onClick={() => handleDeleteClick(bot)}
         >
           <Trash2 className="h-4 w-4" />
         </Button>
       </div>
     );
   };
-  const columns: ColDef<AdminBot>[] = [
+
+  const columns: ColDef<BotResponse>[] = [
     {
       headerName: "Bot Name",
       field: "name",
       flex: 1,
       minWidth: 160,
     },
-
     {
       headerName: "Coin",
-      field: "coin",
-      width: 70,
-      cellRenderer: (params: ICellRendererParams<AdminBot>) => {
-        return (
-          <div className="px-2 py-1 rounded-full border text-xs">
-            {params.value}
-          </div>
-        );
-      },
+      valueGetter: (p) => p.data?.tradingConfig?.coinSymbol,
+      width: 90,
+      cellRenderer: (params: ICellRendererParams) => (
+        <div className="px-2 py-1 rounded-full border text-xs font-medium">
+          {params.value}
+        </div>
+      ),
     },
-
     {
       headerName: "Status",
       field: "status",
       width: 130,
       sortable: enableSorting,
-      cellRenderer: (params: ICellRendererParams<AdminBot>) => {
-        const value = params.value as AdminBotStatus;
-
-        const variant: Record<AdminBotStatus, BadgeVariant> = {
-          healthy: "positive",
-          warning: "warning", // choose 'secondary' for yellow-ish style
-          critical: "negative",
+      cellRenderer: (params: ICellRendererParams<BotResponse>) => {
+        const value = params.value as BotStatus;
+        const variant: Record<BotStatus, BadgeVariant> = {
+          ACTIVE: "positive",
+          PAUSED: "warning",
+          ERROR: "negative",
         };
-
-        return <Badge variant={variant[value]}>{value}</Badge>;
+        return <Badge variant={variant[value] || "secondary"}>{value}</Badge>;
       },
     },
-
     {
       headerName: "ROI (24h)",
-      field: "roi1d",
+      valueGetter: (p) => p.data?.stats?.roi24h ?? 0,
       width: 120,
       sortable: enableSorting,
-      cellRenderer: (params: ICellRendererParams<AdminBot>) => {
+      cellRenderer: (params: ICellRendererParams) => {
         const value = params.value as number;
         const isPositive = value >= 0;
-        const color = isPositive ? "text-green-400" : "text-red-400";
+        const color = isPositive ? "text-green-500" : "text-red-500";
         return (
           <div className={`flex items-center gap-1 font-medium ${color}`}>
             {isPositive ? (
@@ -151,16 +158,15 @@ export default function BotTable({
         );
       },
     },
-
     {
       headerName: "PnL (24h)",
-      field: "pnl1d",
+      valueGetter: (p) => p.data?.stats?.pnl24h ?? 0,
       width: 120,
       sortable: enableSorting,
-      cellRenderer: (params: ICellRendererParams<AdminBot>) => {
+      cellRenderer: (params: ICellRendererParams) => {
         const value = params.value as number;
         const isPositive = value >= 0;
-        const color = isPositive ? "text-green-400" : "text-red-400";
+        const color = isPositive ? "text-green-500" : "text-red-500";
         return (
           <div className={`flex items-center gap-1 font-medium ${color}`}>
             {isPositive ? (
@@ -168,57 +174,63 @@ export default function BotTable({
             ) : (
               <ArrowDownRight className="w-4 h-4" />
             )}
-            {value.toFixed(2)}%
+            ${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </div>
         );
       },
     },
-
     {
       headerName: "Copying Users",
-      field: "copyingUsers",
+      valueGetter: (p) => p.data?.stats?.copyingUsers ?? 0,
       width: 150,
       sortable: enableSorting,
-      cellRenderer: (params: ICellRendererParams<AdminBot>) => {
-        const value = params.value as number;
-        return value.toLocaleString();
-      },
+      cellRenderer: (params: ICellRendererParams) =>
+        params.value?.toLocaleString(),
     },
-
     {
       headerName: "Last Signal",
-      field: "lastSignal",
+      // FIX: Use valueGetter to access nested 'stats.lastSignalAt'
+      valueGetter: (p) => p.data?.stats?.lastSignalAt,
       flex: 1,
-      minWidth: 200,
+      minWidth: 160,
       valueFormatter: (params) => {
-        const signal = params.value as AdminBot["lastSignal"] | undefined;
-        if (!signal) return "";
-        return `${signal.type.toUpperCase()} • ${signal.timestamp}`;
+        // FIX: Safely check validity before formatting
+        if (!params.value) return "-";
+        const date = new Date(params.value);
+        // Ensure it's a valid date object
+        if (!isValid(date)) return "-";
+        return format(date, "MMM dd, HH:mm");
       },
     },
-
     {
       headerName: "Actions",
       width: 180,
       sortable: false,
-      cellRenderer: ActionsRenderer, // <= React component
+      cellRenderer: ActionsRenderer,
     },
   ];
 
-  //
-  // RETURN TABLE
-  //
   return (
-    <DataTable<AdminBot>
-      title="All Bots"
-      columns={columns}
-      rowData={bots}
-      enableSorting={enableSorting}
-      enableSearch={enableSearch}
-      enablePagination={enablePagination}
-      paginationPageSize={paginationPageSize}
-      fallback="No bots found..."
-      getRowId={(p) => p.data.id}
-    />
+    <>
+      <DataTable<BotResponse>
+        title="All Bots"
+        columns={columns}
+        rowData={bots}
+        enableSorting={enableSorting}
+        enableSearch={enableSearch}
+        enablePagination={enablePagination}
+        paginationPageSize={paginationPageSize}
+        fallback="No bots found..."
+        getRowId={(p) => p.data.id}
+      />
+      {/* Delete Confirmation Modal */}
+      <DeleteBotModal
+        isOpen={!!botToDelete}
+        onClose={() => setBotToDelete(null)}
+        onConfirm={handleConfirmDelete}
+        botName={botToDelete?.name || ""}
+        isDeleting={isDeleting}
+      />
+    </>
   );
 }
