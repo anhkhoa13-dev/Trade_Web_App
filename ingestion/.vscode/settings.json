@@ -1,8 +1,6 @@
 {
-  "java.configuration.updateBuildConfiguration": "automatic",
-  "java.compile.nullAnalysis.mode": "automatic",
   "azureFunctions.javaBuildTool": "maven",
-  "azureFunctions.deploySubpath": "target/azure-functions/ingestion-function",
+  "azureFunctions.deploySubpath": "target/azure-functions/trade-ingest-thk",
   "azureFunctions.projectLanguage": "Java",
   "azureFunctions.projectRuntime": "~4",
   "debug.internalConsoleOptions": "neverOpen",

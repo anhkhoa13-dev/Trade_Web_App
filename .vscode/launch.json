@@ -25,16 +25,20 @@
       "request": "launch",
       "name": "Next.js: Debug Development Server",
       "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "dev"
-      ],
+      "runtimeArgs": ["run", "dev"],
       "cwd": "${workspaceFolder}/client",
       "console": "integratedTerminal",
       "port": 9229,
-      "skipFiles": [
-        "<node_internals>/**"
-      ]
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Attach to Java Functions",
+      "type": "java",
+      "request": "attach",
+      "hostName": "127.0.0.1",
+      "port": 5005,
+      "preLaunchTask": "func: host start"
     }
-  ]
+  ],
+  "version": "0.2.0"
 }
