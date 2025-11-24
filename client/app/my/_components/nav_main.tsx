@@ -16,6 +16,7 @@ import {
   SidebarMenuSubItem,
 } from "@/app/ui/shadcn/sidebar";
 import { ChevronRight, LucideIcon } from "lucide-react";
+import Link from "next/link";
 
 export interface NavMainProps {
   items: {
@@ -72,9 +73,9 @@ export default function NavMain({ items }: NavMainProps) {
                               asChild
                               className="text-base h-8"
                             >
-                              <a href={`${item.url}/${subItem.url}`}>
+                              <Link href={`${item.url}/${subItem.url}`}>
                                 <span>{subItem.title}</span>
-                              </a>
+                              </Link>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
                         ))}
@@ -89,10 +90,10 @@ export default function NavMain({ items }: NavMainProps) {
                   className="text-base h-10"
                   tooltip={item.title}
                 >
-                  <a href={`/${item.url}`}>
+                  <Link href={`${item.url}`}>
                     {item.icon && <item.icon />}
                     <span className="pl-2">{item.title}</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               )}
             </SidebarMenuItem>

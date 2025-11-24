@@ -21,7 +21,7 @@ const navData: NavMainProps = {
     {
       title: "Profile",
       url: "/my/profile",
-      isActive: false,
+      isActive: true,
       icon: User,
     },
     {

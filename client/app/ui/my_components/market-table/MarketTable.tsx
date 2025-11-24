@@ -151,7 +151,7 @@ export function MarketTable({
                 </Button>
               </Link>
 
-              <Link href={`/market/${s}/trade`}>
+              <Link href={`/trade/${s}`}>
                 <Button size="icon" variant="ghost">
                   <TrendingUp className="w-4 h-4" />
                 </Button>
