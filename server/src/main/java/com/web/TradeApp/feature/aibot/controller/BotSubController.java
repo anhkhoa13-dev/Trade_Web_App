@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.web.TradeApp.feature.aibot.dto.BotSubscription.BotCopyRequest;
 import com.web.TradeApp.feature.aibot.dto.BotSubscription.BotSubscriptionResponse;
-import com.web.TradeApp.feature.aibot.service.BotSubscriptionService;
+import com.web.TradeApp.feature.aibot.service.subscription.BotSubscriptionService;
 import com.web.TradeApp.feature.common.Annotation.ApiMessage;
 import com.web.TradeApp.utils.SecurityUtil;
 

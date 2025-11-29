@@ -101,8 +101,8 @@ export function BotConfigDialog({
     // Transform UI percentages (1-100) to API decimals (0.01-1.0)
     const payload: BotCopyRequest = {
       botId: values.botId,
-      allocatedAmount: values.allocatedAmount,
-      allocatedCoin: values.allocatedCoin,
+      botWalletBalance: values.allocatedAmount,
+      botWalletCoin: values.allocatedCoin,
       tradePercentage: values.tradePercentage / 100,
       maxDailyLossPercentage: values.maxDailyLossPercentage / 100,
     };

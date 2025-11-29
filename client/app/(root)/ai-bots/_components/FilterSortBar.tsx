@@ -81,17 +81,16 @@ export function FilterSortBar({
         <Select
           value={timeWindow}
           onValueChange={(v) =>
-            onTimeWindowChange(v as "1d" | "7d" | "30d" | "all")
+            onTimeWindowChange(v as "1d" | "7d" | "current")
           }
         >
           <SelectTrigger className="w-[150px]">
             <SelectValue placeholder="Time Range" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="1d">1D</SelectItem>
-            <SelectItem value="7d">7D</SelectItem>
-            <SelectItem value="30d">30D</SelectItem>
-            <SelectItem value="all">All Time</SelectItem>
+            <SelectItem value="1d">24 Hours</SelectItem>
+            <SelectItem value="7d">7 Days</SelectItem>
+            <SelectItem value="current">All Time</SelectItem>
           </SelectContent>
         </Select>
       </div>

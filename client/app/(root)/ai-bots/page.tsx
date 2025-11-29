@@ -7,7 +7,7 @@ import { FilterSortBar } from "./_components/FilterSortBar";
 import { PaginationBar } from "../../ui/my_components/PaginationBar";
 import { useRouter } from "next/navigation";
 import {
-  BotResponse,
+  BotMetricsDTO,
   SortOption,
   TimeWindow,
 } from "@/services/interfaces/botInterfaces";
@@ -98,21 +98,16 @@ export default function AiBotPage() {
       <section
         className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full"
       >
-        {bots.map((bot: BotResponse) => (
+        {bots.map((bot) => (
           <BotCard
-            key={bot.id}
-            id={bot.id}
+            key={bot.botId}
+            id={bot.botId}
             name={bot.name}
-            roi1d={bot.stats?.roi24h || 0} // Fallback or mapping needed if you have distinct fields
-            roi7d={0}
-            roi30d={0}
-            roiAllTime={0} // Add to backend if needed
-            pnl1d={bot.stats?.pnl24h || 0}
-            pnl7d={0}
-            pnl30d={0}
-            maxDrawdown={0} // Add to backend if needed
-            coin={bot.tradingConfig?.coinSymbol || ""} // "BTC"
-            activeUsers={bot.stats?.copyingUsers || 0}
+            roi={bot.averageRoi || 0}
+            pnl={bot.totalPnl || 0}
+            maxDrawdown={bot.maxDrawdown || 0}
+            coin={bot.coinSymbol || ""}
+            activeUsers={bot.activeSubscribers || 0}
             onCopy={handleCopy}
             onClick={onNavigateToBotDetail}
             timeWindow={timeWindow}

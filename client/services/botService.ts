@@ -9,6 +9,8 @@ import {
   BotResponse,
   BotFilterParams,
   BotPaginatedResponse,
+  BotMetricsPaginatedResponse,
+  BotDetailResponse,
 } from "./interfaces/botInterfaces";
 import api from "@/lib/api";
 
@@ -98,73 +100,42 @@ export function useBotService() {
   return BotService(axiosAuth);
 }
 
-// Public api
+// Public api - Fetch bots with metrics
 export const fetchBots = async (
   params: BotFilterParams,
-): Promise<BotPaginatedResponse> => {
+): Promise<BotMetricsPaginatedResponse> => {
   const queryParams = new URLSearchParams();
 
-  // A. Pagination (0-indexed for backend)
+  // Pagination (0-indexed for backend)
   queryParams.append("page", Math.max(0, params.page - 1).toString());
   queryParams.append("size", params.size.toString());
 
-  // B. Filtering Logic using Builder
-  const filters = [];
+  // Timeframe (backend supports: current, 1d, 7d)
+  const timeframe = params.timeWindow || "1d";
+  queryParams.append("timeframe", timeframe);
 
-  // 1. Search by Name (Like)
-  if (params.search) {
-    // "name ~~ '%value%'"
-    filters.push(sfLike("name", `*${params.search}*`));
+  // Sort by (default to "pnl")
+  const sortBy = params.sort || "pnl";
+  queryParams.append("sortBy", sortBy);
+
+  // Search by bot name
+  if (params.search && params.search.trim()) {
+    queryParams.append("search", params.search.trim());
   }
 
-  // 2. Active Only (Default filter example)
-  // filters.push(sfEqual("status", "ACTIVE"));
+  const response = await api.get<BotMetricsPaginatedResponse>(
+    `/metrics/bots?${queryParams.toString()}`,
+  );
+  return response.data;
+};
 
-  // 3. Time Window (Optional logic)
-  // If your backend filters stats dynamically, pass this as a separate param
-  // If you filter CreatedAt:
-  // if (params.timeWindow === '1d') {
-  //    const oneDayAgo = new Date(Date.now() - 86400000).toISOString();
-  //    filters.push(sfGe("createdAt", oneDayAgo));
-  // }
-
-  // Combine all filters with AND
-  if (filters.length > 0) {
-    const filterQuery = sfAnd(filters).toString();
-    queryParams.append("filter", filterQuery);
-  }
-
-  // C. Sorting
-  // if (params.sort) {
-  //   let sortField = "stats.totalProfit";
-
-  //   // Logic Fix: Determine suffix based on the TimeWindow directly
-  //   // If "all" or undefined, default to "24h" (or whatever your default stat is)
-  //   // If "1d", use "24h"
-  //   let suffix = "24h";
-  //   if (params.timeWindow === "7d") suffix = "7d";
-  //   if (params.timeWindow === "30d") suffix = "30d";
-  //   // Note: If params.timeWindow is "all", suffix remains "24h" (default)
-  //   // Adjust this if your backend actually has fields like 'pnlAllTime'
-
-  //   switch (params.sort) {
-  //     case "pnl":
-  //       // Maps to: stats.pnl24h, stats.pnl7d, stats.pnl30d
-  //       sortField = `stats.pnl${suffix}`;
-  //       break;
-  //     case "roi":
-  //       // Maps to: stats.roi24h, stats.roi7d, stats.roi30d
-  //       sortField = `stats.roi${suffix}`;
-  //       break;
-  //     case "copied":
-  //       sortField = "stats.copyingUsers";
-  //       break;
-  //   }
-  //   queryParams.append("sort", `${sortField},desc`);
-  // }
-
-  const response = await api.get<BotPaginatedResponse>(
-    `/bots?${queryParams.toString()}`,
+// Public api - Fetch bot detail with chart data
+export const fetchBotDetail = async (
+  botId: string,
+  timeframe: "1d" | "7d" = "7d",
+): Promise<BotDetailResponse> => {
+  const response = await api.get<BotDetailResponse>(
+    `/metrics/bots/${botId}/detail?timeframe=${timeframe}`,
   );
   return response.data;
 };

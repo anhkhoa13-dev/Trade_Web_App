@@ -13,57 +13,45 @@ export type MetricPriority = "roi" | "pnl";
 interface BotCardProps {
   id: string;
   name: string;
-  roi1d: number;
-  roi7d: number;
-  roi30d: number;
-  roiAllTime: number;
-  pnl1d: number;
-  pnl7d: number;
-  pnl30d: number;
+  roi: number; // Average ROI for selected timeframe
+  pnl: number; // Total PnL for selected timeframe
   maxDrawdown: number;
   coin: string;
   activeUsers: number;
   onCopy: (id: string) => void;
   onClick: (id: string) => void;
   timeWindow: TimeWindow;
-  priority?: SortOption; // NEW
+  priority?: SortOption;
 }
 
 export function BotCard({
   id,
   name,
-  roi1d,
-  roi7d,
-  roi30d,
-  roiAllTime,
-  pnl1d,
-  pnl7d,
-  pnl30d,
+  roi,
+  pnl,
   maxDrawdown,
   coin,
   activeUsers,
   onCopy,
   onClick,
   timeWindow,
-  priority = "roi", // default sort priority
+  priority = "roi",
 }: BotCardProps) {
-  // Select ROI and PnL based on selected time range
-  const getMetrics = () => {
+  // Get label based on selected time window
+  const getLabel = () => {
     switch (timeWindow) {
       case "1d":
-        return { roi: roi1d, pnl: pnl1d, label: "24H" };
+        return "24H";
       case "7d":
-        return { roi: roi7d, pnl: pnl7d, label: "7D" };
-      case "30d":
-        return { roi: roi30d, pnl: pnl30d, label: "30D" };
-      case "all":
-        return { roi: roiAllTime, pnl: pnl7d, label: "All-Time" };
+        return "7D";
+      case "current":
+        return "All Time";
       default:
-        return { roi: roi7d, pnl: pnl7d, label: "7D" };
+        return "7D";
     }
   };
 
-  const { roi, pnl, label } = getMetrics();
+  const label = getLabel();
 
   const mainMetric = priority === "roi" ? roi : pnl;
   const mainMetricLabel =
@@ -71,7 +59,7 @@ export function BotCard({
   const mainMetricFormatted =
     priority === "roi"
       ? `${roi >= 0 ? "+" : ""}${roi.toFixed(2)}%`
-      : `${pnl >= 0 ? "+" : ""}$${pnl.toFixed(2)}`;
+      : `${pnl >= 0 ? "+" : ""}${pnl.toFixed(2)}`;
 
   return (
     <Card
@@ -162,49 +150,6 @@ export function BotCard({
             <p className="mb-1 text-xs text-muted-foreground">Max DD</p>
             <p className="text-[var(--destructive)]">
               {maxDrawdown.toFixed(1)}%
-            </p>
-          </div>
-        </div>
-
-        {/* ROI Breakdown */}
-        <div className="grid grid-cols-3 gap-2 text-xs">
-          <div>
-            <p className="mb-1 text-muted-foreground">1D</p>
-            <p
-              className={
-                roi1d >= 0
-                  ? "text-[var(--chart-3)]"
-                  : "text-[var(--destructive)]"
-              }
-            >
-              {roi1d >= 0 ? "+" : ""}
-              {roi1d.toFixed(1)}%
-            </p>
-          </div>
-          <div>
-            <p className="mb-1 text-muted-foreground">7D</p>
-            <p
-              className={
-                roi7d >= 0
-                  ? "text-[var(--chart-3)]"
-                  : "text-[var(--destructive)]"
-              }
-            >
-              {roi7d >= 0 ? "+" : ""}
-              {roi7d.toFixed(1)}%
-            </p>
-          </div>
-          <div>
-            <p className="mb-1 text-muted-foreground">30D</p>
-            <p
-              className={
-                roi30d >= 0
-                  ? "text-[var(--chart-3)]"
-                  : "text-[var(--destructive)]"
-              }
-            >
-              {roi30d >= 0 ? "+" : ""}
-              {roi30d.toFixed(1)}%
             </p>
           </div>
         </div>

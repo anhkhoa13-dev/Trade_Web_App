@@ -1,4 +1,4 @@
-package com.web.TradeApp.feature.coin.dto;
+package com.web.TradeApp.feature.admin.dto;
 
 import java.math.BigDecimal;
 

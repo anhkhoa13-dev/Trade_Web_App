@@ -28,10 +28,6 @@ public class BotTrade extends BaseTrade {
     @JoinColumn(name = "bot_signal_id")
     private BotSignal botSignal;
 
-    // Profit and Loss for this specific bot trade (Realized PnL)
-    @Column(name = "pnl_amount", precision = 18, scale = 6)
-    private BigDecimal pnl;
-
     @Column(nullable = false, precision = 18, scale = 6)
     private BigDecimal feeBotApplied;
 }

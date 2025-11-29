@@ -1,4 +1,4 @@
-package com.web.TradeApp.feature.aibot.service;
+package com.web.TradeApp.feature.aibot.service.subscription;
 
 import java.util.UUID;
 

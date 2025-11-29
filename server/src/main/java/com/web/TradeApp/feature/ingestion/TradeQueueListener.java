@@ -88,6 +88,22 @@ public class TradeQueueListener {
             JsonNode payloadNode = rootNode.path("payload");
             String incomingSecret = payloadNode.path("secret_key").asText(null);
 
+            // 2.2 ACTION VALIDATION: Check if action is ERROR
+            String actionStr = payloadNode.path("action").asText("").toUpperCase();
+            if ("ERROR".equals(actionStr)) {
+                log.warn("⚠️ ERROR ACTION: Ignoring message with ERROR action. Msg ID: {}", message.getMessageId());
+                deleteMessage(message); // Remove ERROR messages
+                return;
+            }
+
+            // Validate action is LONG or SHORT
+            if (!"LONG".equals(actionStr) && !"SHORT".equals(actionStr)) {
+                log.warn("⚠️ INVALID ACTION: Unknown action '{}'. Expected LONG or SHORT. Msg ID: {}",
+                        actionStr, message.getMessageId());
+                deleteMessage(message); // Remove invalid action messages
+                return;
+            }
+
             // 3. VALIDATION
             if (incomingToken == null || incomingSecret == null) {
                 log.warn("⚠️ MALFORMED: Missing token or secret. Msg ID: {}", message.getMessageId());

@@ -1,4 +1,4 @@
-package com.web.TradeApp.feature.aibot.service;
+package com.web.TradeApp.feature.aibot.service.subscription;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -20,12 +20,14 @@ import com.web.TradeApp.feature.aibot.model.BotSignal;
 import com.web.TradeApp.feature.aibot.model.BotSubscription;
 import com.web.TradeApp.feature.aibot.repository.BotRepository;
 import com.web.TradeApp.feature.aibot.repository.BotSubscriptionRepository;
+import com.web.TradeApp.feature.aibot.service.BotTradeService;
 import com.web.TradeApp.feature.coin.entity.Coin;
 import com.web.TradeApp.feature.coin.entity.CoinHolding;
 import com.web.TradeApp.feature.coin.entity.Wallet;
 import com.web.TradeApp.feature.coin.repository.CoinHoldingRepository;
 import com.web.TradeApp.feature.coin.repository.CoinRepository;
 import com.web.TradeApp.feature.coin.repository.WalletRepository;
+import com.web.TradeApp.feature.coin.service.CoinGeckoClient;
 import com.web.TradeApp.feature.ingestion.event.SignalReceivedEvent;
 
 import jakarta.transaction.Transactional;
@@ -44,6 +46,7 @@ public class BotSubscriptionServiceImpl implements BotSubscriptionService {
     private final BotSubMapper botSubMapper;
     private final CoinRepository coinRepo;
     private final CoinHoldingRepository holdingRepo;
+    private final CoinGeckoClient coinGeckoClient;
 
     @Async
     @EventListener
@@ -109,16 +112,27 @@ public class BotSubscriptionServiceImpl implements BotSubscriptionService {
         }
 
         // validate balance
-        validateSufficientAsset(userId, request.botId(), request.allocatedAmount(), request.allocatedCoin());
+        validateSufficientAsset(userId, request.botId(), request.botWalletBalance(), request.botWalletCoin());
 
-        BotSubscription sub = botSubMapper.toEntity(request);
         Bot bot = botRepo.findById(request.botId())
                 .orElseThrow(() -> new IdInvalidException("bot id is null"));
+
+        // Tính Net Investment = Bot Wallet Balance (USDT) + (Bot Wallet Coin × Current
+        // Price)
+        BigDecimal netInvestment = calculateNetInvestment(
+                bot.getCoinSymbol(),
+                request.botWalletBalance(),
+                request.botWalletCoin());
+
+        BotSubscription sub = botSubMapper.toEntity(request);
         sub.setBot(bot);
         sub.setUserId(userId);
-        subRepo.save(sub);
+        sub.setNetInvestment(netInvestment);
 
         BotSubscription savedSub = subRepo.save(sub);
+
+        log.info("✅ Bot copied successfully: User={}, Bot={}, Net Investment={}",
+                userId, bot.getId(), netInvestment);
 
         return botSubMapper.toResponse(savedSub);
     }
@@ -138,39 +152,55 @@ public class BotSubscriptionServiceImpl implements BotSubscriptionService {
         // 3. Validate Assets for the NEW allocation amounts
         // We re-run validation to ensure the user has enough funds for the updated
         // target
-        validateSufficientAsset(userId, request.botId(), request.allocatedAmount(), request.allocatedCoin());
+        validateSufficientAsset(userId, request.botId(), request.botWalletBalance(), request.botWalletCoin());
 
-        // 4. Update Fields
-        botSubMapper.updateEntityFromDto(request, sub);
-
-        // 5. Handle Bot Switch (if user changed the bot strategy)
+        // 4. Handle Bot Switch (if user changed the bot strategy)
+        Bot bot = sub.getBot();
         if (!sub.getBot().getId().equals(request.botId())) {
-            Bot newBot = botRepo.findById(request.botId())
+            bot = botRepo.findById(request.botId())
                     .orElseThrow(() -> new IdInvalidException("New Bot ID not found: " + request.botId()));
-            sub.setBot(newBot);
+            sub.setBot(bot);
         }
+
+        // 5. Tính lại Net Investment khi update
+        BigDecimal oldNetInvestment = sub.getNetInvestment();
+        BigDecimal newNetInvestment = calculateNetInvestment(
+                bot.getCoinSymbol(),
+                request.botWalletBalance(),
+                request.botWalletCoin());
+
+        BigDecimal netInvestmentChange = newNetInvestment.subtract(oldNetInvestment);
+
+        // 6. Update Fields
+        botSubMapper.updateEntityFromDto(request, sub);
+        sub.setNetInvestment(newNetInvestment);
+
         BotSubscription updatedSub = subRepo.save(sub);
+
+        log.info("✅ Bot subscription updated: Sub={}, Net Investment: {} → {} (Change: {})",
+                botSubId, oldNetInvestment, newNetInvestment, netInvestmentChange);
+
         return botSubMapper.toResponse(updatedSub);
     }
 
     /**
-     * Checks if the user's wallet has enough USDT to cover the allocated amount.
+     * Checks if the user's wallet has enough USDT to cover the bot wallet balance.
      * Throws InsufficientBalanceException if funds are low.
      */
-    private void validateSufficientAsset(UUID userId, UUID botId, BigDecimal allocatedAmount,
-            BigDecimal allocatedCoin) {
+    private void validateSufficientAsset(UUID userId, UUID botId, BigDecimal botWalletBalance,
+            BigDecimal botWalletCoin) {
         Wallet wallet = walletRepo.findByUserId(userId)
                 .orElseThrow(() -> new IdInvalidException("User Wallet not found for ID: " + userId));
 
         // Check if Balance < Allocation
-        if (wallet.getBalance().compareTo(allocatedAmount) < 0) {
+        if (wallet.getBalance().compareTo(botWalletBalance) < 0) {
             log.warn("❌ Copy Bot Failed: Insufficient Balance. User: {}, Has: {}, Needs: {}",
-                    userId, wallet.getBalance(), allocatedAmount);
+                    userId, wallet.getBalance(), botWalletBalance);
             throw new InsufficientBalanceException(
                     "Insufficient Wallet Balance. You have " + wallet.getBalance() + " USDT but tried to allocate "
-                            + allocatedAmount + " USDT.");
+                            + botWalletBalance + " USDT.");
         }
-        if (allocatedCoin.compareTo(BigDecimal.ZERO) > 0) {
+        if (botWalletCoin.compareTo(BigDecimal.ZERO) > 0) {
             // 1. Find which coin the bot trades
             Bot bot = botRepo.findById(botId)
                     .orElseThrow(() -> new IdInvalidException("Bot not found: " + botId));
@@ -184,15 +214,50 @@ public class BotSubscriptionServiceImpl implements BotSubscriptionService {
                             "You do not own any " + coin.getSymbol() + " to allocate."));
 
             // 3. Check sufficiency
-            if (holding.getAmount().compareTo(allocatedCoin) < 0) {
+            if (holding.getAmount().compareTo(botWalletCoin) < 0) {
                 log.warn("❌ Copy Bot Failed: Insufficient Coin. User: {}, Has: {} {}, Needs: {}",
-                        userId, holding.getAmount(), coin.getSymbol(), allocatedCoin);
+                        userId, holding.getAmount(), coin.getSymbol(), botWalletCoin);
                 throw new InsufficientBalanceException(
                         "Insufficient " + coin.getSymbol() + " Balance. You have " + holding.getAmount()
-                                + " but tried to allocate " + allocatedCoin);
+                                + " but tried to allocate " + botWalletCoin);
             }
         }
     }
+
+    /**
+     * Tính Net Investment (Tổng vốn đầu tư gốc quy đổi ra USDT)
+     * 
+     * Công thức:
+     * Net Investment = Bot Wallet Balance (USDT) + (Bot Wallet Coin × Current
+     * Price)
+     * 
+     * Ví dụ:
+     * - User nạp 1000 USDT + 0.5 BTC (BTC = $50,000)
+     * - Net Investment = 1000 + (0.5 × 50000) = $26,000
+     */
+    private BigDecimal calculateNetInvestment(String coinSymbol, BigDecimal botWalletBalance,
+            BigDecimal botWalletCoin) {
+        // Nếu không có coin, chỉ có USDT
+        if (botWalletCoin.compareTo(BigDecimal.ZERO) == 0) {
+            return botWalletBalance;
+        }
+
+        // Lấy thông tin coin và giá hiện tại
+        Coin coin = coinRepo.findBySymbol(coinSymbol)
+                .orElseThrow(() -> new IdInvalidException("Coin not found: " + coinSymbol));
+
+        BigDecimal currentPrice = coinGeckoClient.getCurrentPrice(coin.getCoinGeckoId());
+
+        // Tính giá trị coin quy đổi ra USDT
+        BigDecimal coinValueInUsdt = botWalletCoin.multiply(currentPrice);
+
+        // Net Investment = USDT + Coin Value
+        return botWalletBalance.add(coinValueInUsdt);
+    }
+
+    /**
+     * Lấy giá hiện tại của coin từ CoinGecko API
+     */
 
     @Override
     public BotSubscriptionResponse toggleSubscription(UUID botSubId, UUID userId, boolean active) {

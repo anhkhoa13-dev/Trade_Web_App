@@ -9,11 +9,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.web.TradeApp.exception.IdInvalidException;
-import com.web.TradeApp.feature.coin.dto.CoinDepositRequest;
-import com.web.TradeApp.feature.coin.dto.CoinDepositResponse;
+import com.web.TradeApp.feature.admin.dto.CoinDepositRequest;
+import com.web.TradeApp.feature.admin.dto.CoinDepositResponse;
+import com.web.TradeApp.feature.admin.dto.CoinWithdrawRequest;
+import com.web.TradeApp.feature.admin.dto.CoinWithdrawResponse;
 import com.web.TradeApp.feature.coin.dto.CoinInfoResponse;
-import com.web.TradeApp.feature.coin.dto.CoinWithdrawRequest;
-import com.web.TradeApp.feature.coin.dto.CoinWithdrawResponse;
 import com.web.TradeApp.feature.coin.entity.Coin;
 import com.web.TradeApp.feature.coin.entity.CoinHolding;
 import com.web.TradeApp.feature.coin.entity.Wallet;

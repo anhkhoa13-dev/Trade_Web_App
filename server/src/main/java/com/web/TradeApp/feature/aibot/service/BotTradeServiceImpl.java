@@ -63,7 +63,7 @@ public class BotTradeServiceImpl implements BotTradeService {
 
                 // 2. Calculate Gross Amount to Spend (USDT)
                 // Formula: Allocation Amount (e.g. 100) * Trade % (e.g. 0.1)
-                BigDecimal grossUsdtToSpend = sub.getAllocatedAmount()
+                BigDecimal grossUsdtToSpend = sub.getBotWalletBalance()
                                 .multiply(sub.getTradePercentage())
                                 .setScale(6, RoundingMode.DOWN);
 
@@ -135,9 +135,9 @@ public class BotTradeServiceImpl implements BotTradeService {
 
                 // 7. UPDATE VIRTUAL BALANCES OF BOT (The "Sub-Wallet" Logic)
                 // Decrease USDT Allocation
-                sub.setAllocatedAmount(sub.getAllocatedAmount().subtract(grossUsdtToSpend));
+                sub.setBotWalletBalance(sub.getBotWalletBalance().subtract(grossUsdtToSpend));
                 // Increase Coin Allocation
-                sub.setAllocatedCoin(sub.getAllocatedCoin().add(finalQuantity));
+                sub.setBotWalletCoin(sub.getBotWalletCoin().add(finalQuantity));
                 subRepo.save(sub);
 
                 // 8. Save Records
@@ -185,7 +185,7 @@ public class BotTradeServiceImpl implements BotTradeService {
 
                 // 2. Calculate Coin to Sell based on VIRTUAL Balance
                 // Formula: Allocated Coin * Trade %
-                BigDecimal quantityToSell = sub.getAllocatedCoin()
+                BigDecimal quantityToSell = sub.getBotWalletCoin()
                                 .multiply(sub.getTradePercentage())
                                 .setScale(8, RoundingMode.DOWN);
 
@@ -241,9 +241,9 @@ public class BotTradeServiceImpl implements BotTradeService {
 
                 // 6. UPDATE VIRTUAL BALANCES
                 // Decrease Virtual Coin
-                sub.setAllocatedCoin(sub.getAllocatedCoin().subtract(quantityToSell));
+                sub.setBotWalletCoin(sub.getBotWalletCoin().subtract(quantityToSell));
                 // Increase Virtual USDT (Re-invest logic)
-                sub.setAllocatedAmount(sub.getAllocatedAmount().add(finalUsdt));
+                sub.setBotWalletBalance(sub.getBotWalletBalance().add(finalUsdt));
                 subRepo.save(sub);
 
                 // 7. Save Records
@@ -287,7 +287,6 @@ public class BotTradeServiceImpl implements BotTradeService {
                                 .notionalValue(notional)
                                 .feeBotApplied(BigDecimal.ZERO)
                                 .feeTradeApplied(type == BaseTrade.TradeType.SELL ? feeOrNotional : BigDecimal.ZERO)
-                                .pnl(null)
                                 .build();
                 botTradeRepo.save(trade);
         }

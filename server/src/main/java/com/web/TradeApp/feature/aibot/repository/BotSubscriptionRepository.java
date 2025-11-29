@@ -27,7 +27,7 @@ public interface BotSubscriptionRepository extends JpaRepository<BotSubscription
      * represents how much total money is currently allocated by users to that bot
      */
     @Query("""
-                SELECT COALESCE(SUM(bs.allocatedAmount), 0)
+                SELECT COALESCE(SUM(bs.botWalletBalance), 0)
                 FROM BotSubscription bs
                 WHERE bs.bot.id = :botId AND bs.active = true
             """)
@@ -40,4 +40,10 @@ public interface BotSubscriptionRepository extends JpaRepository<BotSubscription
     Optional<BotSubscription> findByUserIdAndBotId(UUID userId, UUID botId);
 
     boolean existsByUserIdAndBotId(UUID userId, UUID botId);
+
+    // Find all active subscriptions
+    List<BotSubscription> findAllByActiveTrue();
+
+    // Find all active subscriptions for a specific bot
+    List<BotSubscription> findAllByBotIdAndActiveTrue(UUID botId);
 }

@@ -31,15 +31,39 @@ public class BotSubscription extends BaseEntity {
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
-    // 1. Total Capital Allocated (e.g., 100 USDT)
-    // The bot will never spend more than this amount from the wallet effectively.
-    // (In this logic, it calculates trade size based on this number).
-    @Column(name = "allocated_amount", nullable = false, precision = 18, scale = 6)
-    private BigDecimal allocatedAmount;
+    /**
+     * SỐ DÒ VÍ USDT CỦA BOT (Bot Wallet Balance)
+     * Biến động liên tục khi bot trade (mua/bán coin).
+     * VD: Ban đầu 1000 USDT → Mua BTC → Còn 500 USDT
+     */
+    @Column(name = "bot_wallet_balance", nullable = false, precision = 18, scale = 6)
+    private BigDecimal botWalletBalance;
 
-    @Column(name = "allocated_coin", nullable = false, precision = 36, scale = 18)
+    /**
+     * SỐ LƯỢNG COIN TRONG VÍ BOT (Bot Wallet Coin)
+     * Biến động liên tục khi bot trade.
+     * VD: Ban đầu 0 BTC → Mua → 0.01 BTC → Bán → 0.005 BTC
+     */
+    @Column(name = "bot_wallet_coin", nullable = false, precision = 36, scale = 18)
     @Builder.Default
-    private BigDecimal allocatedCoin = BigDecimal.ZERO;
+    private BigDecimal botWalletCoin = BigDecimal.ZERO;
+
+    /**
+     * TỔNG VỐN ĐẦU TƯ GỐC (Net Investment) - MỎ NEO ĐỂ TÍNH PNL
+     * Quy đổi ra USDT tại thời điểm nạp.
+     * 
+     * Công thức PnL:
+     * PnL = (botWalletBalance + botWalletCoin × CurrentPrice) - netInvestment
+     * 
+     * Cách hoạt động:
+     * - Khi user nạp $1000 USDT: netInvestment += 1000
+     * - Khi user nạp 1 BTC (giá $50k): netInvestment += 50000
+     * - Khi bot trade thắng/thua: netInvestment KHÔNG ĐỔI ✅
+     * - Khi user rút $500: netInvestment -= 500
+     */
+    @Column(name = "net_investment", nullable = false, precision = 18, scale = 6)
+    @Builder.Default
+    private BigDecimal netInvestment = BigDecimal.ZERO;
 
     // 2. Percentage per Trade (e.g., 0.10 for 10%)
     // "For every action, bot buys/sells % of allocation amount"

@@ -1,4 +1,4 @@
-package com.web.TradeApp.feature.coin.dto;
+package com.web.TradeApp.feature.admin.dto;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -12,9 +12,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CoinWithdrawResponse {
+public class CoinDepositResponse {
     private UUID id;
     private String coinGeckoId;
-    private BigDecimal withdrewQuantity;
+    private String symbol;
+    private String name;
+    private BigDecimal depositedQuantity;
     private BigDecimal newQuantity;
 }

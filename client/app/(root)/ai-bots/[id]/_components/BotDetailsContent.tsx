@@ -9,26 +9,47 @@ import {
   Share,
   Copy,
 } from "lucide-react";
-import { mockPortfolioPerformance } from "@/entities/mockPortfolioPerformance";
-import { Bot } from "@/entities/mockAiBots";
+import { useState } from "react";
 import { Button } from "@/app/ui/shadcn/button";
 import { Card } from "@/app/ui/shadcn/card";
-import PortfolioPerformanceChart from "@/app/my/dashboard/(admin)/coins/_components/PortfolioPerformanceChart";
+import { Badge } from "@/app/ui/shadcn/badge";
 import { useRouter } from "next/navigation";
+import { useBotDetail } from "@/hooks/bot/useBotDetail";
+import { TimeWindow } from "@/services/interfaces/botInterfaces";
+import { COIN_LOGOS } from "@/services/constants/coinConstant";
+import dynamic from "next/dynamic";
+import MetricBox from "./MetricBox";
+
+const ReactApexChart = dynamic(() => import("react-apexcharts"), {
+  ssr: false,
+});
 
 interface BotDetailsContentProps {
-  bot: Bot;
+  botId: string;
 }
 
-export default function BotDetailsContent({ bot }: BotDetailsContentProps) {
+export default function BotDetailsContent({ botId }: BotDetailsContentProps) {
   const router = useRouter();
-  if (!bot) {
+  const [timeframe, setTimeframe] = useState<TimeWindow>("7d");
+  const { data, isLoading, isError } = useBotDetail(botId, timeframe);
+
+  if (isLoading) {
+    return (
+      <div className="py-20 text-center text-muted-foreground">
+        Loading bot details...
+      </div>
+    );
+  }
+
+  if (isError || !data?.data) {
     return (
       <div className="py-20 text-center text-muted-foreground">
         Bot not found.
       </div>
     );
   }
+
+  const bot = data.data;
 
   const handleBack = () => {
     router.push("/ai-bots");
@@ -48,19 +69,81 @@ export default function BotDetailsContent({ bot }: BotDetailsContentProps) {
           className="flex flex-col gap-6 lg:flex-row lg:items-start
             lg:justify-between"
         >
-          <div className="flex-1">
-            <h1 className="mb-1 text-2xl font-semibold">{bot.name}</h1>
-            <p className="mb-4 text-muted-foreground text-sm max-w-xl">
-              {bot.description}
-            </p>
+          <div className="flex-1 flex gap-4">
+            {/* Coin Logo */}
+            <img
+              src={COIN_LOGOS[bot.coinSymbol] || COIN_LOGOS.BTC}
+              alt={bot.coinSymbol}
+              className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+            />
 
-            <div className="flex flex-wrap items-center gap-3">
-              <div
-                className="flex items-center gap-1.5 rounded-full bg-muted/60
-                  px-3 py-1.5 text-xs text-muted-foreground"
-              >
-                <Users className="h-3.5 w-3.5" />
-                <span>{bot.activeUsers.toLocaleString()} active users</span>
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-1">
+                <h1 className="text-2xl font-semibold">{bot.name}</h1>
+                {bot.status && (
+                  <Badge
+                    variant={
+                      bot.status === "ACTIVE"
+                        ? "default"
+                        : bot.status === "PAUSED"
+                          ? "secondary"
+                          : "outline"
+                    }
+                    className={
+                      bot.status === "ACTIVE"
+                        ? `bg-green-500/10 text-green-500 border-green-500/20
+                          hover:bg-green-500/20`
+                        : bot.status === "PAUSED"
+                          ? `bg-yellow-500/10 text-yellow-500
+                            border-yellow-500/20 hover:bg-yellow-500/20`
+                          : bot.status === "MAINTENANCE"
+                            ? `bg-orange-500/10 text-orange-500
+                              border-orange-500/20 hover:bg-orange-500/20`
+                            : ""
+                    }
+                  >
+                    {bot.status}
+                  </Badge>
+                )}
+              </div>
+
+              {bot.description && (
+                <p className="mb-3 text-muted-foreground text-sm max-w-2xl">
+                  {bot.description}
+                </p>
+              )}
+
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="secondary" className="gap-1.5">
+                  <Users className="h-3.5 w-3.5" />
+                  {bot.activeSubscribers.toLocaleString()} active users
+                </Badge>
+                <Badge variant="outline">Trading: {bot.tradingPair}</Badge>
+                {bot.riskLevel && (
+                  <Badge
+                    variant="outline"
+                    className={
+                      bot.riskLevel === "LOW"
+                        ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                        : bot.riskLevel === "MEDIUM"
+                          ? `bg-yellow-500/10 text-yellow-500
+                            border-yellow-500/20`
+                          : "bg-red-500/10 text-red-500 border-red-500/20"
+                    }
+                  >
+                    {bot.riskLevel} RISK
+                  </Badge>
+                )}
+                {bot.category && (
+                  <Badge variant="outline">
+                    {bot.category.replace("_", " ")}
+                  </Badge>
+                )}
+                {bot.fee > 0 && (
+                  <Badge variant="outline">
+                    Fee: {(bot.fee * 100).toFixed(2)}%
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
@@ -85,47 +168,56 @@ export default function BotDetailsContent({ bot }: BotDetailsContentProps) {
       {/* Performance Chart */}
       <Card className="border border-border bg-card p-6">
         <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-2">Performance Overview</h2>
-          <PortfolioPerformanceChart
-            data={mockPortfolioPerformance}
-            subtitle="performance overview"
-          />
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">PnL Performance</h2>
+            <div className="flex gap-2">
+              <Button
+                variant={timeframe === "1d" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTimeframe("1d")}
+              >
+                1D
+              </Button>
+              <Button
+                variant={timeframe === "7d" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTimeframe("7d")}
+              >
+                7D
+              </Button>
+            </div>
+          </div>
+          <PnLChart chartData={bot.chartData} timeframe={timeframe} />
         </div>
 
         {/* Metrics Summary Grid */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <MetricBox
-            label="ROI (1D)"
-            value={`+${bot.roi1d.toFixed(1)}%`}
-            positive
+            label={`PnL (${timeframe === "1d" ? "24H" : "7D"})`}
+            value={`${bot.totalPnl >= 0 ? "+" : ""}$${bot.totalPnl.toFixed(2)}`}
+            positive={bot.totalPnl >= 0}
           />
           <MetricBox
-            label="ROI (7D)"
-            value={`+${bot.roi7d.toFixed(1)}%`}
-            positive
-          />
-          <MetricBox
-            label="ROI (30D)"
-            value={`+${bot.roi30d.toFixed(1)}%`}
-            positive
-          />
-          <MetricBox
-            label="PnL (7D)"
-            value={`+$${bot.pnl7d.toFixed(2)}`}
-            positive
-          />
-          <MetricBox
-            label="PnL (30D)"
-            value={`+$${bot.pnl30d.toFixed(2)}`}
-            positive
+            label={`ROI (${timeframe === "1d" ? "24H" : "7D"})`}
+            value={`${bot.averageRoi >= 0 ? "+" : ""}${bot.averageRoi.toFixed(2)}%`}
+            positive={bot.averageRoi >= 0}
           />
           <MetricBox
             label="Max Drawdown"
-            value={`${bot.maxDrawdown.toFixed(1)}%`}
+            value={`${bot.maxDrawdownPercent.toFixed(2)}%`}
           />
-          {/* <MetricBox label="Win Rate" value={`${bot.winRate.toFixed(1)}%`} />
-          <MetricBox label="Sharpe Ratio" value={`${bot.sharpeRatio.toFixed(2)}`} />
-          <MetricBox label="Avg Daily Trades" value={`${bot.avgDailyTrades.toFixed(1)}`} /> */}
+          {/* <MetricBox
+            label="Active Users"
+            value={bot.activeSubscribers.toString()}
+          /> */}
+          <MetricBox
+            label="Total Net Investment"
+            value={`$${bot.totalNetInvestment.toFixed(2)}`}
+          />
+          <MetricBox
+            label="Total Equity"
+            value={`$${bot.totalEquity.toFixed(2)}`}
+          />
         </div>
       </Card>
 
@@ -133,7 +225,8 @@ export default function BotDetailsContent({ bot }: BotDetailsContentProps) {
       <Card className="border border-border bg-card p-6">
         <h2 className="mb-4 text-xl font-semibold">Bot Strategy Overview</h2>
         <p className="mb-6 text-muted-foreground text-sm leading-relaxed">
-          {bot.description}
+          Trading bot for {bot.coinSymbol} with automated entry and exit
+          signals.
         </p>
 
         <div className="space-y-6">
@@ -184,28 +277,83 @@ export default function BotDetailsContent({ bot }: BotDetailsContentProps) {
   );
 }
 
-// Small metric box component
-function MetricBox({
-  label,
-  value,
-  positive = false,
+// PnL Chart Component
+function PnLChart({
+  chartData,
+  timeframe,
 }: {
-  label: string;
-  value: string;
-  positive?: boolean;
+  chartData: Array<{ timestamp: string; totalPnl: number }>;
+  timeframe: TimeWindow;
 }) {
-  const color = positive
-    ? "text-[var(--chart-3)]"
-    : value.includes("-")
-      ? "text-[var(--destructive)]"
-      : "";
+  const series = [
+    {
+      name: "Total PnL",
+      data: chartData.map((point) => ({
+        x: new Date(point.timestamp).getTime(),
+        y: point.totalPnl,
+      })),
+    },
+  ];
+
+  const options: ApexCharts.ApexOptions = {
+    chart: {
+      type: "line",
+      background: "transparent",
+      toolbar: { show: false },
+      zoom: { enabled: false },
+    },
+    stroke: {
+      curve: "smooth",
+      width: 2,
+    },
+    dataLabels: {
+      enabled: false,
+    },
+    xaxis: {
+      type: "datetime",
+      labels: {
+        format: timeframe === "1d" ? "HH:mm" : "MMM dd",
+        style: {
+          colors: "#9ca3af",
+          fontSize: "12px",
+        },
+      },
+    },
+    yaxis: {
+      labels: {
+        formatter: (val) => `$${val.toFixed(0)}`,
+        style: {
+          colors: "#9ca3af",
+          fontSize: "12px",
+        },
+      },
+    },
+    grid: {
+      borderColor: "#1e293b",
+      strokeDashArray: 3,
+    },
+    colors: ["#3b82f6"],
+    tooltip: {
+      theme: "dark",
+      x: {
+        format: "MMM dd, HH:mm",
+      },
+      y: {
+        formatter: (val) => `$${val.toFixed(2)}`,
+      },
+    },
+  };
 
   return (
-    <div className="rounded-lg border border-border bg-muted/40 p-4">
-      <p className="text-muted-foreground text-xs flex items-center gap-2">
-        {label}
-      </p>
-      <p className={`mt-2 text-lg font-medium ${color}`}>{value}</p>
+    <div className="w-full h-[350px]">
+      <ReactApexChart
+        options={options}
+        series={series}
+        type="line"
+        height="100%"
+      />
     </div>
   );
 }
+
+// Small metric box component

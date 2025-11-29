@@ -3,8 +3,8 @@ import { AxiosInstance } from "axios";
 
 export type BotCopyRequest = {
   botId: string;
-  allocatedAmount: number;
-  allocatedCoin: number;
+  botWalletBalance: number;
+  botWalletCoin: number;
   tradePercentage: number; // Sent as decimal (0.01 - 1.0)
   maxDailyLossPercentage: number; // Sent as decimal (0.01 - 1.0)
 };

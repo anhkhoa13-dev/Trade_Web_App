@@ -37,8 +37,25 @@ export interface BotResponse {
     lastSignalAt?: string;
   };
 }
-export type TimeWindow = "1d" | "7d" | "30d" | "all";
+
+// New interface for metrics API response
+export interface BotMetricsDTO {
+  botId: string;
+  name: string;
+  coinSymbol: string;
+  tradingPair: string;
+  activeSubscribers: number;
+  totalPnl: number;
+  averageRoi: number;
+  maxDrawdown: number;
+  maxDrawdownPercent: number;
+  totalNetInvestment: number;
+  totalEquity: number;
+}
+
+export type TimeWindow = "1d" | "7d" | "current";
 export type SortOption = "pnl" | "roi" | "copied";
+
 export interface BotFilterParams {
   page: number;
   size: number;
@@ -46,4 +63,34 @@ export interface BotFilterParams {
   sort?: SortOption;
   timeWindow?: TimeWindow;
 }
+
+export interface ChartDataPoint {
+  timestamp: string; // ISO 8601
+  totalPnl: number;
+}
+
+export interface BotDetailDTO {
+  botId: string;
+  name: string;
+  description?: string;
+  coinSymbol: string;
+  tradingPair: string;
+  riskLevel?: string;
+  category?: string;
+  status?: string;
+  fee: number;
+  activeSubscribers: number;
+  totalPnl: number;
+  averageRoi: number;
+  maxDrawdown: number;
+  maxDrawdownPercent: number;
+  totalNetInvestment: number;
+  totalEquity: number;
+  chartData: ChartDataPoint[];
+}
+
 export type BotPaginatedResponse = ApiResponse<PaginatedResult<BotResponse>>;
+export type BotMetricsPaginatedResponse = ApiResponse<
+  PaginatedResult<BotMetricsDTO>
+>;
+export type BotDetailResponse = ApiResponse<BotDetailDTO>;
