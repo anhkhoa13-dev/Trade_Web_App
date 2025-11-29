@@ -3,7 +3,6 @@
 import { MarketCoin } from '@/entities/Coin/MarketCoin';
 import { useState, useEffect, useRef } from 'react';
 
-
 const BINANCE_WS_URL = "wss://stream.binance.com:9443/ws/!ticker@arr";
 
 export const useLiveMarket = (initialData: MarketCoin[]) => {

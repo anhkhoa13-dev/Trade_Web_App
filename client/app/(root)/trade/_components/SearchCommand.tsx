@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
-import { Command, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { searchCoins } from "@/lib/actions/gecko.actions";
 import { Coin } from "@/entities/Coin/Coin";
 import { useRouter } from "next/navigation";
