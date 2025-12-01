@@ -1,67 +1,80 @@
-"use client";
+'use client'
 
-import { useEffect, useRef, useState } from "react";
+import { MarketCoin } from '@/entities/Coin/MarketCoin';
+import { useState, useEffect, useRef } from 'react';
 
-export interface MarketTicker {
-  symbol: string;
-  price: number;
-  changePercent: number;
-  history: number[]; // sparkline data
-  lastUpdate: number;
-  quoteVolume: number;
-}
+const BINANCE_WS_URL = "wss://stream.binance.com:9443/ws/!ticker@arr";
 
-export function useLiveMarketStream(symbols: string[], historyLength = 20) {
-  const [tickers, setTickers] = useState<Record<string, MarketTicker>>({});
-  const wsRef = useRef<WebSocket | null>(null);
+export const useLiveMarket = (initialData: MarketCoin[]) => {
+    const [data, setData] = useState<MarketCoin[]>(initialData);
 
-  useEffect(() => {
-    if (!symbols.length) return;
+    const marketMap = useRef<Map<string, MarketCoin>>(new Map());
 
-    const streams = symbols
-      .map((s) => `${s.toLowerCase()}usdt@ticker`)
-      .join("/");
-    const url = `wss://stream.binance.com:9443/stream?streams=${streams}`;
-    const ws = new WebSocket(url);
-    wsRef.current = ws;
+    useEffect(() => {
+        if (marketMap.current.size === 0 && initialData.length > 0) {
+            initialData.forEach((coin) => {
+                const pair = `${coin.symbol}USDT`;
+                marketMap.current.set(pair, coin);
+            });
+        }
+    }, [initialData]);
 
-    ws.onopen = () => console.log("[WS] Connected to Binance multi-stream");
-    ws.onclose = () => console.log("[WS] Closed Binance stream");
+    useEffect(() => {
+        if (initialData.length === 0) return;
 
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (!data?.data) return;
-      const t = data.data;
-      const symbol = t.s.replace("USDT", "");
+        let ws: WebSocket;
 
-      setTickers((prev) => {
-        const existing = prev[symbol];
-        const price = parseFloat(t.c);
-        const changePercent = parseFloat(t.P);
-        const quoteVolume = parseFloat(t.q);
-        const history = existing
-          ? [...existing.history.slice(-historyLength + 1), price]
-          : Array(historyLength).fill(price);
+        const connectWebSocket = () => {
+            ws = new WebSocket(BINANCE_WS_URL);
 
-        return {
-          ...prev,
-          [symbol]: {
-            symbol,
-            price,
-            changePercent,
-            history,
-            lastUpdate: t.E,
-            quoteVolume,
-          },
+            ws.onopen = () => {
+                // console.log("Connected to Binance Socket");
+            };
+
+            ws.onmessage = (event) => {
+                const tickers = JSON.parse(event.data);
+
+                tickers.forEach((ticker: any) => {
+                    // Chỉ update những coin có trong Map (danh sách lấy từ Server)
+                    if (marketMap.current.has(ticker.s)) {
+                        const currentCoin = marketMap.current.get(ticker.s)!;
+                        const newPrice = parseFloat(ticker.c);
+
+                        // Update coin object
+                        const updatedCoin: MarketCoin = {
+                            ...currentCoin,
+                            price: newPrice,
+                            changePercent: parseFloat(ticker.P),
+                            quoteVolume: parseFloat(ticker.q),
+                            lastUpdate: ticker.E,
+                            history: [...currentCoin.history.slice(1), newPrice]
+                        };
+
+                        marketMap.current.set(ticker.s, updatedCoin);
+                    }
+                });
+            };
+
+
+            ws.onclose = () => {
+                // setTimeout(connectWebSocket, 5000);
+            };
         };
-      });
-    };
 
-    return () => {
-      ws.close();
-      wsRef.current = null;
-    };
-  }, [symbols, historyLength]);
+        connectWebSocket();
 
-  return tickers;
-}
+        // Throttling: Update React State mỗi 1 giây
+        const intervalId = setInterval(() => {
+            if (marketMap.current.size > 0) {
+                setData(Array.from(marketMap.current.values()));
+            }
+        }, 1000);
+
+        return () => {
+            if (ws) ws.close();
+            clearInterval(intervalId);
+        };
+    }, [initialData]); // Dependency là initialData
+
+    return data;
+};

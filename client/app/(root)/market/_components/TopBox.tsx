@@ -2,28 +2,25 @@
 
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/ui/shadcn/card";
-import { COIN_LOGOS } from "@/services/constants/coinConstant";
+import { MarketCoin } from "@/entities/Coin/MarketCoin";
+import { LucideIcon } from "lucide-react";
 
-export default function TopBox({
-  title,
-  coins,
-}: {
-  title: string;
-  coins: any[];
-}) {
+interface TopBoxProps {
+  title: string,
+  coins: MarketCoin[]
+}
+
+export default function TopBox({ title, coins }: TopBoxProps) {
   return (
-    <Card className="border border-border bg-card shadow-sm h-full">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
       </CardHeader>
 
-      <CardContent className="flex flex-col gap-3">
+      <CardContent className="space-y-4">
         {coins.length > 0 ? (
           coins.map((c) => {
             const symbol = c.symbol.toUpperCase();
-            const logo =
-              COIN_LOGOS[symbol] ??
-              `https://ui-avatars.com/api/?name=${encodeURIComponent(symbol)}`;
 
             return (
               <div
@@ -33,7 +30,7 @@ export default function TopBox({
                 {/* Left: Logo + Symbol */}
                 <div className="flex items-center gap-2">
                   <Image
-                    src={logo}
+                    src={c.image}
                     alt={symbol}
                     width={22}
                     height={22}
