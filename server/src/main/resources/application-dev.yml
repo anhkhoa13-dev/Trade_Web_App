@@ -1,0 +1,15 @@
+spring:
+  config:
+    import: optional:file:.env.properties
+  datasource:
+    url: jdbc:mysql://localhost:3306/trade_app
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format-sql: true
+    database: mysql
