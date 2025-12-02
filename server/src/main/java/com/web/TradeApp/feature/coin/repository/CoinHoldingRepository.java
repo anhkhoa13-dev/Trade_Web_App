@@ -1,5 +1,6 @@
 package com.web.TradeApp.feature.coin.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -12,4 +13,6 @@ import com.web.TradeApp.feature.coin.entity.CoinHolding;
 public interface CoinHoldingRepository extends JpaRepository<CoinHolding, UUID> {
     // Critical: Used to find if a user already owns a specific coin in their wallet
     Optional<CoinHolding> findByWalletIdAndCoinId(UUID walletId, UUID coinId);
+
+    List<CoinHolding> findByWallet_User_Id(UUID userId);
 }

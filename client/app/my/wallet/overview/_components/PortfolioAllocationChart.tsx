@@ -10,7 +10,9 @@ import {
   CardDescription,
   CardContent,
 } from "@/app/ui/shadcn/card";
-import { mockUserPortfolio } from "@/entities/Coin";
+import { useWallet } from "@/hooks/useWallet";
+import { useLiveMarketStream } from "@/hooks/ws/useLiveMarketStream";
+import { Loader2 } from "lucide-react";
 
 // Avoid SSR issues
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
@@ -24,34 +26,53 @@ type AllocationItem = {
 };
 
 interface PortfolioAllocationChartProps {
-  data?: AllocationItem[]; // Optional: pass your own data. If not provided, uses mockUserPortfolio
   title?: string;
   subtitle?: string;
   topN?: number;
 }
 
 export default function PortfolioAllocationChart({
-  data,
   title = "Portfolio Allocation",
   subtitle = "Distribution of your assets by percentage",
   topN = 5,
 }: PortfolioAllocationChartProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const { data: walletData, isLoading } = useWallet();
 
-  // Normalize input data: from props or mock
+  // Extract coin symbols from wallet holdings
+  const symbols = useMemo(() => {
+    if (!walletData?.coinHoldings) return [];
+    return walletData.coinHoldings.map((coin) => coin.coinSymbol);
+  }, [walletData]);
+
+  // Get live prices for all wallet coins
+  const tickers = useLiveMarketStream(symbols);
+
+  // Calculate allocation items from wallet data
   const items: AllocationItem[] = useMemo(() => {
-    if (data && data.length) return data;
-    // fallback to mockUserPortfolio (which has value and percent)
-    return mockUserPortfolio.map((c) => ({
-      symbol: c.symbol,
-      name: c.name,
-      value: c.value,
-    }));
-  }, [data]);
+    if (!walletData?.coinHoldings || Object.keys(tickers).length === 0) {
+      return [];
+    }
+
+    return walletData.coinHoldings.map((coin) => {
+      const ticker = tickers[coin.coinSymbol];
+      const coinValue = ticker ? coin.amount * ticker.price : 0;
+
+      return {
+        symbol: coin.coinSymbol,
+        name: coin.coinName,
+        value: coinValue,
+      };
+    });
+  }, [walletData, tickers]);
 
   // Compute topN + Other from values (not from pre-rounded percents)
   const { labels, series } = useMemo(() => {
+    if (items.length === 0) {
+      return { labels: [], series: [] };
+    }
+
     const sorted = [...items].sort((a, b) => b.value - a.value);
     const top = sorted.slice(0, topN);
     const rest = sorted.slice(topN);
@@ -161,6 +182,25 @@ export default function PortfolioAllocationChart({
       },
     ],
   };
+
+  if (isLoading || series.length === 0) {
+    return (
+      <Card className="w-full h-full">
+        <CardHeader className="pb-0">
+          <CardTitle className="text-lg font-semibold">{title}</CardTitle>
+          <CardDescription className="text-sm text-muted-foreground">
+            {subtitle}
+          </CardDescription>
+        </CardHeader>
+        <CardContent
+          className="flex items-center justify-center"
+          style={{ height: 340 }}
+        >
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full h-full">

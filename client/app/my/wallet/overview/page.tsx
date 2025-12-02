@@ -8,6 +8,8 @@ import ActivityHistoryTable from "@/app/ui/my_components/activity-history-table/
 import { mockActivities } from "@/entities/mockActivities";
 import { SYMBOLS } from "@/services/constants/coinConstant";
 import { MarketTable } from "@/app/ui/my_components/market-table/MarketTable";
+import { useLiveMarketStream } from "@/hooks/ws/useLiveMarketStream";
+import { useWallet } from "@/hooks/useWallet";
 
 export default function page() {
   return (

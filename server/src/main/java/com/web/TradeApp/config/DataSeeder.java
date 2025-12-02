@@ -1,8 +1,10 @@
 package com.web.TradeApp.config;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Set;
 import java.util.Optional;
+import java.util.Random;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -142,8 +144,13 @@ public class DataSeeder {
             walletRepository.save(wallet);
         }
 
-        // C. Seed 10 BTC
         seedCoinAndHolding(wallet, "bitcoin", "Bitcoin", "BTC", USER_BTC_AMOUNT);
+        seedCoinAndHolding(wallet, "ethereum", "Ethereum", "ETH", generateRandomAmount(0, 5));
+        seedCoinAndHolding(wallet, "binancecoin", "Binance Coin", "BNB", generateRandomAmount(0, 5));
+        seedCoinAndHolding(wallet, "solana", "Binance Coin", "BNB", generateRandomAmount(0, 5));
+        seedCoinAndHolding(wallet, "ripple", "Ripple", "XRP", generateRandomAmount(0, 5));
+        seedCoinAndHolding(wallet, "cardano", "Cardano", "ADA", generateRandomAmount(0, 5));
+        seedCoinAndHolding(wallet, "dogecoin", "Dogecoin", "DOGE", generateRandomAmount(0, 5));
     }
 
     private void seedCoinAndHolding(Wallet wallet, String coinGeckoId, String name, String symbol, BigDecimal amount) {
@@ -170,5 +177,15 @@ public class DataSeeder {
                     .build();
             coinHoldingRepository.save(holding);
         }
+    }
+
+    private BigDecimal generateRandomAmount(double min, double max) {
+        BigDecimal minBd = BigDecimal.valueOf(min);
+        BigDecimal maxBd = BigDecimal.valueOf(max);
+        BigDecimal range = maxBd.subtract(minBd);
+        BigDecimal factor = BigDecimal.valueOf(new Random().nextDouble());
+
+        return minBd.add(range.multiply(factor))
+                .setScale(8, RoundingMode.HALF_UP); // 8 decimals for crypto
     }
 }

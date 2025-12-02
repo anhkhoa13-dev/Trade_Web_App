@@ -1,24 +1,91 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { DataTable } from "@/app/ui/my_components/data-table/data-table";
-import { userPortfolioColumns } from "./UserPortfolioColumns";
+import {
+  userPortfolioColumns,
+  UserPortfolioCoin,
+} from "./UserPortfolioColumns";
 import { Button } from "@/app/ui/shadcn/button";
-import { ArrowRight } from "lucide-react";
-import { mockUserPortfolio } from "@/entities/Coin";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useWallet } from "@/hooks/useWallet";
+import { useLiveMarketStream } from "@/hooks/ws/useLiveMarketStream";
+import { COIN_LOGOS } from "@/services/constants/coinConstant";
 
 const TOP_NUMBER = 5;
 
 export default function PortfolioAssetTable() {
   const router = useRouter();
-  const topFive = [...mockUserPortfolio]
-    .sort((a, b) => b.percent - a.percent)
-    .slice(0, TOP_NUMBER);
+  const { data: walletData, isLoading } = useWallet();
+
+  // Extract coin symbols from wallet holdings
+  const symbols = useMemo(() => {
+    if (!walletData?.coinHoldings) return [];
+    return walletData.coinHoldings.map((coin) => coin.coinSymbol);
+  }, [walletData]);
+
+  // Get live prices for all wallet coins
+  const tickers = useLiveMarketStream(symbols);
+
+  // Calculate portfolio data with real-time prices
+  const portfolioData: UserPortfolioCoin[] = useMemo(() => {
+    if (!walletData?.coinHoldings || Object.keys(tickers).length === 0) {
+      return [];
+    }
+
+    // Calculate total portfolio value first
+    let totalValue = walletData.balance; // Include USDT balance
+    walletData.coinHoldings.forEach((coin) => {
+      const ticker = tickers[coin.coinSymbol];
+      if (ticker) {
+        totalValue += coin.amount * ticker.price;
+      }
+    });
+
+    // Map each coin to portfolio item with calculated values
+    const items = walletData.coinHoldings.map((coin) => {
+      const ticker = tickers[coin.coinSymbol];
+      const coinValue = ticker ? coin.amount * ticker.price : 0;
+      const percent = totalValue > 0 ? (coinValue / totalValue) * 100 : 0;
+
+      return {
+        id: coin.coinSymbol,
+        symbol: coin.coinSymbol,
+        name: coin.coinName,
+        image: COIN_LOGOS[coin.coinSymbol] || "",
+        amount: coin.amount,
+        value: coinValue,
+        percent,
+      };
+    });
+
+    return items;
+  }, [walletData, tickers]);
+
+  // Get top 5 by value
+  const topFive = useMemo(() => {
+    return [...portfolioData]
+      .sort((a, b) => b.value - a.value)
+      .slice(0, TOP_NUMBER);
+  }, [portfolioData]);
 
   const handleViewMore = () => {
     router.push("/my/wallet/portfolio");
   };
+
+  if (isLoading) {
+    return (
+      <div
+        className="flex flex-col gap-4 w-full h-full border border-border
+          bg-card rounded-xl overflow-hidden p-6"
+      >
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

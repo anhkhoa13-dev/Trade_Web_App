@@ -29,8 +29,6 @@ export const BotService = (client: AxiosInstance) => ({
       healthCheckUrl: formData.healthUrl || null,
     };
 
-    // 2. Make the request
-    console.log(payload);
     const res = await client.post<ApiResponse<BotSecretResponse>>(
       "/admin/bots",
       payload,
