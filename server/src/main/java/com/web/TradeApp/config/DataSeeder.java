@@ -147,7 +147,7 @@ public class DataSeeder {
         seedCoinAndHolding(wallet, "bitcoin", "Bitcoin", "BTC", USER_BTC_AMOUNT);
         seedCoinAndHolding(wallet, "ethereum", "Ethereum", "ETH", generateRandomAmount(0, 5));
         seedCoinAndHolding(wallet, "binancecoin", "Binance Coin", "BNB", generateRandomAmount(0, 5));
-        seedCoinAndHolding(wallet, "solana", "Binance Coin", "BNB", generateRandomAmount(0, 5));
+        seedCoinAndHolding(wallet, "solana", "Solana", "SOL", generateRandomAmount(0, 5));
         seedCoinAndHolding(wallet, "ripple", "Ripple", "XRP", generateRandomAmount(0, 5));
         seedCoinAndHolding(wallet, "cardano", "Cardano", "ADA", generateRandomAmount(0, 5));
         seedCoinAndHolding(wallet, "dogecoin", "Dogecoin", "DOGE", generateRandomAmount(0, 5));

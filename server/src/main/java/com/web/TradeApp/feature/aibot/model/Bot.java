@@ -32,11 +32,11 @@ public class Bot extends BaseEntity {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    // The single coin this bot is allowed to trade (e.g., "BTC")
+    // exp: BTC, ETH
     @Column(name = "coin_symbol", nullable = false, length = 20)
     private String coinSymbol;
 
-    // e.g. "BTC/USDT" if you want
+    // exp: BTC/USDT, ETH/USDT
     @Column(name = "trading_pair", length = 40)
     private String tradingPair;
 

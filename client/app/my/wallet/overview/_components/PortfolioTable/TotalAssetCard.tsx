@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/app/ui/shadcn/card";
 import { Badge } from "@/app/ui/shadcn/badge";
 import { TrendingUp, TrendingDown, Loader2 } from "lucide-react";
 import { useWallet } from "@/hooks/useWallet";
-import { useLiveMarketStream } from "@/hooks/ws/useLiveMarketStream";
+import { useLiveMarketStream } from "@/hooks/ws/useLiveMarketStream-v1";
 
 const VND_TO_USDT = 24300; // Approximate conversion rate
 
@@ -76,34 +76,56 @@ export function TotalAssetCard() {
       </CardHeader>
 
       {/* Content */}
-      <CardContent className="px-6 flex flex-col justify-between flex-grow">
-        <div className="flex items-end gap-3">
-          <h2 className="text-4xl font-semibold leading-tight">
-            {totalValue.toFixed(2)}{" "}
-            <span className="text-muted-foreground text-lg">USDT</span>
-          </h2>
+      <CardContent className="px-6 flex justify-between items-start flex-grow">
+        <div className="flex flex-col justify-between h-full">
+          <div className="flex items-end gap-3">
+            <h2 className="text-4xl font-semibold leading-tight">
+              {totalValue.toFixed(2)}{" "}
+              <span className="text-muted-foreground text-lg">USDT</span>
+            </h2>
 
-          <Badge
-            variant={isPositive ? "default" : "destructive"}
-            className="mb-1 flex items-center gap-1 shrink-0"
-          >
-            {isPositive ? (
-              <TrendingUp className="h-3 w-3" />
-            ) : (
-              <TrendingDown className="h-3 w-3" />
-            )}
-            {isPositive ? "+" : ""}
-            {weightedChange.toFixed(2)}%
-          </Badge>
+            <Badge
+              variant={isPositive ? "default" : "destructive"}
+              className="mb-1 flex items-center gap-1 shrink-0"
+            >
+              {isPositive ? (
+                <TrendingUp className="h-3 w-3" />
+              ) : (
+                <TrendingDown className="h-3 w-3" />
+              )}
+              {isPositive ? "+" : ""}
+              {weightedChange.toFixed(2)}%
+            </Badge>
+          </div>
+
+          <div className="mt-2 space-y-1">
+            <p className="text-sm text-muted-foreground leading-snug">
+              24h change compared to yesterday
+            </p>
+            <p className="text-sm text-muted-foreground leading-snug">
+              ≈ {(totalValue * VND_TO_USDT).toLocaleString()}&nbsp;VNĐ
+            </p>
+          </div>
         </div>
 
-        <div className="mt-2 space-y-1">
-          <p className="text-sm text-muted-foreground leading-snug">
-            24h change compared to yesterday
-          </p>
-          <p className="text-sm text-muted-foreground leading-snug">
-            ≈ {(totalValue * VND_TO_USDT).toLocaleString()}&nbsp;VNĐ
-          </p>
+        {/* Wallet Balance Display */}
+        <div className="flex flex-col items-end justify-center">
+          <div className="text-right">
+            <p
+              className="text-xs font-medium text-muted-foreground uppercase
+                tracking-wide mb-2"
+            >
+              Wallet Balance
+            </p>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-3xl font-bold tabular-nums">
+                {walletData?.balance.toFixed(2)}
+              </span>
+              <span className="text-sm font-medium text-muted-foreground">
+                USDT
+              </span>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>

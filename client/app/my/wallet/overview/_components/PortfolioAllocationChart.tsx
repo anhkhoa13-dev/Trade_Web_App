@@ -11,8 +11,8 @@ import {
   CardContent,
 } from "@/app/ui/shadcn/card";
 import { useWallet } from "@/hooks/useWallet";
-import { useLiveMarketStream } from "@/hooks/ws/useLiveMarketStream";
 import { Loader2 } from "lucide-react";
+import { useLiveMarketStream } from "@/hooks/ws/useLiveMarketStream-v1";
 
 // Avoid SSR issues
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {

@@ -52,6 +52,12 @@ application:
       access-expiration: ${JWT_ACCESS_EXPIRATION}
       refresh-expiration: ${JWT_REFRESH_EXPIRATION}
 
+bot:
+  api:
+    url: ${BOT_API_URL:}
+    key: ${BOT_API_KEY:}
+    secret: ${BOT_API_SECRET:}
+
 logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n"

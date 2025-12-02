@@ -11,12 +11,11 @@ const useTradingViewWidget = (
 
   useEffect(() => {
     if (!containerRef.current) return;
-    if (containerRef.current.dataset.loaded) return;
 
     const isAutoSize = config.autoSize === true;
-
     const styleHeight = isAutoSize ? "100%" : `${height}px`;
 
+    // Clear existing content
     containerRef.current.innerHTML = `<div class="tradingview-widget-container__widget" style="width: 100%; height: ${styleHeight};"></div>`;
 
     const script = document.createElement("script");
@@ -25,12 +24,10 @@ const useTradingViewWidget = (
     script.innerHTML = JSON.stringify(config);
 
     containerRef.current.appendChild(script);
-    containerRef.current.dataset.loaded = "true";
 
     return () => {
       if (containerRef.current) {
         containerRef.current.innerHTML = "";
-        delete containerRef.current.dataset.loaded;
       }
     };
   }, [src, config, height]);

@@ -7,28 +7,39 @@ export default withAuth(
     const user = token?.user;
     const pathname = req.nextUrl.pathname;
 
-    if (pathname.startsWith("/my")) {
-      if (!token) {
-        return NextResponse.redirect(new URL("/login", req.url));
-      }
+    const isAuthRoute = ["/login", "/register", "/verify"].some((route) =>
+      pathname.startsWith(route),
+    );
+
+    if (token && isAuthRoute) {
+      return NextResponse.redirect(new URL("/", req.url));
     }
 
-    const isAdminPath =
-      pathname.includes("/dashboard/(admin)") || pathname.includes("/admin");
-    if (isAdminPath) {
+    if (pathname.startsWith("/my/dashboard")) {
       if (!user?.roles?.includes("ADMIN")) {
-        console.log(`Access denied to ${pathname}: User is not an admin.`);
         return NextResponse.redirect(new URL("/403", req.url));
       }
     }
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token,
+      authorized: ({ token, req }) => {
+        const pathname = req.nextUrl.pathname;
+
+        if (
+          pathname.startsWith("/login") ||
+          pathname.startsWith("/register") ||
+          pathname.startsWith("/verify")
+        ) {
+          return true;
+        }
+
+        return !!token;
+      },
     },
   },
 );
 
 export const config = {
-  matcher: ["/my/dashboard/(admin)/:path*", "/my/:path*"],
+  matcher: ["/my/:path*", "/login", "/register", "/verify"],
 };

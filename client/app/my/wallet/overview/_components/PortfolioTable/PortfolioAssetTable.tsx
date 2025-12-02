@@ -10,8 +10,8 @@ import { Button } from "@/app/ui/shadcn/button";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useWallet } from "@/hooks/useWallet";
-import { useLiveMarketStream } from "@/hooks/ws/useLiveMarketStream";
 import { COIN_LOGOS } from "@/services/constants/coinConstant";
+import { useLiveMarketStream } from "@/hooks/ws/useLiveMarketStream-v1";
 
 const TOP_NUMBER = 5;
 

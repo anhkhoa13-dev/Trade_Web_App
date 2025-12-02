@@ -13,7 +13,7 @@ export default function SymbolDetailWidget({
 }: SymbolDetailWidgetProps) {
   const config = {
     symbol: symbol.toUpperCase(),
-    isTransparent: "true",
+    isTransparent: false,
     locale: "en",
     width: "100%",
   };

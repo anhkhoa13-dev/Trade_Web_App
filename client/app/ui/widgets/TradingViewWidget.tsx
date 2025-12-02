@@ -26,7 +26,7 @@ const TradingViewWidget = ({
     console.log(resolvedTheme);
     return {
       ...config,
-      // colorTheme: resolvedTheme,
+      colorTheme: resolvedTheme,
       theme: resolvedTheme,
     };
   }, [resolvedTheme, config]);

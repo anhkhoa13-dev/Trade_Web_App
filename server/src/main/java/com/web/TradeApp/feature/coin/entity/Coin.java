@@ -28,6 +28,8 @@ public class Coin extends BaseEntity {
     @Column(name = "coin_gecko_id", nullable = false, unique = true)
     private String coinGeckoId;
     private String name;
+
+    @Column(name = "symbol", nullable = false, unique = true)
     private String symbol;
 
     @Column(nullable = false, precision = 5, scale = 4)

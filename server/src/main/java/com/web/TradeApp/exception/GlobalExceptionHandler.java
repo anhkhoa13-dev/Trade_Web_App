@@ -53,7 +53,8 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
-    @ExceptionHandler({ MethodArgumentNotValidException.class, InsufficientBalanceException.class })
+    @ExceptionHandler({ MethodArgumentNotValidException.class, InsufficientBalanceException.class,
+            InsufficientCoinException.class })
     public ProblemDetail handleValidationException(MethodArgumentNotValidException ex) {
         ex.printStackTrace();
 
