@@ -238,13 +238,13 @@ public class DataSeeder {
      */
     private BigDecimal getFixedPrice(String symbol) {
         return switch (symbol.toUpperCase()) {
-            case "BTC" -> new BigDecimal("98000.00");
-            case "ETH" -> new BigDecimal("3900.00");
-            case "BNB" -> new BigDecimal("680.00");
-            case "SOL" -> new BigDecimal("235.00");
-            case "XRP" -> new BigDecimal("2.60");
-            case "ADA" -> new BigDecimal("1.30");
-            case "DOGE" -> new BigDecimal("0.45");
+            case "BTC" -> new BigDecimal("85000.00");
+            case "ETH" -> new BigDecimal("2500.00");
+            case "BNB" -> new BigDecimal("500.00");
+            case "SOL" -> new BigDecimal("200.00");
+            case "XRP" -> new BigDecimal("2");
+            case "ADA" -> new BigDecimal("1");
+            case "DOGE" -> new BigDecimal("0.25");
             default -> BigDecimal.ZERO;
         };
     }
