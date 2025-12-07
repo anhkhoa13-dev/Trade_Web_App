@@ -8,7 +8,6 @@ import { NetworkError } from "@/lib/errors";
 import { LoginInput } from "@/schema/loginSchema";
 import { LoginResponse } from "@/services/authService";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import * as setCookieParser from "set-cookie-parser";
 
 export async function login(params: LoginInput): Promise<ApiResponse<LoginResponse>> {
@@ -114,14 +113,3 @@ export async function logout() {
     await signOut({ redirectTo: "/" })
 }
 
-// export async function refresh(): Promise<ApiResponse<LoginResponse>> {
-//     try {
-//         const cookieStore = await cookies()
-//         const refreshToken = cookieStore.get("refresh_token")?.value;
-
-//         // logout
-//         if (!refreshToken) {
-
-//         }
-//     }
-// }

@@ -1,6 +1,6 @@
-import { auth } from "@/auth";
-import { NetworkError } from "@/lib/errors";
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+import { auth } from "@/auth"
+import { NetworkError } from "@/lib/errors"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
 async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
     const session = await auth()

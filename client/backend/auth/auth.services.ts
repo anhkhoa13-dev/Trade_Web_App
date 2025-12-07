@@ -1,14 +1,18 @@
 import { api } from "@/actions/fetch";
 import { LoginRequest } from "./auth.types";
-import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
+import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies"
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
 export const AuthService = {
     async login(payload: LoginRequest) {
-        const response = await api.post(
-            "/auth/login",
-            payload,
-        )
-
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        })
         return response
     },
 
@@ -26,5 +30,16 @@ export const AuthService = {
         )
 
         return response
-    }
+    },
+
+    async refresh(cookies: Pick<ReadonlyRequestCookies, "get">) {
+        const refreshToken = cookies.get("refresh_token")?.value
+        const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+            method: "POST",
+            headers: {
+                Cookie: `refresh_token=${refreshToken}`
+            }
+        })
+        return response
+    },
 };
