@@ -16,6 +16,7 @@ export type LoginRequest = {
 
 export type LoginResponse = {
   accessToken: string;
+  expiresAt: number;
   user: {
     id: string;
     email: string;
@@ -51,8 +52,8 @@ export const AuthService = {
     });
   },
 
-  async login(payload: LoginRequest): Promise<ApiResponse<LoginResponse>> {
-    const { data } = await api.post<ApiResponse<LoginResponse>>(
+  async login(payload: LoginRequest) {
+    const  data  = await api.post<ApiResponse<LoginResponse>>(
       "/auth/login",
       payload,
     );
@@ -71,8 +72,8 @@ export const AuthService = {
     );
     return data;
   },
-  // doesnt work
-  // async logout(): Promise<void> {
-  //   await authApi.post("/auth/logout");
-  // },
+
+  async logout(): Promise<void> {
+    await api.post("/auth/logout");
+  },
 };

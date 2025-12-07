@@ -9,7 +9,6 @@ import {
   FormMessage,
 } from "../../ui/shadcn/form";
 import { Input } from "../../ui/shadcn/input";
-import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "../../ui/shadcn/button";
@@ -17,13 +16,11 @@ import useActivateAcc from "@/hooks/useActivateAcc";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import toast from "react-hot-toast";
+import { VerificationInput, verificationSchema } from "@/schema/verificationSchema";
 
-const verificationSchema = z.object({
-  code: z.string().length(6, "Code must be 6 digits"),
-});
 
 export default function VerifyForm() {
-  const form = useForm<z.infer<typeof verificationSchema>>({
+  const form = useForm<VerificationInput>({
     resolver: zodResolver(verificationSchema),
     defaultValues: {
       code: ""
@@ -41,7 +38,7 @@ export default function VerifyForm() {
     }
   }, [urlToken, router]);
 
-  const handleVerify = async (values: z.infer<typeof verificationSchema>) => {
+  const handleVerify = async (values: VerificationInput) => {
     if (!urlToken) {
       return alert("Invalid or missing token");
     }

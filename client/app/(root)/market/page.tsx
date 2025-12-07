@@ -1,7 +1,7 @@
 import React from "react";
 
 import MarketTable from "@/app/ui/my_components/market-table/MarketTable";
-import { getCachedMarketData } from "@/lib/actions/gecko.actions";
+import { getCachedMarketData } from "@/actions/gecko.actions";
 import MarketStats from "./_components/MarketStats";
 
 export default async function MarketPage() {

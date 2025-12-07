@@ -1,4 +1,4 @@
-import { searchCoins } from "@/lib/actions/gecko.actions";
+import { searchCoins } from "@/actions/gecko.actions";
 import { redirect } from "next/navigation";
 
 export default async function TradeIndexPage() {

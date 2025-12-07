@@ -1,4 +1,4 @@
-import { searchCoins } from "@/lib/actions/gecko.actions";
+import { searchCoins } from "@/actions/gecko.actions";
 
 import Link from "next/link";
 import { Button } from "@/app/ui/shadcn/button";

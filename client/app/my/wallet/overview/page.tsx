@@ -7,7 +7,7 @@ import PortfolioAllocationChart from "./_components/PortfolioAllocationChart";
 import ActivityHistoryTable from "@/app/ui/my_components/activity-history-table/ActivityHistoryTable";
 import { mockActivities } from "@/entities/mockActivities";
 import MarketTable from "@/app/ui/my_components/market-table/MarketTable";
-import { getCachedMarketData } from "@/lib/actions/gecko.actions";
+import { getCachedMarketData } from "@/actions/gecko.actions";
 
 export default async function page() {
   const initialCoins = await getCachedMarketData(1000);
@@ -36,12 +36,12 @@ export default async function page() {
         <MarketTable
           initialData={initialCoins}
           defaultPageSize={5}
-          // symbols={SYMBOLS}
-          // showLimit={6}
-          // enableActions={true}
-          // enablePagination={false}
-          // enableSearch={false}
-          // enableSorting={false}
+        // symbols={SYMBOLS}
+        // showLimit={6}
+        // enableActions={true}
+        // enablePagination={false}
+        // enableSearch={false}
+        // enableSorting={false}
         />
       </div>
       <div className="col-span-1 md:col-span-4 w-full">

@@ -1,10 +1,8 @@
-// app/components/layout/SiteHeader.tsx
 "use client";
 
 import { useState, useEffect, memo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useSession } from "next-auth/react";
 import { Menu, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -17,10 +15,18 @@ import { UserNav } from "./UserNav";
 import TickerTape from "@/app/ui/widgets/TicketTape";
 const TickerTapeMemo = memo(TickerTape);
 
-export default function SiteHeader() {
-  const { data: session, status } = useSession();
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
+interface HeaderProps {
+  user?: {
+    email: string
+    username: string
+    fullname: string
+    avatarUrl?: string | null
+  }
+}
+
+export default function SiteHeader({ user }: HeaderProps) {
+  const [isScrolled, setIsScrolled] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -31,7 +37,7 @@ export default function SiteHeader() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const isAuthenticated = status === "authenticated";
+  const isAuthenticated = !!user;
 
   return (
     <header
@@ -75,10 +81,10 @@ export default function SiteHeader() {
           {/* Auth State */}
           {isAuthenticated ? (
             <UserNav user={{
-              name: session?.user?.fullname,
-              username: session?.user?.username,
-              email: session?.user?.email,
-              image: session?.user?.avatarUrl
+              name: user.fullname,
+              username: user.username,
+              email: user.email,
+              image: user.avatarUrl
             }} />
           ) : (
             <div className="hidden items-center gap-2 md:flex">

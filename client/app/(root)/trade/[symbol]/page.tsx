@@ -1,4 +1,4 @@
-import { searchCoins } from "@/lib/actions/gecko.actions";
+import { searchCoins } from "@/actions/gecko.actions";
 import SearchCommand from "../_components/SearchCommand";
 import SymbolDetailWidget from "../_components/SymbolDetailWidget";
 import AdvanceChartWidget from "../_components/AdvanceChartWidget";

@@ -8,7 +8,7 @@ import { Slider } from "@/app/ui/shadcn/slider";
 import { Label } from "@/app/ui/shadcn/label";
 import { Checkbox } from "@/app/ui/shadcn/checkbox";
 import { cn } from "@/lib/utils";
-import { executeMarketOrder } from "@/lib/actions/trade.actions";
+import { executeMarketOrder } from "@/actions/trade.actions";
 import { toast } from "react-hot-toast";
 
 interface OrderInputSectionProps {
@@ -142,7 +142,7 @@ const OrderInputSection = ({
               "h-10 pl-12 text-right font-mono text-sm",
               !isMarket && "pr-14",
               isMarket &&
-                `opacity-50 bg-secondary/20 cursor-not-allowed
+              `opacity-50 bg-secondary/20 cursor-not-allowed
                 text-muted-foreground`,
               `[appearance:textfield]
               [&::-webkit-outer-spin-button]:appearance-none

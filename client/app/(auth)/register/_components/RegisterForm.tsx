@@ -14,29 +14,12 @@ import {
 } from "../../../ui/shadcn/form";
 import { Input, PasswordInput } from "../../../ui/shadcn/input";
 import { Button } from "../../../ui/shadcn/button";
-
-export const registerSchema = z
-  .object({
-    username: z.string().trim().min(1, { message: "Username is required" }),
-    email: z.email({ message: "Invalid email" }),
-    password: z
-      .string()
-      .min(6, { message: "Password must be at least 6 characters" }),
-    confirm: z.string().min(6, { message: "Please confirm your password" }),
-  })
-  .refine((data) => data.password === data.confirm, {
-    message: "Passwords do not match",
-    path: ["confirm"],
-  });
-
-const verificationSchema = z.object({
-  code: z.string().length(6, { message: "Code must be 6 digits" }),
-});
+import { RegisterInput, registerSchema } from "@/schema/registerSchema";
 
 export default function RegisterForm() {
   const registerMutation = useSignUp();
 
-  const form = useForm<z.infer<typeof registerSchema>>({
+  const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       username: "",
@@ -45,12 +28,8 @@ export default function RegisterForm() {
       confirm: "",
     },
   });
-  const verifyForm = useForm<z.infer<typeof verificationSchema>>({
-    resolver: zodResolver(verificationSchema),
-    defaultValues: { code: "" },
-  });
 
-  const handleRegister = async (values: z.infer<typeof registerSchema>) => {
+  const handleRegister = async (values: RegisterInput) => {
     registerMutation.mutate(values);
   };
   const { isPending } = registerMutation;

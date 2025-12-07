@@ -123,14 +123,12 @@ public class AuthController {
 
         @PostMapping("/logout")
         @ApiMessage("Logout successfully")
-        public ResponseEntity<Void> logout() {
-                String email = SecurityUtil.getCurrentUserLogin().isPresent()
-                                ? SecurityUtil.getCurrentUserLogin().get()
-                                : "";
+        public ResponseEntity<Void> logout(
+                        @CookieValue(name = "refresh_token") String refreshToken) {
 
-                if (email.equals("")) {
-                        throw new AuthenticationCredentialsNotFoundException("No authenticated user found");
-                }
+                Jwt decodedToken = this.securityUtil.checkValidRefreshToken(refreshToken);
+                String email = decodedToken.getSubject();
+
                 // update refresh token in db = null
                 this.userService.updateUserToken(null, email);
 

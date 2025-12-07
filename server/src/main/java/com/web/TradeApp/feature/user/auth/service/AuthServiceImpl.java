@@ -201,8 +201,7 @@ public class AuthServiceImpl implements AuthService {
         res.setUser(userLogin);
 
         // create a token
-        String access_token = this.jwtUtil.generateAccessToken(email, res, roleNames);
-        res.setAccessToken(access_token);
+        this.jwtUtil.generateAccessToken(email, res, roleNames);
 
         return res;
     }

@@ -7,7 +7,7 @@ import { Separator } from "../../../ui/shadcn/separator";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
+import { signIn } from "@/auth";
 import toast from "react-hot-toast";
 import { GoogleButton, GithubButton } from "./OAuth2Button";
 
@@ -17,7 +17,9 @@ export default function LoginCard() {
 
   const handleGoogleLogin = async () => {
     try {
-      await signIn("google", { redirect: false, callbackUrl: "/" });
+      "use server"
+      await signIn("google");
+
       router.push("/");
       toast.success("Logged in successfully");
     } catch (error: any) {
