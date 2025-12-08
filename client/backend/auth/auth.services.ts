@@ -1,5 +1,5 @@
 import { api } from "@/actions/fetch";
-import { LoginRequest } from "./auth.types";
+import { ActivateRequest, LoginRequest, RegisterRequest } from "./auth.types";
 import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
@@ -42,4 +42,26 @@ export const AuthService = {
         })
         return response
     },
+
+    async register(payload: RegisterRequest) {
+        const response = await fetch(`${API_BASE_URL}/auth/register`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        })
+        return response
+    },
+
+    async active(payload: ActivateRequest) {
+        const response = await fetch(`${API_BASE_URL}/auth/activate`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        })
+        return response
+    }
 };

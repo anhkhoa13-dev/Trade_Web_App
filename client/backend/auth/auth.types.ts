@@ -8,6 +8,10 @@ export type LoginRequest = {
     email: string
     password: string
 }
+export type ActivateRequest = {
+    urlToken: string,
+    activateCode: string
+}
 
 export type LoginResponse = {
     accessToken: string
@@ -22,11 +26,13 @@ export type LoginResponse = {
     }
 }
 
-export interface RegisterResponse {
+
+export type RegisterResponse = {
     id: string
     email: string
     urlToken: string
     createdAt: string
 }
+
 
 export type RefreshResponse = LoginResponse

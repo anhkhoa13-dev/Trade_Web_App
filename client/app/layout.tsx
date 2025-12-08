@@ -1,10 +1,7 @@
 import "./globals.css";
 
 import { ThemeProvider } from "./providers/ThemeProvider";
-import QueryProvider from "@/context/QueryProvider";
 import { Toaster } from "react-hot-toast";
-import AuthProvider from "./providers/AuthProvider";
-
 
 export default function RootLayout({
   children,
@@ -21,11 +18,7 @@ export default function RootLayout({
           disableTransitionOnChange={false}
         >
           <Toaster position="top-center" />
-          <AuthProvider>
-            <QueryProvider>
-              {children}
-            </QueryProvider>
-          </AuthProvider>
+          {children}
         </ThemeProvider>
       </body>
     </html>

@@ -1,9 +1,7 @@
 "use client";
 
-import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useSignUp } from "@/hooks/useSignUp";
 import {
   Form,
   FormControl,
@@ -15,9 +13,13 @@ import {
 import { Input, PasswordInput } from "../../../ui/shadcn/input";
 import { Button } from "../../../ui/shadcn/button";
 import { RegisterInput, registerSchema } from "@/schema/registerSchema";
+import { register } from "@/actions/auth.actions";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { Spinner } from "@/app/ui/shadcn/spinner";
 
 export default function RegisterForm() {
-  const registerMutation = useSignUp();
+  const router = useRouter()
 
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
@@ -27,12 +29,28 @@ export default function RegisterForm() {
       password: "",
       confirm: "",
     },
-  });
+  })
+
+  const { isSubmitting } = form.formState
 
   const handleRegister = async (values: RegisterInput) => {
-    registerMutation.mutate(values);
+    const res = await register(values)
+
+    if (res.status === "success") {
+      toast.success(res.message)
+
+      const params = new URLSearchParams();
+      if (res.data?.urlToken) {
+        params.set("token", res.data.urlToken);
+      }
+
+      params.set("email", values.email)
+      router.push(`/verify?${params.toString()}`)
+
+    } else {
+      toast.error(res.message)
+    }
   };
-  const { isPending } = registerMutation;
 
   return (
     <Form {...form}>
@@ -96,9 +114,13 @@ export default function RegisterForm() {
         <Button
           type="submit"
           className="w-full cursor-pointer"
-          disabled={isPending}
+          disabled={isSubmitting}
         >
-          {isPending ? "Processing..." : "Register"}
+          {isSubmitting ? (
+            <Spinner />
+          ) :
+            "Register"
+          }
         </Button>
       </form>
     </Form>

@@ -1,12 +1,16 @@
 "use server"
 
 import { signIn, signOut } from "@/auth";
+
 import { AuthService } from "@/backend/auth/auth.services";
+import { LoginResponse, RegisterResponse } from "@/backend/auth/auth.types";
 import { ApiResponse } from "@/backend/constants/ApiResponse";
 import { ErrorResponse } from "@/backend/errorResponse";
+
 import { NetworkError } from "@/lib/errors";
 import { LoginInput } from "@/schema/loginSchema";
-import { LoginResponse } from "@/services/authService";
+import { RegisterInput } from "@/schema/registerSchema";
+import { VerificationInput } from "@/schema/verificationSchema";
 import { cookies } from "next/headers";
 import * as setCookieParser from "set-cookie-parser";
 
@@ -113,3 +117,87 @@ export async function logout() {
     await signOut({ redirectTo: "/" })
 }
 
+export async function register(params: RegisterInput): Promise<ApiResponse<RegisterResponse>> {
+    try {
+        const response = await AuthService.register(params)
+
+        // error
+        if (!response.ok) {
+            const error = await response.json() as ErrorResponse
+
+            return {
+                status: "error",
+                timestamp: new Date().toISOString(),
+                message: error.detail,
+                data: null,
+                statusCode: error.status
+            }
+
+        }
+
+        // success
+        const data = await response.json() as ApiResponse<RegisterResponse>
+        return data
+
+    } catch (error) {
+        if (error instanceof NetworkError)
+            return {
+                status: "error",
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                data: null,
+                statusCode: 503
+            }
+
+        return {
+            status: "error",
+            timestamp: new Date().toISOString(),
+            message: "Internal Server Error",
+            data: null,
+            statusCode: 500
+        }
+    }
+}
+
+
+export async function activate({ urlToken, params }: { urlToken: string, params: VerificationInput }): Promise<ApiResponse> {
+    try {
+        const response = await AuthService.active({ urlToken, ...params })
+
+        // error
+        if (!response.ok) {
+            const error = await response.json() as ErrorResponse
+
+            return {
+                status: "error",
+                timestamp: new Date().toISOString(),
+                message: error.detail,
+                data: null,
+                statusCode: error.status
+            }
+
+        }
+
+        // success
+        const data = await response.json() as ApiResponse
+        return data
+
+    } catch (error) {
+        if (error instanceof NetworkError)
+            return {
+                status: "error",
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                data: null,
+                statusCode: 503
+            }
+
+        return {
+            status: "error",
+            timestamp: new Date().toISOString(),
+            message: "Internal Server Error",
+            data: null,
+            statusCode: 500
+        }
+    }
+}

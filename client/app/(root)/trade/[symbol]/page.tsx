@@ -8,8 +8,8 @@ import RecentTradesWidget from "../_components/RecentTradesWidget";
 import Link from "next/link";
 import { Button } from "@/app/ui/shadcn/button";
 import { Lock } from "lucide-react";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-option";
+import { auth } from "@/auth";
+
 
 interface TradePageProps {
     params: Promise<{ symbol: string }>
@@ -19,7 +19,7 @@ export default async function TradePage({ params }: TradePageProps) {
     const { symbol } = await params;
     const initialCoins = await searchCoins();
 
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     const isLoggedIn = !!session?.user;
 
     return (

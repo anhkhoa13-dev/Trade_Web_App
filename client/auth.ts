@@ -72,7 +72,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 })
 
 export async function refreshAccessToken(token: JWT): Promise<JWT> {
-    console.log("Refresh access token...")
     try {
         const cookieStore = await cookies()
         const refreshToken = cookieStore.get("refresh_token")?.value

@@ -1,7 +1,7 @@
 "use server";
 
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-option";
+import { auth } from "@/auth";
+
 import { revalidatePath } from "next/cache";
 
 // Định nghĩa kiểu dữ liệu khớp với DTO của Java
@@ -12,7 +12,7 @@ interface MarketOrderParams {
 }
 
 export async function executeMarketOrder(params: MarketOrderParams) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (!session || !session.user) {
     return { success: false, message: "Unauthorized" };
