@@ -63,5 +63,15 @@ export const AuthService = {
             body: JSON.stringify(payload)
         })
         return response
-    }
+    },
+    async loginGoogle(idToken: String) {
+        const response = await fetch(`${API_BASE_URL}/auth/social/google`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ idToken })
+        })
+        return response
+    },
 };

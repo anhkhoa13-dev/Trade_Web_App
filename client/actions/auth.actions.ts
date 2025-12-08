@@ -159,7 +159,6 @@ export async function register(params: RegisterInput): Promise<ApiResponse<Regis
     }
 }
 
-
 export async function activate({ urlToken, params }: { urlToken: string, params: VerificationInput }): Promise<ApiResponse> {
     try {
         const response = await AuthService.active({ urlToken, ...params })
@@ -200,4 +199,8 @@ export async function activate({ urlToken, params }: { urlToken: string, params:
             statusCode: 500
         }
     }
+}
+
+export async function googleLogin() {
+    await signIn("google", { redirectTo: "/" })
 }

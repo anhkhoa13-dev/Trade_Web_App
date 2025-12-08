@@ -1,37 +1,11 @@
-"use client";
-
-import { useUserProfile } from "@/hooks/useUserProfile";
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/ui/shadcn/avatar";
 import { TabsContent } from "@radix-ui/react-tabs";
-import { useUpdateProfile } from "@/hooks/useUserUpdateProfile";
 import { Tabs, TabsList, TabsTrigger } from "@/app/ui/shadcn/tabs";
 import ProfileCard from "./_components/ProfileCard";
 import AccountCard from "./_components/AccountCard";
 import SecurityCard from "./_components/SecurityCard";
 
 export default function ProfilePage() {
-  const { data: profile, isLoading, error } = useUserProfile();
-  const { mutate: updateProfile, isPending } = useUpdateProfile();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading profile...
-      </div>
-    );
-  }
-
-  if (error || !profile) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center
-          text-destructive"
-      >
-        Failed to load profile.
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen flex justify-center">
       <div className="w-full max-w-4xl p-6 space-y-6">

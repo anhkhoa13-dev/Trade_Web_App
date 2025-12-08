@@ -1,5 +1,6 @@
-import NextAuth, { Session, User } from "next-auth"
+import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
+import Google from "next-auth/providers/google"
 import { JWT } from "next-auth/jwt"
 import { LoginResponse } from "./backend/auth/auth.types"
 import { cookies } from "next/headers"
@@ -28,23 +29,53 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     return null
                 }
             }
-        })
+        }),
+        Google,
     ],
 
     callbacks: {
-        async jwt({ token, user }: { token: JWT, user: User }) {
-            if (user) {
-                token.accessToken = user.accessToken
-                token.expiresAt = user.expiresAt
+        async jwt({ token, user, account }) {
+            if (user && account) {
+                switch (account.provider) {
+                    case "google": {
+                        const googleIdToken = account.id_token
+                        if (!googleIdToken) return token;
 
-                token.user = {
-                    id: user.id,
-                    email: user.email,
-                    username: user.username,
-                    fullname: user.fullname,
-                    avatarUrl: user.avatarUrl,
-                    roles: user.roles,
+                        const backendData = await loginWithGoogle(googleIdToken)
+
+                        if (backendData) {
+                            token.accessToken = backendData.accessToken
+                            token.expiresAt = backendData.expiresAt
+                            token.user = {
+                                id: backendData.user.id,
+                                email: backendData.user.email,
+                                username: backendData.user.username,
+                                fullname: backendData.user.fullname,
+                                avatarUrl: backendData.user.avatarUrl,
+                                roles: backendData.user.roles,
+                            }
+                        }
+                        break
+                    }
+
+                    case "credentials": {
+                        token.accessToken = user.accessToken
+                        token.expiresAt = user.expiresAt
+                        token.user = {
+                            id: user.id,
+                            email: user.email,
+                            username: user.username,
+                            fullname: user.fullname,
+                            avatarUrl: user.avatarUrl,
+                            roles: user.roles,
+                        }
+                        break
+                    }
+
+                    default:
+                        break
                 }
+
                 return token
             }
             if (Date.now() < token.expiresAt)
@@ -52,7 +83,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
             return await refreshAccessToken(token)
         },
-        session({ session, token }: { session: Session, token: JWT }) {
+        session({ session, token }) {
             if (token.error) {
                 return {
                     ...session,
@@ -71,7 +102,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }
 })
 
-export async function refreshAccessToken(token: JWT): Promise<JWT> {
+async function refreshAccessToken(token: JWT): Promise<JWT> {
     try {
         const cookieStore = await cookies()
         const refreshToken = cookieStore.get("refresh_token")?.value
@@ -126,5 +157,46 @@ export async function refreshAccessToken(token: JWT): Promise<JWT> {
             ...token,
             error: "RefreshAccessTokenError"
         }
+    }
+}
+
+async function loginWithGoogle(idToken: string): Promise<LoginResponse | null> {
+    try {
+        const res = await AuthService.loginGoogle(idToken)
+
+        if (!res.ok) {
+            const error = await res.json() as ErrorResponse
+            console.error(error)
+            return null
+        }
+
+        const data = await res.json() as ApiResponse<LoginResponse>
+
+        const setCookieHeader = res.headers.getSetCookie()
+        if (setCookieHeader && setCookieHeader.length > 0) {
+
+            const parsedCookies = setCookieParser.parse(setCookieHeader)
+            const cookieStore = await cookies()
+
+            parsedCookies.forEach(cookie => {
+                cookieStore.set({
+                    name: cookie.name,
+                    value: cookie.value,
+                    httpOnly: cookie.httpOnly,
+                    secure: cookie.secure,
+                    path: cookie.path,
+                    maxAge: cookie.maxAge,
+                    expires: cookie.expires,
+                    sameSite: cookie.sameSite as "lax" | "strict" | "none",
+                    domain: cookie.domain,
+                })
+            })
+        }
+
+        return data.data || null
+    }
+    catch (error) {
+        console.error("Error during Google Login Action:", error)
+        return null
     }
 }

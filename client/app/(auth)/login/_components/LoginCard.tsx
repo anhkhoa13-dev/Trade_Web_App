@@ -8,22 +8,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { GoogleButton, GithubButton } from "./OAuth2Button";
+import { googleLogin } from "@/actions/auth.actions";
+import toast from "react-hot-toast";
 
 
 export default function LoginCard() {
   const router = useRouter();
 
   const handleGoogleLogin = async () => {
-    // try {
-    //   "use server"
-    //   await signIn("google");
-
-    //   router.push("/");
-    //   toast.success("Logged in successfully");
-    // } catch (error: any) {
-    //   console.error("Login failed:", error);
-    //   toast.error("Failed to login. Please try again.");
-    // }
+    await googleLogin()
   };
 
   return (
