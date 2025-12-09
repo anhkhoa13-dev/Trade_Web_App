@@ -12,12 +12,13 @@ import { useRouter } from "next/navigation";
 import { useWallet } from "@/hooks/useWallet";
 import { COIN_LOGOS } from "@/services/constants/coinConstant";
 import { useLiveMarketStream } from "@/hooks/ws/useLiveMarketStream-v1";
+import { AssetDTO } from "@/backend/wallet/wallet.types";
 
 const TOP_NUMBER = 5;
 
-export default function PortfolioAssetTable() {
+export default function PortfolioAssetTable({ walletData }: { walletData: AssetDTO | null }) {
   const router = useRouter();
-  const { data: walletData, isLoading } = useWallet();
+
 
   // Extract coin symbols from wallet holdings
   const symbols = useMemo(() => {
@@ -74,7 +75,7 @@ export default function PortfolioAssetTable() {
     router.push("/my/wallet/portfolio");
   };
 
-  if (isLoading) {
+  if (!walletData) {
     return (
       <div
         className="flex flex-col gap-4 w-full h-full border border-border

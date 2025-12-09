@@ -8,22 +8,29 @@ import ActivityHistoryTable from "@/app/ui/my_components/activity-history-table/
 import { mockActivities } from "@/entities/mockActivities";
 import MarketTable from "@/app/ui/my_components/market-table/MarketTable";
 import { getCachedMarketData } from "@/actions/gecko.actions";
+import { getWallet } from "@/actions/wallet.actions";
 
 export default async function page() {
-  const initialCoins = await getCachedMarketData(1000);
+  const [initialCoins, walletResponse] = await Promise.all([
+    getCachedMarketData(1000),
+    getWallet()
+  ]);
+
+  const walletData = walletResponse.data
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
       {/* Row 1: Total Assets */}
       <div className="col-span-1 md:col-span-12 w-full">
-        <TotalAssetCard />
+        <TotalAssetCard walletData={walletData} />
       </div>
 
       {/* Row 2: Portfolio Assets + Allocation */}
       <div className="col-span-1 md:col-span-8 w-full">
-        <PortfolioAssetTable />
+        <PortfolioAssetTable walletData={walletData} />
       </div>
       <div className="col-span-1 md:col-span-4 w-full">
-        <PortfolioAllocationChart />
+        <PortfolioAllocationChart walletData={walletData} />
       </div>
 
       {/* Row 3: Profit/Loss Analysis */}

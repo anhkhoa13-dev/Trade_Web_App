@@ -56,10 +56,6 @@ const navData: NavMainProps = {
           url: "/overview",
         },
         {
-          title: "Trade",
-          url: "/trade",
-        },
-        {
           title: "My Bots",
           url: "/ai-bots",
         },

@@ -10,9 +10,9 @@ import {
   CardDescription,
   CardContent,
 } from "@/app/ui/shadcn/card";
-import { useWallet } from "@/hooks/useWallet";
 import { Loader2 } from "lucide-react";
 import { useLiveMarketStream } from "@/hooks/ws/useLiveMarketStream-v1";
+import { AssetDTO } from "@/backend/wallet/wallet.types";
 
 // Avoid SSR issues
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
@@ -29,16 +29,17 @@ interface PortfolioAllocationChartProps {
   title?: string;
   subtitle?: string;
   topN?: number;
+  walletData: AssetDTO | null;
 }
 
 export default function PortfolioAllocationChart({
   title = "Portfolio Allocation",
   subtitle = "Distribution of your assets by percentage",
   topN = 5,
+  walletData
 }: PortfolioAllocationChartProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const { data: walletData, isLoading } = useWallet();
 
   // Extract coin symbols from wallet holdings
   const symbols = useMemo(() => {
@@ -183,7 +184,7 @@ export default function PortfolioAllocationChart({
     ],
   };
 
-  if (isLoading || series.length === 0) {
+  if (series.length === 0) {
     return (
       <Card className="w-full h-full">
         <CardHeader className="pb-0">

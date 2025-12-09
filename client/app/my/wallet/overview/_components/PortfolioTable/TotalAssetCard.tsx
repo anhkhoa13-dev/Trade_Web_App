@@ -6,12 +6,11 @@ import { Badge } from "@/app/ui/shadcn/badge";
 import { TrendingUp, TrendingDown, Loader2 } from "lucide-react";
 import { useWallet } from "@/hooks/useWallet";
 import { useLiveMarketStream } from "@/hooks/ws/useLiveMarketStream-v1";
+import { AssetDTO } from "@/backend/wallet/wallet.types";
 
 const VND_TO_USDT = 24300; // Approximate conversion rate
 
-export function TotalAssetCard() {
-  const { data: walletData, isLoading } = useWallet();
-
+export function TotalAssetCard({ walletData }: { walletData: AssetDTO | null }) {
   // Extract coin symbols from wallet holdings
   const symbols = useMemo(() => {
     if (!walletData?.coinHoldings) return [];
@@ -45,7 +44,7 @@ export function TotalAssetCard() {
 
   const isPositive = weightedChange >= 0;
 
-  if (isLoading) {
+  if (!walletData) {
     return (
       <Card
         className="w-full h-full flex flex-col justify-between rounded-lg border
