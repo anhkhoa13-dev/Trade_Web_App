@@ -72,7 +72,7 @@ export const historyService = {
     if (params.toDate) queryParams.append("toDate", params.toDate);
 
     const url = `/history/transactions/user?${queryParams.toString()}`;
-
+    console.log(url);
     if (accessToken) {
       // Server-side call with token
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}`, {

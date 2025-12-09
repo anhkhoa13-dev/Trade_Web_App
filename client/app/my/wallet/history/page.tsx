@@ -105,7 +105,14 @@ export default async function HistoryPage({
   }
 
   // 3. Fetch Available Coins (for filter dropdown)
-  const availableCoins = ["BTC", "ETH", "SOL", "AVAX", "DOGE"];
+  const availableCoins = [
+    "Bitcoin",
+    "Ethereum",
+    "Solana",
+    "Avalanche",
+    "Dogecoin",
+    "Binance",
+  ];
 
   return (
     <HistoryDashboard

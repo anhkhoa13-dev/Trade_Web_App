@@ -4,8 +4,6 @@ import PortfolioAssetTable from "./_components/PortfolioTable/PortfolioAssetTabl
 import ProfitLostAnalysis from "./_components/ProfitLostAnalysis";
 import AITradeStatus from "./_components/AITradeStatus";
 import PortfolioAllocationChart from "./_components/PortfolioAllocationChart";
-import ActivityHistoryTable from "@/app/ui/my_components/activity-history-table/ActivityHistoryTable";
-import { mockActivities } from "@/entities/mockActivities";
 import MarketTable from "@/app/ui/my_components/market-table/MarketTable";
 import { getCachedMarketData } from "@/lib/actions/gecko.actions";
 import { getServerSession } from "next-auth";
@@ -17,6 +15,7 @@ import Link from "next/link";
 import { Button } from "@/app/ui/shadcn/button";
 import { Card } from "@/app/ui/shadcn/card";
 import { ArrowRight } from "lucide-react";
+import { getBotSubOverviewSSR } from "@/services/botSubService";
 
 export default async function page() {
   const initialCoins = await getCachedMarketData(1000);
@@ -30,6 +29,9 @@ export default async function page() {
     historyFilter,
     session.accessToken,
   );
+
+  // Fetch bot subscription overview
+  const botOverview = await getBotSubOverviewSSR(session.accessToken);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
@@ -65,12 +67,12 @@ export default async function page() {
         />
       </div>
       <div className="col-span-1 md:col-span-4 w-full">
-        <AITradeStatus />
+        <AITradeStatus data={botOverview} />
       </div>
 
       {/* Row 5: Activity History */}
       <Card className="shadow-sm col-span-1 md:col-span-12 w-full p-6">
-        <div className="flex items-center justify-between py-3">
+        <div className="flex items-center justify-between py-2">
           <h2 className="text-2xl font-bold">Recent Activity</h2>
           <Link href="/my/wallet/history">
             <Button variant="outline">

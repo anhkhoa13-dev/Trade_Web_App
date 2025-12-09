@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
   useReactTable,
@@ -10,7 +10,13 @@ import {
   getSortedRowModel,
   SortingState,
 } from "@tanstack/react-table";
-import { Bot, ChevronLeft, ChevronRight, ArrowUpDown } from "lucide-react";
+import {
+  Bot,
+  ChevronLeft,
+  ChevronRight,
+  ArrowUpDown,
+  Loader2,
+} from "lucide-react";
 import { Card } from "@/app/ui/shadcn/card";
 import {
   Table,
@@ -45,6 +51,7 @@ export function BotTransactionsTable({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
   const transactions = data.data?.result || [];
 
   const totalPages = data.data?.meta.pages || 0;
@@ -52,26 +59,30 @@ export function BotTransactionsTable({
   const hasPrevPage = currentPage > 0;
 
   const handlePageChange = (newPage: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", newPage.toString());
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("page", newPage.toString());
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    });
   };
 
   const handleSort = (columnId: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    const currentSort = params.get("sort") || "";
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      const currentSort = params.get("sort") || "";
 
-    // Toggle sort direction
-    let newSort = `${columnId},desc`;
-    if (currentSort === `${columnId},desc`) {
-      newSort = `${columnId},asc`;
-    } else if (currentSort === `${columnId},asc`) {
-      newSort = "createdAt,desc"; // Reset to default
-    }
+      // Toggle sort direction
+      let newSort = `${columnId},desc`;
+      if (currentSort === `${columnId},desc`) {
+        newSort = `${columnId},asc`;
+      } else if (currentSort === `${columnId},asc`) {
+        newSort = "createdAt,desc"; // Reset to default
+      }
 
-    params.set("sort", newSort);
-    params.set("page", "0"); // Reset to first page when sorting
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      params.set("sort", newSort);
+      params.set("page", "0"); // Reset to first page when sorting
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    });
   };
 
   const formatDate = (timestamp: string) => {
@@ -252,7 +263,15 @@ export function BotTransactionsTable({
   });
 
   return (
-    <Card className="shadow-sm flex flex-col justify-between">
+    <Card className="shadow-sm flex flex-col justify-between relative">
+      {isPending && (
+        <div
+          className="absolute inset-0 bg-background/50 backdrop-blur-sm flex
+            items-center justify-center z-10 rounded-lg"
+        >
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )}
       {selectedBotName && (
         <div className="border-b p-6">
           <div className="flex items-center gap-3">

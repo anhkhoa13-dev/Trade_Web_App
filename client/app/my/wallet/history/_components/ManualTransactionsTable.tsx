@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
   useReactTable,
@@ -19,7 +19,7 @@ import {
 } from "@/app/ui/shadcn/table";
 import { Badge } from "@/app/ui/shadcn/badge";
 import { Button } from "@/app/ui/shadcn/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, ArrowUpDown } from "lucide-react";
 import type {
   HistoryResponse,
   TransactionHistoryDTO,
@@ -43,15 +43,37 @@ export function ManualTransactionsTable({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
 
   const totalPages = data.data?.meta.pages || 0;
   const hasNextPage = currentPage < totalPages - 1;
   const hasPrevPage = currentPage > 0;
 
   const handlePageChange = (newPage: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", newPage.toString());
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("page", newPage.toString());
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    });
+  };
+
+  const handleSort = (columnId: string) => {
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      const currentSort = params.get("sort") || "";
+
+      // Toggle sort direction
+      let newSort = `${columnId},desc`;
+      if (currentSort === `${columnId},desc`) {
+        newSort = `${columnId},asc`;
+      } else if (currentSort === `${columnId},asc`) {
+        newSort = "createdAt,desc"; // Reset to default
+      }
+
+      params.set("sort", newSort);
+      params.set("page", "0"); // Reset to first page when sorting
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    });
   };
 
   const formatDate = (timestamp: string) => {
@@ -73,7 +95,16 @@ export function ManualTransactionsTable({
   const columns = useMemo(
     () => [
       columnHelper.accessor("createdAt", {
-        header: "Time",
+        header: () => (
+          <button
+            onClick={() => handleSort("createdAt")}
+            className="flex items-center gap-1 hover:text-primary
+              transition-colors cursor-pointer"
+          >
+            Time
+            <ArrowUpDown className="h-3 w-3" />
+          </button>
+        ),
         cell: (info) => {
           const { date, time } = formatDate(info.getValue());
           return (
@@ -130,7 +161,16 @@ export function ManualTransactionsTable({
         },
       }),
       columnHelper.accessor("priceAtExecution", {
-        header: "Price",
+        header: () => (
+          <button
+            onClick={() => handleSort("priceAtExecution")}
+            className="flex items-center gap-1 hover:text-primary
+              transition-colors cursor-pointer"
+          >
+            Price
+            <ArrowUpDown className="h-3 w-3" />
+          </button>
+        ),
         cell: (info) => {
           const price = info.getValue();
           return (
@@ -147,7 +187,16 @@ export function ManualTransactionsTable({
         },
       }),
       columnHelper.accessor("quantity", {
-        header: "Amount",
+        header: () => (
+          <button
+            onClick={() => handleSort("quantity")}
+            className="flex items-center gap-1 hover:text-primary
+              transition-colors cursor-pointer"
+          >
+            Amount
+            <ArrowUpDown className="h-3 w-3" />
+          </button>
+        ),
         cell: (info) => {
           const amount = info.getValue();
           return (
@@ -163,7 +212,16 @@ export function ManualTransactionsTable({
         },
       }),
       columnHelper.accessor("notionalValue", {
-        header: "Total",
+        header: () => (
+          <button
+            onClick={() => handleSort("notionalValue")}
+            className="flex items-center gap-1 hover:text-primary
+              transition-colors cursor-pointer"
+          >
+            Total
+            <ArrowUpDown className="h-3 w-3" />
+          </button>
+        ),
         cell: (info) => {
           const total = info.getValue();
           return (
@@ -180,7 +238,16 @@ export function ManualTransactionsTable({
         },
       }),
       columnHelper.accessor("feeTradeApplied", {
-        header: "Fee",
+        header: () => (
+          <button
+            onClick={() => handleSort("feeTradeApplied")}
+            className="flex items-center gap-1 hover:text-primary
+              transition-colors cursor-pointer"
+          >
+            Fee
+            <ArrowUpDown className="h-3 w-3" />
+          </button>
+        ),
         cell: (info) => {
           const fee = info.getValue();
           return (
@@ -191,7 +258,7 @@ export function ManualTransactionsTable({
         },
       }),
     ],
-    [],
+    [handleSort],
   );
 
   const table = useReactTable({
@@ -201,7 +268,15 @@ export function ManualTransactionsTable({
   });
 
   return (
-    <Card className="shadow-sm flex flex-col justify-between">
+    <Card className="shadow-sm flex flex-col justify-between relative">
+      {isPending && (
+        <div
+          className="absolute inset-0 bg-background/50 backdrop-blur-sm flex
+            items-center justify-center z-10 rounded-lg"
+        >
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )}
       <div className="overflow-x-auto px-6">
         <Table>
           <TableHeader>

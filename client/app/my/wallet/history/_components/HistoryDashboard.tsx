@@ -168,24 +168,42 @@ export function HistoryDashboard({
         </div>
       </Card>
 
-      {/* Main Content - Render based on Active Tab */}
-      {activeTab === "manual" && manualData && (
-        <ManualTransactionsTable
-          data={manualData}
-          currentPage={currentFilters.page}
-          pageSize={currentFilters.size}
-        />
-      )}
+      {/* Main Content - Render based on Active Tab with Smooth Transition */}
+      <div className="relative min-h-[400px]">
+        <div
+          className={`transition-opacity duration-300 ${
+            activeTab === "manual"
+              ? "opacity-100"
+              : "opacity-0 absolute inset-0 pointer-events-none"
+            }`}
+        >
+          {activeTab === "manual" && manualData && (
+            <ManualTransactionsTable
+              data={manualData}
+              currentPage={currentFilters.page}
+              pageSize={currentFilters.size}
+            />
+          )}
+        </div>
 
-      {activeTab === "bot" && (
-        <BotTransactionsView
-          data={botData}
-          subscriptions={botSubscriptions}
-          selectedBotId={currentFilters.botId}
-          currentPage={currentFilters.page}
-          pageSize={currentFilters.size}
-        />
-      )}
+        <div
+          className={`transition-opacity duration-300 ${
+            activeTab === "bot"
+              ? "opacity-100"
+              : "opacity-0 absolute inset-0 pointer-events-none"
+            }`}
+        >
+          {activeTab === "bot" && (
+            <BotTransactionsView
+              data={botData}
+              subscriptions={botSubscriptions}
+              selectedBotId={currentFilters.botId}
+              currentPage={currentFilters.page}
+              pageSize={currentFilters.size}
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 }
