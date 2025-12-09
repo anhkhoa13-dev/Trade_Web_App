@@ -21,7 +21,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
 
   return (
     <SidebarProvider>
-      <DashboardSidebar />
+      <DashboardSidebar session={session} />
 
       <SidebarInset>
         <header

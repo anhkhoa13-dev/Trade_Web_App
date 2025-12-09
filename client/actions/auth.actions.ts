@@ -1,102 +1,111 @@
 "use server"
 
-import { signIn, signOut } from "@/auth";
-
+import { auth, signIn, signOut } from "@/auth";
 import { AuthService } from "@/backend/auth/auth.services";
 import { LoginResponse, RegisterResponse } from "@/backend/auth/auth.types";
 import { ApiResponse } from "@/backend/constants/ApiResponse";
 import { ErrorResponse } from "@/backend/errorResponse";
-
-import { NetworkError } from "@/lib/errors";
 import { LoginInput } from "@/schema/loginSchema";
 import { RegisterInput } from "@/schema/registerSchema";
 import { VerificationInput } from "@/schema/verificationSchema";
 import { cookies } from "next/headers";
 import * as setCookieParser from "set-cookie-parser";
-
-export async function login(params: LoginInput): Promise<ApiResponse<LoginResponse>> {
-    try {
-        const response = await AuthService.login(params)
-
-        // error
-        if (!response.ok) {
-            const error = await response.json() as ErrorResponse
-
-            return {
-                status: "error",
-                timestamp: new Date().toISOString(),
-                message: error.detail,
-                data: null,
-                statusCode: error.status
-            }
-
-        }
-
-        // success
-        const data = await response.json() as ApiResponse<LoginResponse>
-
-        // Set springboot header
-        const setCookieHeader = response.headers.getSetCookie()
-
-        if (setCookieHeader && setCookieHeader.length > 0) {
-
-            const parsedCookies = setCookieParser.parse(setCookieHeader)
-            const cookieStore = await cookies()
-
-            parsedCookies.forEach(cookie => {
-                cookieStore.set({
-                    name: cookie.name,
-                    value: cookie.value,
-                    httpOnly: cookie.httpOnly,
-                    secure: cookie.secure,
-                    path: cookie.path,
-                    maxAge: cookie.maxAge,
-                    expires: cookie.expires,
-                    sameSite: cookie.sameSite as "lax" | "strict" | "none",
-                    domain: cookie.domain,
-                })
-            })
-        }
-
-        // Save user session with next-auth
-        await signIn("credentials", {
-            loginResponseJson: JSON.stringify(data.data),
-            redirect: false,
-        })
+import { withAuthError } from "./utils/action.wrapper";
 
 
-        return data
-    } catch (error) {
-        if (error instanceof NetworkError)
-            return {
-                status: "error",
-                timestamp: new Date().toISOString(),
-                message: error.message,
-                data: null,
-                statusCode: 503
-            }
+const loginLogic = async (params: LoginInput): Promise<ApiResponse<LoginResponse>> => {
+    const response = await AuthService.login(params)
 
+    // Handle Backend API Error
+    if (!response.ok) {
+        const error = await response.json() as ErrorResponse
         return {
             status: "error",
             timestamp: new Date().toISOString(),
-            message: "Internal Server Error",
+            message: error.detail,
             data: null,
-            statusCode: 500
+            statusCode: error.status
         }
     }
+
+    // Success Logic
+    const data = await response.json() as ApiResponse<LoginResponse>
+
+    // Set cookies logic
+    const setCookieHeader = response.headers.getSetCookie()
+    if (setCookieHeader && setCookieHeader.length > 0) {
+        const parsedCookies = setCookieParser.parse(setCookieHeader)
+        const cookieStore = await cookies()
+        parsedCookies.forEach(cookie => {
+            cookieStore.set({
+                name: cookie.name,
+                value: cookie.value,
+                httpOnly: cookie.httpOnly,
+                secure: cookie.secure,
+                path: cookie.path,
+                maxAge: cookie.maxAge,
+                expires: cookie.expires,
+                sameSite: cookie.sameSite as "lax" | "strict" | "none",
+                domain: cookie.domain,
+            })
+        })
+    }
+
+    // NextAuth SignIn
+    await signIn("credentials", {
+        loginResponseJson: JSON.stringify(data.data),
+        redirect: false,
+    })
+
+    return data;
 }
 
-export async function logout() {
-    try {
-        // remove refresh token at backend
-        const cookieStore = await cookies()
-        const response = await AuthService.logout(cookieStore)
+const registerLogic = async (params: RegisterInput): Promise<ApiResponse<RegisterResponse>> => {
+    const response = await AuthService.register(params)
 
-        // delete cookie
+    if (!response.ok) {
+        const error = await response.json() as ErrorResponse
+        return {
+            status: "error",
+            timestamp: new Date().toISOString(),
+            message: error.detail,
+            data: null,
+            statusCode: error.status
+        }
+    }
+
+    return await response.json() as ApiResponse<RegisterResponse>
+}
+
+const activateLogic = async ({ urlToken, params }: { urlToken: string, params: VerificationInput }): Promise<ApiResponse> => {
+    const response = await AuthService.active({ urlToken, ...params })
+
+    if (!response.ok) {
+        const error = await response.json() as ErrorResponse
+        return {
+            status: "error",
+            timestamp: new Date().toISOString(),
+            message: error.detail,
+            data: null,
+            statusCode: error.status
+        }
+    }
+
+    return await response.json() as ApiResponse
+}
+
+const logoutLogic = async () => {
+    // remove refresh token at backend
+    const session = await auth()
+
+    if (session) {
+        const cookieStore = await cookies()
+        const response = await AuthService.logout(cookieStore, session)
+
+        // delete cookie helper
         const setCookieHeader = response.headers.getSetCookie()
         if (setCookieHeader && setCookieHeader.length > 0) {
             const parsedCookies = setCookieParser.parse(setCookieHeader)
-
             parsedCookies.forEach(cookie => {
                 cookieStore.set({
                     name: cookie.name,
@@ -111,96 +120,19 @@ export async function logout() {
                 });
             });
         }
-    } catch (error) {
-        console.log("Logout error at Nextjs Server", error)
     }
+
     await signOut({ redirectTo: "/" })
 }
 
-export async function register(params: RegisterInput): Promise<ApiResponse<RegisterResponse>> {
-    try {
-        const response = await AuthService.register(params)
-
-        // error
-        if (!response.ok) {
-            const error = await response.json() as ErrorResponse
-
-            return {
-                status: "error",
-                timestamp: new Date().toISOString(),
-                message: error.detail,
-                data: null,
-                statusCode: error.status
-            }
-
-        }
-
-        // success
-        const data = await response.json() as ApiResponse<RegisterResponse>
-        return data
-
-    } catch (error) {
-        if (error instanceof NetworkError)
-            return {
-                status: "error",
-                timestamp: new Date().toISOString(),
-                message: error.message,
-                data: null,
-                statusCode: 503
-            }
-
-        return {
-            status: "error",
-            timestamp: new Date().toISOString(),
-            message: "Internal Server Error",
-            data: null,
-            statusCode: 500
-        }
-    }
-}
-
-export async function activate({ urlToken, params }: { urlToken: string, params: VerificationInput }): Promise<ApiResponse> {
-    try {
-        const response = await AuthService.active({ urlToken, ...params })
-
-        // error
-        if (!response.ok) {
-            const error = await response.json() as ErrorResponse
-
-            return {
-                status: "error",
-                timestamp: new Date().toISOString(),
-                message: error.detail,
-                data: null,
-                statusCode: error.status
-            }
-
-        }
-
-        // success
-        const data = await response.json() as ApiResponse
-        return data
-
-    } catch (error) {
-        if (error instanceof NetworkError)
-            return {
-                status: "error",
-                timestamp: new Date().toISOString(),
-                message: error.message,
-                data: null,
-                statusCode: 503
-            }
-
-        return {
-            status: "error",
-            timestamp: new Date().toISOString(),
-            message: "Internal Server Error",
-            data: null,
-            statusCode: 500
-        }
-    }
-}
-
-export async function googleLogin() {
+export const googleLogin = async () => {
     await signIn("google", { redirectTo: "/" })
 }
+
+export const login = withAuthError(loginLogic)
+
+export const register = withAuthError(registerLogic)
+
+export const activate = withAuthError(activateLogic)
+
+export const logout = withAuthError(logoutLogic)

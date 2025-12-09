@@ -12,9 +12,9 @@ import NavMain, { NavMainProps } from "./nav_main";
 import { Home, LucideLayoutDashboard } from "lucide-react";
 import { Wallet } from "lucide-react";
 import { User } from "lucide-react";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/app/ui/shadcn/button";
+import { Session } from "next-auth";
 
 const navData: NavMainProps = {
   items: [
@@ -72,11 +72,15 @@ const navData: NavMainProps = {
   ],
 };
 
+interface DashboardSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  session: Session;
+}
+
 export default function DashboardSidebar({
+  session,
   ...props
-}: React.ComponentProps<typeof Sidebar>) {
-  const { data: session } = useSession();
-  const isAdmin = session?.user?.roles?.includes("ADMIN");
+}: DashboardSidebarProps) {
+  const isAdmin = session.user.roles.includes("ADMIN");
 
   const filteredNavItems = navData.items
     .map((item) => {

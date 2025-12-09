@@ -4,8 +4,19 @@ import { Tabs, TabsList, TabsTrigger } from "@/app/ui/shadcn/tabs";
 import ProfileCard from "./_components/ProfileCard";
 import AccountCard from "./_components/AccountCard";
 import SecurityCard from "./_components/SecurityCard";
+import { getProfile } from "@/actions/user.action";
+import { error } from "console";
 
-export default function ProfilePage() {
+export default async function ProfilePage() {
+
+  const response = await getProfile()
+  const profile = response.data
+
+  if (!profile) {
+    console.error(response.message)
+    return null
+  }
+
   return (
     <div className="min-h-screen flex justify-center">
       <div className="w-full max-w-4xl p-6 space-y-6">
@@ -14,20 +25,20 @@ export default function ProfilePage() {
           <Avatar className="h-15 w-15">
             <AvatarImage
               src={
-                profile?.avatarUrl ??
+                profile.avatarUrl ??
                 `https://ui-avatars.com/api/?name=${profile?.username}&background=random`
               }
-              alt={profile?.username}
+              alt={profile.username}
             />
             <AvatarFallback>
-              {profile?.username?.slice(0, 2).toUpperCase()}
+              {profile.username.slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
 
           <div className="flex flex-col items-center">
-            <div className="text-3xl font-semibold">{profile?.username}</div>
+            <div className="text-3xl font-semibold">{profile.username}</div>
             <div className="text-sm text-muted-foreground">
-              {profile?.email}
+              {profile.email}
             </div>
           </div>
         </div>
@@ -46,7 +57,7 @@ export default function ProfilePage() {
           <TabsContent value="profile" className="space-y-5">
             <ProfileCard
               profile={profile}
-              onSave={(updatedProfile) => updateProfile(updatedProfile)}
+            // onSave={(updatedProfile) => updateProfile(updatedProfile)}
             />
           </TabsContent>
 

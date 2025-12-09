@@ -1,6 +1,6 @@
-import { api } from "@/actions/fetch";
 import { ActivateRequest, LoginRequest, RegisterRequest } from "./auth.types";
 import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies"
+import { Session } from "next-auth";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
@@ -16,19 +16,17 @@ export const AuthService = {
         return response
     },
 
-    async logout(cookies: Pick<ReadonlyRequestCookies, "get">) {
+    async logout(cookies: Pick<ReadonlyRequestCookies, "get">, session: Session) {
         const refreshToken = cookies.get("refresh_token")?.value
+        const accessToken = session?.accessToken
 
-        const response = await api.post(
-            "/auth/logout",
-            {},
-            {
-                headers: {
-                    Cookie: `refresh_token=${refreshToken}`
-                }
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+            method: "POST",
+            headers: {
+                Cookie: `refresh_token=${refreshToken}`,
+                Authorization: `Bearer ${accessToken}`
             }
-        )
-
+        })
         return response
     },
 

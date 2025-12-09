@@ -1,8 +1,10 @@
 import { auth } from "@/auth"
 import { NetworkError } from "@/lib/errors"
+import { ErrorResponse } from "./errorResponse"
+import { ApiResponse } from "./constants/ApiResponse"
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
-async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
+async function fetchWithAuth<T>(endpoint: string, options: RequestInit = {}) {
     const session = await auth()
     const accessToken = session?.accessToken
 
@@ -21,14 +23,27 @@ async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
 
     let response: Response;
 
-    // network error
+
     try {
         response = await fetch(`${API_BASE_URL}${endpoint}`, {
             ...options,
             headers: mergedHeaders,
         })
 
-        return response
+        if (!response.ok) {
+            const error = await response.json() as ErrorResponse
+            return {
+                status: "error",
+                timestamp: new Date().toISOString(),
+                message: error.detail,
+                data: null,
+                statusCode: error.status
+            }
+        }
+
+        const data = await response.json() as ApiResponse<T>
+
+        return data
     } catch (error) {
         throw new NetworkError("Network error")
     }
@@ -36,26 +51,26 @@ async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
 }
 
 export const api = {
-    get: (endpoint: string, options: RequestInit = {}) =>
-        fetchWithAuth(endpoint, {
+    get: <T>(endpoint: string, options: RequestInit = {}) =>
+        fetchWithAuth<T>(endpoint, {
             ...options,
             method: 'GET'
         }),
 
-    post: (endpoint: string, body: any, options: RequestInit = {}) =>
-        fetchWithAuth(endpoint, {
+    post: <T>(endpoint: string, body: any, options: RequestInit = {}) =>
+        fetchWithAuth<T>(endpoint, {
             ...options,
             method: 'POST',
             body: JSON.stringify(body)
         }),
 
-    put: (endpoint: string, body: any, options: RequestInit = {}) =>
-        fetchWithAuth(endpoint, {
+    put: <T>(endpoint: string, body: any, options: RequestInit = {}) =>
+        fetchWithAuth<T>(endpoint, {
             ...options,
             method: 'PUT',
             body: JSON.stringify(body)
         }),
 
-    delete: (endpoint: string, options: RequestInit = {}) =>
-        fetchWithAuth(endpoint, { ...options, method: 'DELETE' }),
+    delete: <T>(endpoint: string, options: RequestInit = {}) =>
+        fetchWithAuth<T>(endpoint, { ...options, method: 'DELETE' }),
 };
