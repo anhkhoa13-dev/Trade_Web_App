@@ -32,7 +32,7 @@ export const AuthService = {
 
     async refresh(cookies: Pick<ReadonlyRequestCookies, "get">) {
         const refreshToken = cookies.get("refresh_token")?.value
-        const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+        const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
             method: "POST",
             headers: {
                 Cookie: `refresh_token=${refreshToken}`

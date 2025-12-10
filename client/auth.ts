@@ -78,6 +78,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
                 return token
             }
+
             if (Date.now() < token.expiresAt)
                 return token
 
@@ -104,6 +105,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
 async function refreshAccessToken(token: JWT): Promise<JWT> {
     try {
+        console.log("Refresh token")
         const cookieStore = await cookies()
         const refreshToken = cookieStore.get("refresh_token")?.value
 

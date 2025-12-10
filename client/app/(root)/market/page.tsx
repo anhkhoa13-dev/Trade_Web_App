@@ -20,7 +20,7 @@ export default async function MarketPage() {
 
         {/* --- Market Table --- */}
         <section>
-          <MarketTable initialData={initialCoins} />
+          <MarketTable initialData={initialCoins} defaultPageSize={10} />
         </section>
 
       </div>

@@ -63,20 +63,19 @@ export function DataTable<TData, TValue>({
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
       {/* Toolbar */}
-      <div
-        className="flex items-center justify-between p-4 border-b
-          border-border/50"
-      >
-        <h1 className="text-lg font-semibold px-2">{title}</h1>
-        {enableSearch && (
+      {enableSearch && (
+        <div
+          className="flex items-center justify-between p-4 border-b border-border/50"
+        >
+          <h1 className="text-lg font-semibold px-2">{title}</h1>
           <Input
             placeholder="Search..."
             value={globalFilter ?? ""}
             onChange={(e) => setGlobalFilter(e.target.value)}
             className="w-64"
           />
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Table content */}
       <div className="overflow-x-auto">

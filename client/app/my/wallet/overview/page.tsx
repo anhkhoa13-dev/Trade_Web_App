@@ -1,5 +1,5 @@
 import React from "react";
-import { TotalAssetCard } from "./_components/PortfolioTable/TotalAssetCard";
+import { TotalAssetCard } from "./_components/TotalAssetCard";
 import PortfolioAssetTable from "./_components/PortfolioTable/PortfolioAssetTable";
 import ProfitLostAnalysis from "./_components/ProfitLostAnalysis";
 import AITradeStatus from "./_components/AITradeStatus";
@@ -12,7 +12,7 @@ import { getWallet } from "@/actions/wallet.actions";
 
 export default async function page() {
   const [initialCoins, walletResponse] = await Promise.all([
-    getCachedMarketData(1000),
+    getCachedMarketData(5),
     getWallet()
   ]);
 

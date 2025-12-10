@@ -5,7 +5,6 @@ import ProfileCard from "./_components/ProfileCard";
 import AccountCard from "./_components/AccountCard";
 import SecurityCard from "./_components/SecurityCard";
 import { getProfile } from "@/actions/user.action";
-import { error } from "console";
 
 export default async function ProfilePage() {
 

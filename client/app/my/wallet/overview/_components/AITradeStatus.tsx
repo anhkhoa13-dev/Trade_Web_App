@@ -9,8 +9,6 @@ import {
   CardContent,
 } from "@/app/ui/shadcn/card";
 import { Button } from "@/app/ui/shadcn/button";
-import { Switch } from "@/app/ui/shadcn/switch";
-import { Label } from "@/app/ui/shadcn/label";
 import { Badge } from "@/app/ui/shadcn/badge";
 import { Bot, TrendingUp, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";

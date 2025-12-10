@@ -4,7 +4,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -90,6 +89,7 @@ public class AuthController {
                  * (invalid)
                  */
                 // Check valid
+
                 Jwt decodedToken = this.securityUtil.checkValidRefreshToken(refreshToken);
                 String email = decodedToken.getSubject();
 

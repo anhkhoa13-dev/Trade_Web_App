@@ -9,10 +9,10 @@ import {
 import { Button } from "@/app/ui/shadcn/button";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useWallet } from "@/hooks/useWallet";
 import { COIN_LOGOS } from "@/services/constants/coinConstant";
 import { useLiveMarketStream } from "@/hooks/ws/useLiveMarketStream-v1";
 import { AssetDTO } from "@/backend/wallet/wallet.types";
+import { Card, CardHeader } from "@/app/ui/shadcn/card";
 
 const TOP_NUMBER = 5;
 
@@ -89,12 +89,12 @@ export default function PortfolioAssetTable({ walletData }: { walletData: AssetD
   }
 
   return (
-    <div
-      className="flex flex-col gap-4 w-full h-full border border-border bg-card
+    <Card
+      className="flex flex-col gap-4 justify-between w-full h-full border border-border bg-card
         rounded-xl overflow-hidden p-6"
     >
       {/* Header Section */}
-      <div
+      <CardHeader
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between"
       >
         <div>
@@ -115,9 +115,9 @@ export default function PortfolioAssetTable({ walletData }: { walletData: AssetD
           View More
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
-      </div>
+      </CardHeader>
 
-      {/* Table (overview only) */}
+
       <DataTable
         columns={userPortfolioColumns}
         data={topFive}
@@ -125,6 +125,8 @@ export default function PortfolioAssetTable({ walletData }: { walletData: AssetD
         enablePagination={false}
         enableSorting={false}
       />
-    </div>
+      {/* Table (overview only) */}
+
+    </Card>
   );
 }

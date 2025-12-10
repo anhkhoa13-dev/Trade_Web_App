@@ -3,9 +3,6 @@
 import React from "react";
 import {
   Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
   CardContent,
 } from "@/app/ui/shadcn/card";
 import { TrendingUp, TrendingDown } from "lucide-react";
