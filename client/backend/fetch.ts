@@ -4,7 +4,7 @@ import { ErrorResponse } from "./errorResponse"
 import { ApiResponse } from "./constants/ApiResponse"
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
-async function fetchWithAuth<T>(endpoint: string, options: RequestInit = {}) {
+async function _fetch<T>(endpoint: string, options: RequestInit = {}, withAuth: boolean) {
     const session = await auth()
     const accessToken = session?.accessToken
 
@@ -12,7 +12,7 @@ async function fetchWithAuth<T>(endpoint: string, options: RequestInit = {}) {
         'Content-Type': 'application/json',
     };
 
-    if (accessToken) {
+    if (accessToken && withAuth) {
         defaultHeaders['Authorization'] = `Bearer ${accessToken}`;
     }
 
@@ -50,27 +50,26 @@ async function fetchWithAuth<T>(endpoint: string, options: RequestInit = {}) {
 
 }
 
+type ApiOptions = {
+    endpoint: string
+    options?: RequestInit
+    withAuth?: boolean
+    body?: any
+}
+
 export const api = {
-    get: <T>(endpoint: string, options: RequestInit = {}) =>
-        fetchWithAuth<T>(endpoint, {
-            ...options,
-            method: 'GET'
-        }),
+    get: <T>({ endpoint, options = {}, withAuth = true }: ApiOptions) =>
+        _fetch<T>(endpoint, { ...options, method: 'GET' }, withAuth),
 
-    post: <T>(endpoint: string, body: any, options: RequestInit = {}) =>
-        fetchWithAuth<T>(endpoint, {
-            ...options,
-            method: 'POST',
-            body: JSON.stringify(body)
-        }),
+    post: <T>({ endpoint, body, options = {}, withAuth = true }: ApiOptions) =>
+        _fetch<T>(endpoint, { ...options, method: 'POST', body: JSON.stringify(body) }, withAuth),
 
-    put: <T>(endpoint: string, body: any, options: RequestInit = {}) =>
-        fetchWithAuth<T>(endpoint, {
-            ...options,
-            method: 'PUT',
-            body: JSON.stringify(body)
-        }),
+    put: <T>({ endpoint, body, options = {}, withAuth = true }: ApiOptions) =>
+        _fetch<T>(endpoint, { ...options, method: 'PUT', body: JSON.stringify(body) }, withAuth),
 
-    delete: <T>(endpoint: string, options: RequestInit = {}) =>
-        fetchWithAuth<T>(endpoint, { ...options, method: 'DELETE' }),
-};
+    patch: <T>({ endpoint, body, options = {}, withAuth = true }: ApiOptions) =>
+        _fetch<T>(endpoint, { ...options, method: 'PATCH', body: JSON.stringify(body) }, withAuth),
+
+    delete: <T>({ endpoint, options = {}, withAuth = true }: ApiOptions) =>
+        _fetch<T>(endpoint, { ...options, method: 'DELETE' }, withAuth),
+}

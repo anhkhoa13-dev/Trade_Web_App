@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BotFormInputs, BotFormSchema } from "@/services/schemas/bot";
+import { BotFormInputs, BotFormSchema } from "@/schema/bot";
 import { BasicInformationSection } from "./_components/BasicInformationSection";
 import { EngineSettingsSection } from "./_components/EngineSettingsSection";
 import { TradingConfigurationSection } from "./_components/TradingConfigurationSection";

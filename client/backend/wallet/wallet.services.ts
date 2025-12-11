@@ -3,7 +3,9 @@ import { AssetDTO } from "./wallet.types";
 
 export const WalletService = {
     async getUserAssets() {
-        const res = await api.get<AssetDTO>(`/wallet/assets`)
+        const res = await api.get<AssetDTO>({
+            endpoint: `/wallet/assets`,
+        })
         return res
     },
 }

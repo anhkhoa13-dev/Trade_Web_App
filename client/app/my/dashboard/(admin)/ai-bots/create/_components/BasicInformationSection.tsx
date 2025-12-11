@@ -11,9 +11,9 @@ import {
   SelectItem,
 } from "@/app/ui/shadcn/select";
 import { SectionCard } from "@/app/ui/my_components/Card/SectionCard";
-import { BotFormInputs } from "@/services/schemas/bot";
+import { BotFormInputs } from "@/schema/bot";
 import { useForm, Controller, UseFormReturn } from "react-hook-form";
-import { RISK_LEVELS } from "@/services/constants/botConstant";
+import { RISK_LEVELS } from "@/backend/bot/botConstant";
 
 interface Props {
   form: UseFormReturn<BotFormInputs>;

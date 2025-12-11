@@ -4,7 +4,7 @@ import { Card } from "@/app/ui/shadcn/card";
 import { Button } from "@/app/ui/shadcn/button";
 import { RefreshCw, Pause, Play, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
-import { BotStatus } from "@/services/constants/botConstant";
+import { BotStatus } from "@/backend/bot/botConstant";
 
 interface Props {
   botName: string;

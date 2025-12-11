@@ -19,7 +19,7 @@ import { Input } from "@/app/ui/shadcn/input";
 import {
   BotSubUpdateSchema,
   BotSubUpdateInputs,
-} from "@/services/schemas/botSub";
+} from "@/schema/botSub";
 import { useBotSub } from "@/hooks/bot/useBotSub";
 import { BotCopyRequest, BotUpdateRequest } from "@/services/botSubService";
 

@@ -9,7 +9,9 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   SortingState,
+  PaginationState, // Import thêm
   useReactTable,
+  OnChangeFn, // Import thêm
 } from "@tanstack/react-table";
 
 import {
@@ -31,6 +33,11 @@ interface DataTableProps<TData, TValue> {
   enablePagination?: boolean;
   enableSorting?: boolean;
   fallback?: string;
+
+  // --- Props mới cho Server-Side Pagination ---
+  pageCount?: number; // Tổng số trang từ Server
+  pagination?: PaginationState; // Trạng thái trang hiện tại { pageIndex, pageSize }
+  onPaginationChange?: OnChangeFn<PaginationState>; // Hàm xử lý khi đổi trang
 }
 
 export function DataTable<TData, TValue>({
@@ -40,7 +47,12 @@ export function DataTable<TData, TValue>({
   enableSearch = true,
   enablePagination = true,
   enableSorting = true,
-  fallback = "No results.", // loading
+  fallback = "No results.",
+
+  // Mặc định là undefined (để giữ logic cũ nếu không truyền)
+  pageCount,
+  pagination,
+  onPaginationChange,
 }: DataTableProps<TData, TValue>) {
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -48,25 +60,27 @@ export function DataTable<TData, TValue>({
   const table = useReactTable({
     data,
     columns,
+    pageCount: pageCount ?? -1, // -1 nghĩa là để table tự tính (client-side), nếu có số thì dùng server-side
+    state: {
+      globalFilter,
+      sorting,
+      pagination, // Pass controlled state nếu có
+    },
+    manualPagination: !!pageCount, // Kích hoạt chế độ Server nếu có pageCount
+    onPaginationChange: onPaginationChange, // Pass handler nếu có
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: enableSorting ? getSortedRowModel() : undefined,
     onSortingChange: enableSorting ? setSorting : undefined,
     onGlobalFilterChange: setGlobalFilter,
-    state: {
-      globalFilter,
-      sorting,
-    },
   });
 
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
       {/* Toolbar */}
       {enableSearch && (
-        <div
-          className="flex items-center justify-between p-4 border-b border-border/50"
-        >
+        <div className="flex items-center justify-between p-4 border-b border-border/50">
           <h1 className="text-lg font-semibold px-2">{title}</h1>
           <Input
             placeholder="Search..."
@@ -89,8 +103,7 @@ export function DataTable<TData, TValue>({
                   return (
                     <TableHead
                       key={header.id}
-                      className="h-12 text-left font-medium
-                        text-muted-foreground bg-muted/30 px-10 select-none"
+                      className="h-12 text-left font-medium text-muted-foreground bg-muted/30 px-10 select-none"
                       onClick={
                         enableSorting && header.column.getCanSort()
                           ? header.column.getToggleSortingHandler()
@@ -102,16 +115,12 @@ export function DataTable<TData, TValue>({
                           ? null
                           : flexRender(
                             header.column.columnDef.header,
-                            header.getContext(),
+                            header.getContext()
                           )}
                         {/* Sorting indicators */}
                         {enableSorting && header.column.getCanSort() && (
                           <span className="ml-1 text-xs">
-                            {sorted === "asc"
-                              ? "↑"
-                              : sorted === "desc"
-                                ? "↓"
-                                : "↕"}
+                            {sorted === "asc" ? "↑" : sorted === "desc" ? "↓" : "↕"}
                           </span>
                         )}
                       </div>
@@ -134,7 +143,7 @@ export function DataTable<TData, TValue>({
                     <TableCell key={cell.id} className="px-10">
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext(),
+                        cell.getContext()
                       )}
                     </TableCell>
                   ))}
@@ -143,7 +152,7 @@ export function DataTable<TData, TValue>({
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={table.getAllColumns().length}
+                  colSpan={columns.length} // Sửa lại: dùng columns.length thay vì getAllColumns() để tránh lỗi render
                   className="h-24 text-center text-muted-foreground"
                 >
                   {fallback}

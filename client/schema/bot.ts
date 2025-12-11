@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { BOT_CATEGORIES, RISK_LEVELS } from "../constants/botConstant";
+import { BOT_CATEGORIES, RISK_LEVELS } from "../backend/bot/botConstant";
 
 // --- Schema for the entire Form Data ---
 export const BotFormSchema = z.object({
@@ -15,12 +15,10 @@ export const BotFormSchema = z.object({
 
   // Optional fields on the main Bot entity
   websocketUrl: z
-    .string()
     .url("Must be a valid URL.")
     .optional()
     .or(z.literal("")),
   healthUrl: z
-    .string()
     .url("Must be a valid URL.")
     .optional()
     .or(z.literal("")),

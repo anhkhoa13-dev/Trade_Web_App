@@ -4,17 +4,19 @@ import { ProfileUpdateRequest, UserProfile } from "./user.types";
 
 export const UserService = {
     async getProfile() {
-        const res = await api.get<UserProfile>(
-            "/users/profile"
-        )
+        const res = await api.get<UserProfile>({
+            endpoint: "/users/profile",
+        })
         return res
     },
 
     async updateProfile(payload: ProfileUpdateRequest) {
         const res = await api.put<UserProfile>(
-            "/users/profile",
-            payload,
-        );
-        return res;
+            {
+                endpoint: "/users/profile",
+                body: payload,
+            }
+        )
+        return res
     },
 }
