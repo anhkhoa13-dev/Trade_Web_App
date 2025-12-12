@@ -18,18 +18,34 @@ import jakarta.servlet.http.HttpServletRequest;
 
 @Configuration
 public class VnPayConfig {
-    @Value("${vnpay.tmn-code}")
     public static String TMN_CODE;
-    @Value("${vnpay.hash-secret}")
     public static String HASH_SECRET;
-    @Value("${vnpay.pay-url}")
     public static String PAY_URL;
-    @Value("${vnpay.return-url}")
     public static String RETURN_URL;
 
     public static String VNP_VERSION = "2.1.0";
     public static String VNP_COMMAND = "pay";
     public static String VNP_API_URL = "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";
+
+    @Value("${vnpay.tmn-code}")
+    public void setTmnCode(String tmnCode) {
+        TMN_CODE = tmnCode;
+    }
+
+    @Value("${vnpay.hash-secret}")
+    public void setHashSecret(String hashSecret) {
+        HASH_SECRET = hashSecret;
+    }
+
+    @Value("${vnpay.pay-url}")
+    public void setPayUrl(String payUrl) {
+        PAY_URL = payUrl;
+    }
+
+    @Value("${vnpay.return-url}")
+    public void setReturnUrl(String returnUrl) {
+        RETURN_URL = returnUrl;
+    }
 
     public static String getRandomNumber(int len) {
         Random rnd = new Random();

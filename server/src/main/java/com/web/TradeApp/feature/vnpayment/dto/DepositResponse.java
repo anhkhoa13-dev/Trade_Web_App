@@ -8,9 +8,9 @@ import lombok.Builder;
 
 @Builder
 public record DepositResponse(
-        String amount,
-        boolean convertedAmount,
-        PaymentStatus status,
-        BigDecimal exchangeRate,
-        String description) {
+                BigDecimal amount,
+                BigDecimal convertedAmount,
+                PaymentStatus status,
+                BigDecimal exchangeRate,
+                String description) {
 }

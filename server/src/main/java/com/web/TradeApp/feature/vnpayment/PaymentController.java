@@ -47,7 +47,7 @@ public class PaymentController {
                 return ResponseEntity.ok(Collections.singletonMap("url", paymentUrl));
         }
 
-        // Handle VnPay return URL
+        // Handle VnPay callback
         @PostMapping("/vnpay-callback")
         @ApiMessage("payment returned")
         public ResponseEntity<DepositResponse> paymentCallback(HttpServletRequest request) {

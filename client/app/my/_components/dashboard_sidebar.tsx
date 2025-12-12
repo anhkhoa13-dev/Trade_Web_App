@@ -15,6 +15,7 @@ import { User } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/app/ui/shadcn/button";
+import { Landmark } from "lucide-react";
 
 const navData: NavMainProps = {
   items: [

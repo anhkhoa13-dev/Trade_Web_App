@@ -2,6 +2,7 @@ package com.web.TradeApp.feature.vnpayment.entity;
 
 import java.math.BigDecimal;
 
+import com.web.TradeApp.feature.common.entity.BaseEntity;
 import com.web.TradeApp.feature.user.entity.User;
 
 import jakarta.persistence.Column;
@@ -25,7 +26,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PaymentTransaction {
+public class PaymentTransaction extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

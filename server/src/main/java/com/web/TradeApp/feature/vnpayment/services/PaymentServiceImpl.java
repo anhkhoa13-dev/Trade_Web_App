@@ -35,9 +35,11 @@ import com.web.TradeApp.utils.CommonUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PaymentServiceImpl implements PaymentService {
     private final PaymentTransactionRepository transactionRepository;
     private final UserRepository userRepository;
@@ -66,11 +68,6 @@ public class PaymentServiceImpl implements PaymentService {
         return vnpTxnRef;
     }
 
-    /**
-     * 1. create a vnPay payment URL that redirect user to VnPay payment gateway (in
-     * frontend)
-     * 2. vnPay will call returnUrl after payment done => verifyPayment()
-     */
     @Override
     @Transactional
     public String createVnPayPayment(BigDecimal totalAmount, String vnpTxnRef, HttpServletRequest request)
@@ -82,9 +79,10 @@ public class PaymentServiceImpl implements PaymentService {
         vnp_Params.put("vnp_Version", VnPayConfig.VNP_VERSION);
         vnp_Params.put("vnp_Command", VnPayConfig.VNP_COMMAND);
         vnp_Params.put("vnp_TmnCode", VnPayConfig.TMN_CODE);
-        vnp_Params.put("vnp_Amount", String.valueOf(amount));
+        vnp_Params.put("vnp_Amount", String.valueOf(amount.longValue())); // Ensure .00 is removed for integer
+                                                                          // requirement
         vnp_Params.put("vnp_CurrCode", "VND");
-        vnp_Params.put("vnp_TxnRef", vnpTxnRef); // Mã tham chiếu giao dịch nạp tiền (Unique)
+        vnp_Params.put("vnp_TxnRef", vnpTxnRef);
         vnp_Params.put("vnp_OrderInfo", "deposit to wallet: " + vnpTxnRef);
         vnp_Params.put("vnp_OrderType", "topup");
         vnp_Params.put("vnp_Locale", "vn");
@@ -92,15 +90,14 @@ public class PaymentServiceImpl implements PaymentService {
         vnp_Params.put("vnp_IpAddr", VnPayConfig.getIpAddress(request));
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-        ZoneId zoneId = ZoneId.of("Asia/Ho_Chi_Minh"); // Hoặc "Etc/GMT+7"
+        ZoneId zoneId = ZoneId.of("Asia/Ho_Chi_Minh");
 
         ZonedDateTime now = ZonedDateTime.now(zoneId);
 
-        // TCreation time and Expires after 15 minutes
         vnp_Params.put("vnp_CreateDate", now.format(formatter));
         vnp_Params.put("vnp_ExpireDate", now.plusMinutes(EXPIRED_MINUTES).format(formatter));
 
-        // Create checksum (for validate return url)
+        // Build hash data with ENCODING
         List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
         Collections.sort(fieldNames);
         StringBuilder hashData = new StringBuilder();
@@ -132,40 +129,114 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional
     public DepositResponse processPaymentCallback(HttpServletRequest request) {
-        // check sum
-        if (!verifyPayment(request))
+        // 1. Verify Checksum first
+        if (!verifyPayment(request)) {
+            // Logic verifyPayment đã throw Exception nếu fail, nên dòng này chỉ là fallback
             return null;
+        }
 
         // --- 2. VERIFY TRANSACTION STATUS ---
         String vnpTxnRef = request.getParameter("vnp_TxnRef");
         String vnpResponseCode = request.getParameter("vnp_ResponseCode");
+        String vnpTransactionStatus = request.getParameter("vnp_TransactionStatus");
 
         PaymentTransaction transaction = transactionRepository.findByVnpTxnRef(vnpTxnRef)
                 .orElseThrow(() -> new PaymentException("Transaction not found: " + vnpTxnRef));
 
-        // Idempotency check
+        // Idempotency check: Nếu đã thành công rồi thì không xử lý lại
         if (transaction.getStatus() == PaymentStatus.SUCCESS) {
-            return transactionToDepositResponse(transaction); // Already processed, just return
-        }
-        if (!"00".equals(vnpResponseCode)) {
-            // Payment Failed
-            transaction.setStatus(PaymentStatus.FAILED);
-            transactionRepository.save(transaction);
-            throw new PaymentException("Payment failed with error code: " + vnpResponseCode);
+            log.info("Return directly. This transaction {} has been already processed successfully.", vnpTxnRef);
+            return transactionToDepositResponse(transaction);
         }
 
-        // --- 3. SUCCESS LOGIC (UPDATE WALLET) ---
+        boolean isSuccessResponse = "00".equals(vnpResponseCode);
+        boolean isSuccessStatus = "00".equals(vnpTransactionStatus);
+
+        if (isSuccessResponse && isSuccessStatus) {
+            // --- SUCCESS CASE ---
+            return handleSuccessTransaction(transaction);
+        } else {
+            // --- FAILURE CASE ---
+            return handleFailedTransaction(transaction, vnpResponseCode);
+        }
+    }
+
+    private boolean verifyPayment(HttpServletRequest request) {
+        Map<String, String> fields = new HashMap<>();
+
+        // 1. Get all parameters
+        for (Enumeration<String> params = request.getParameterNames(); params.hasMoreElements();) {
+            String fieldName = params.nextElement();
+            String fieldValue = request.getParameter(fieldName);
+            if ((fieldValue != null) && (fieldValue.length() > 0)) {
+                fields.put(fieldName, fieldValue);
+            }
+        }
+
+        String vnp_SecureHash = request.getParameter("vnp_SecureHash");
+        if (fields.containsKey("vnp_SecureHashType"))
+            fields.remove("vnp_SecureHashType");
+        if (fields.containsKey("vnp_SecureHash"))
+            fields.remove("vnp_SecureHash");
+
+        // 2. Re-calculate signature
+        // QUAN TRỌNG: Phải dùng URLEncoder cho value giống như lúc tạo URL
+        List<String> fieldNames = new ArrayList<>(fields.keySet());
+        Collections.sort(fieldNames);
+        StringBuilder hashData = new StringBuilder();
+        Iterator<String> itr = fieldNames.iterator();
+        while (itr.hasNext()) {
+            String fieldName = itr.next();
+            String fieldValue = fields.get(fieldName);
+            if ((fieldValue != null) && (fieldValue.length() > 0)) {
+                hashData.append(fieldName);
+                hashData.append("=");
+                try {
+                    // Encoding value để khớp với quy tắc hash của VNPay
+                    hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (itr.hasNext()) {
+                hashData.append("&");
+            }
+        }
+
+        String signValue = VnPayConfig.hmacSHA512(VnPayConfig.HASH_SECRET, hashData.toString());
+
+        if (!signValue.equals(vnp_SecureHash)) {
+            // Log chi tiết để debug nếu lỗi
+            log.error("Checksum mismatch!");
+            log.error("Received Hash: {}", vnp_SecureHash);
+            log.error("Calculated Hash: {}", signValue);
+            log.error("Hash String: {}", hashData.toString());
+            throw new PaymentException("Invalid Checksum - Possible data tampering");
+        }
+        return true;
+    }
+
+    private DepositResponse handleSuccessTransaction(PaymentTransaction transaction) {
         transaction.setStatus(PaymentStatus.SUCCESS);
 
         // Fetch Real-time Exchange Rate (USD -> VND)
-        BigDecimal exchangeRate = CommonUtils.fetchRealTimeExchangeRate();
+        // Fallback nếu API lỗi
+        BigDecimal exchangeRate = BigDecimal.valueOf(25000);
+        try {
+            BigDecimal fetchedRate = CommonUtils.fetchRealTimeExchangeRate();
+            if (fetchedRate != null)
+                exchangeRate = fetchedRate;
+        } catch (Exception e) {
+            log.warn("Failed to fetch exchange rate, using default: {}", exchangeRate);
+        }
+
         transaction.setExchangeRate(exchangeRate);
 
         // Convert Currency
         BigDecimal amountVND = transaction.getAmount();
         BigDecimal amountUSD = amountVND.divide(exchangeRate, 2, RoundingMode.HALF_UP);
-        transaction.setAmount(amountVND);
         transaction.setConvertedAmount(amountUSD);
 
         // Update Wallet
@@ -181,56 +252,40 @@ public class PaymentServiceImpl implements PaymentService {
         return transactionToDepositResponse(savedTransaction);
     }
 
-    // 2. Process Callback from VNPay
-    // Returns a Map containing results for Controller processing
-    private boolean verifyPayment(HttpServletRequest request) {
-        Map fields = new HashMap();
+    private DepositResponse handleFailedTransaction(PaymentTransaction transaction, String responseCode) {
+        transaction.setStatus(PaymentStatus.FAILED);
+        transactionRepository.save(transaction);
 
-        // 1. Get all parameters from the returned URL
-        for (Enumeration params = request.getParameterNames(); params.hasMoreElements();) {
-            String fieldName = null;
-            String fieldValue = null;
-            try {
-                fieldName = (String) params.nextElement();
-                fieldValue = request.getParameter(fieldName);
-                if ((fieldValue != null) && (fieldValue.length() > 0)) {
-                    fields.put(fieldName, fieldValue);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        String errorMessage;
+        switch (responseCode) {
+            case "24":
+                errorMessage = "Giao dịch đã bị hủy bởi người dùng";
+                break;
+            case "11":
+                errorMessage = "Giao dịch thất bại: Hết hạn chờ thanh toán";
+                break;
+            case "09":
+                errorMessage = "Giao dịch thất bại: Thẻ/Tài khoản chưa đăng ký dịch vụ InternetBanking";
+                break;
+            case "07":
+                errorMessage = "Giao dịch thất bại: Trừ tiền thành công nhưng nghi ngờ gian lận";
+                break;
+            default:
+                errorMessage = "Giao dịch thất bại với mã lỗi VNPay: " + responseCode;
+                break;
         }
 
-        // 2. Get the signature sent by VNPay (vnp_SecureHash)
-        String vnp_SecureHash = request.getParameter("vnp_SecureHash");
-
-        // 3. Remove hash-related parameters from data before re-calculating hash
-        if (fields.containsKey("vnp_SecureHashType"))
-            fields.remove("vnp_SecureHashType");
-        if (fields.containsKey("vnp_SecureHash"))
-            fields.remove("vnp_SecureHash");
-
-        // 4. Re-calculate signature (Checksum) based on received data and our Secret
-        // Key
-        // Logic: Hash(SecretKey + SortedParams)
-        String signValue = VnPayConfig.hmacSHA512(VnPayConfig.HASH_SECRET, VnPayConfig.hashAllFields(fields));
-
-        // 5. Compare calculated signature (signValue) with VNPay's signature
-        // (vnp_SecureHash)
-        if (!signValue.equals(vnp_SecureHash)) {
-            throw new PaymentException("Invalid Checksum - Possible data tampering");
-        }
-        return true;
+        log.warn("Payment failed for TxnRef: {}. Reason: {}", transaction.getVnpTxnRef(), errorMessage);
+        throw new PaymentException(errorMessage);
     }
 
     private DepositResponse transactionToDepositResponse(PaymentTransaction transaction) {
         return DepositResponse.builder()
-                .amount(transaction.getAmount().toPlainString())
-                .convertedAmount(transaction.getConvertedAmount() != null)
+                .amount(transaction.getAmount())
+                .convertedAmount(transaction.getConvertedAmount())
                 .status(transaction.getStatus())
                 .exchangeRate(transaction.getExchangeRate())
                 .description(transaction.getDescription())
                 .build();
     }
-
 }
