@@ -9,13 +9,13 @@ import toast from "react-hot-toast";
 import { BasicInformationSection } from "../../../create/_components/BasicInformationSection";
 import { TradingConfigurationSection } from "../../../create/_components/TradingConfigurationSection";
 import { EngineSettingsSection } from "../../../create/_components/EngineSettingsSection";
-import { BotCategory, RiskLevel } from "@/services/constants/botConstant";
+import { BotCategory, RiskLevel } from "@/backend/bot/botConstant";
 import {
   useUpdateBot,
   useBotForEdit,
   useDeleteBot,
 } from "@/hooks/bot/useBotHook";
-import { BotFormInputs, BotFormSchema } from "@/services/schemas/bot";
+import { BotFormInputs, BotFormSchema } from "@/schema/botSchema";
 import { EditQuickActions } from "./EditQuickActions";
 import { EditStatistics } from "./EditStatistics";
 import { useState } from "react";

@@ -1,17 +1,16 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-option";
 import { redirect } from "next/navigation";
 import { HistoryDashboard } from "./_components/HistoryDashboard";
-import { historyService } from "@/services/historyService";
-import { getAllSubscriptionsSSR } from "@/services/botSubService";
-import type { BotSubscription } from "@/services/interfaces/botSubInterfaces";
+import { auth } from "@/auth";
+import { BotSubscription } from "@/backend/bot/botSub.types";
+import { getBotTransactions, getManualTransactions } from "@/actions/history.actions";
+import { getUserSubscriptions } from "@/actions/botSub.actions";
 
 export default async function HistoryPage({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (!session?.accessToken) {
     redirect("/login");
@@ -73,34 +72,37 @@ export default async function HistoryPage({
 
   if (activeTab === "manual") {
     // Only fetch manual data if on manual tab
-    manualData = await historyService.getManualTransactions(
+    manualData = await getManualTransactions(
       commonFilters,
-      session.accessToken,
     );
   } else if (activeTab === "bot") {
     // 1. Fetch Subscriptions (needed for the list)
-    const subscriptionsResponse = await getAllSubscriptionsSSR(
+    const subscriptionsResponse = await getUserSubscriptions(
       {
         page: 1,
         size: 100, // Fetch all subscriptions for the list
         sortBy: "equity",
       },
-      session.accessToken,
     );
-    botSubscriptions = subscriptionsResponse.result;
+
+
+    if (subscriptionsResponse.status === "error" || !subscriptionsResponse.data) {
+      return null
+    }
+
+    botSubscriptions = subscriptionsResponse.data.result;
 
     // 2. Determine which bot is selected (URL param or default to first)
     const activeBotId = botId || botSubscriptions[0]?.subscriptionId;
 
     // 3. Fetch Transactions for that specific bot
     if (activeBotId) {
-      botData = await historyService.getBotTransactions(
+      botData = await getBotTransactions(
         {
           ...commonFilters,
           botSubId: activeBotId,
         },
-        session.accessToken, // Assuming this API needs auth
-      );
+      )
     }
   }
 

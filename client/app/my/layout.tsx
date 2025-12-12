@@ -8,14 +8,20 @@ import DashboardSidebar from "./_components/dashboard_sidebar";
 import { Separator } from "../ui/shadcn/separator";
 import { ModeToggle } from "../ui/my_components/Theme/ModeToggle";
 import { UserNav } from "../(root)/_components/Header/UserNav";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-option";
+import { auth } from "@/auth";
+import { forbidden } from "next/navigation";
+
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
-  const session = await getServerSession(authOptions);
+  const session = await auth()
+
+  if (!session) {
+    forbidden()
+  }
+
   return (
     <SidebarProvider>
-      <DashboardSidebar />
+      <DashboardSidebar session={session} />
 
       <SidebarInset>
         <header
@@ -33,10 +39,10 @@ export default async function Layout({ children }: { children: React.ReactNode }
           <div>
             <ModeToggle />
             <UserNav user={{
-              name: session?.user?.fullname,
-              username: session?.user?.username,
-              email: session?.user?.email,
-              image: session?.user?.avatarUrl
+              name: session.user.fullname,
+              username: session.user.username,
+              email: session.user.email,
+              image: session.user.avatarUrl
             }} />
           </div>
         </header>

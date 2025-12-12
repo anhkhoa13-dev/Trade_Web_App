@@ -1,8 +1,6 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/ui/shadcn/card";
-import { Input } from "@/app/ui/shadcn/input";
-import { Label } from "@/app/ui/shadcn/label";
 
 interface WalletAllocationProps {
   botWalletBalance: number;

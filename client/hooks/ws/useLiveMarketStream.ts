@@ -35,7 +35,7 @@ export const useLiveMarket = (initialData: MarketCoin[]) => {
                 const tickers = JSON.parse(event.data);
 
                 tickers.forEach((ticker: any) => {
-                    // Chỉ update những coin có trong Map (danh sách lấy từ Server)
+
                     if (marketMap.current.has(ticker.s)) {
                         const currentCoin = marketMap.current.get(ticker.s)!;
                         const newPrice = parseFloat(ticker.c);
@@ -63,7 +63,7 @@ export const useLiveMarket = (initialData: MarketCoin[]) => {
 
         connectWebSocket();
 
-        // Throttling: Update React State mỗi 1 giây
+        // Throttling
         const intervalId = setInterval(() => {
             if (marketMap.current.size > 0) {
                 setData(Array.from(marketMap.current.values()));
@@ -74,7 +74,7 @@ export const useLiveMarket = (initialData: MarketCoin[]) => {
             if (ws) ws.close();
             clearInterval(intervalId);
         };
-    }, [initialData]); // Dependency là initialData
+    }, [initialData])
 
     return data;
 };

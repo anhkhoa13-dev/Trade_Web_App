@@ -11,7 +11,7 @@ import {
 import { Button } from "@/app/ui/shadcn/button";
 
 import { useRouter } from "next/navigation";
-import { BotStatus } from "@/services/constants/botConstant";
+import { BotStatus } from "@/backend/bot/botConstant";
 
 interface BotFilterBarProps {
   uniqueCoins: string[];

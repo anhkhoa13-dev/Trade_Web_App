@@ -31,7 +31,7 @@ public class JwtUtil {
     @Value("${application.security.jwt.refresh-expiration}")
     private long refreshTokenExpiration;
 
-    public String generateAccessToken(String email, LoginResponse response, List<String> roleNames) {
+    public void generateAccessToken(String email, LoginResponse response, List<String> roleNames) {
         Instant now = Instant.now();
         Instant validity = now.plus(this.accessTokenExpiration, ChronoUnit.SECONDS);
 
@@ -47,7 +47,8 @@ public class JwtUtil {
 
         // header
         JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build(); 
-        return this.jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, claims)).getTokenValue();
+        response.setAccessToken(this.jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, claims)).getTokenValue());
+        response.setExpiresAt(validity.toEpochMilli());
     }
 
     public String generateRefreshToken(String email, LoginResponse response) {

@@ -5,12 +5,13 @@ import { Card, CardContent } from "@/app/ui/shadcn/card";
 import PnLLineChart from "@/app/ui/my_components/charts/PnLLineChart";
 import MetricBox from "@/app/ui/my_components/MetricBox";
 import { Loader2 } from "lucide-react";
-import { useWallet } from "@/hooks/useWallet";
+import { AssetDTO } from "@/backend/wallet/wallet.types";
+// import { useWallet } from "@/hooks/useWallet";
 
-export default function ProfitLostAnalysis() {
-  const { data: assetData, isLoading } = useWallet();
+export default function ProfitLostAnalysis({ walletData }: { walletData: AssetDTO | null; }) {
+  // const { data: assetData, isLoading } = useWallet();
 
-  if (isLoading) {
+  if (!walletData) {
     return (
       <Card className="w-full shadow-sm border border-border bg-card">
         <CardContent className="flex items-center justify-center py-12">
@@ -20,18 +21,18 @@ export default function ProfitLostAnalysis() {
     );
   }
 
-  if (!assetData) {
+  if (!walletData) {
     return null;
   }
 
   // Format chart data for PnLLineChart
-  const chartData = assetData.pnlChartData.map((point) => ({
+  const chartData = walletData.pnlChartData.map((point) => ({
     timestamp: point.timestamp,
     pnl: point.value,
   }));
 
   return (
-    <Card className="w-full shadow-sm border border-border bg-card">
+    <Card >
       <CardContent className="pt-6">
         {/* Title */}
         <h3 className="text-lg font-semibold mb-4">Profit / Loss Analysis</h3>
@@ -45,22 +46,22 @@ export default function ProfitLostAnalysis() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <MetricBox
             label="Total Equity"
-            value={`$${assetData.totalEquity.toFixed(2)}`}
+            value={`$${walletData.totalEquity.toFixed(2)}`}
             showTrend={false}
           />
           <MetricBox
             label="Net Investment"
-            value={`$${assetData.netInvestment.toFixed(2)}`}
+            value={`$${walletData.netInvestment.toFixed(2)}`}
             showTrend={false}
           />
           <MetricBox
             label="PnL (30 Days)"
-            value={`${assetData.pnl >= 0 ? "+" : ""}$${assetData.pnl.toFixed(2)}`}
+            value={`${walletData.pnl >= 0 ? "+" : ""}$${walletData.pnl.toFixed(2)}`}
             showTrend={true}
           />
           <MetricBox
             label="ROI (30 Days)"
-            value={`${assetData.roi >= 0 ? "+" : ""}${assetData.roi.toFixed(2)}%`}
+            value={`${walletData.roi >= 0 ? "+" : ""}${walletData.roi.toFixed(2)}%`}
             showTrend={true}
           />
         </div>
@@ -69,12 +70,12 @@ export default function ProfitLostAnalysis() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
           <MetricBox
             label="Max Drawdown"
-            value={`$${assetData.maxDrawdown.toFixed(2)}`}
+            value={`$${walletData.maxDrawdown.toFixed(2)}`}
             showTrend={false}
           />
           <MetricBox
             label="Max Drawdown %"
-            value={`${assetData.maxDrawdownPct.toFixed(2)}%`}
+            value={`${walletData.maxDrawdownPct.toFixed(2)}%`}
             showTrend={false}
           />
         </div>

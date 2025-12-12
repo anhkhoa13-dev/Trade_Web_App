@@ -7,7 +7,7 @@ import { AdminBot, adminBotDatabase } from "@/entities/mockAdminAiBots";
 import { StatsCard } from "./_components/StatsCard";
 import BotTable from "./_components/BotTable";
 import { BotFilterBar } from "./_components/BotFilterBar";
-import { BotAction, BotStatus } from "@/services/constants/botConstant";
+import { BotAction, BotStatus } from "@/backend/bot/botConstant";
 import { useAllBots } from "@/hooks/bot/useBotHook";
 import { BotResponse } from "@/services/interfaces/botInterfaces";
 

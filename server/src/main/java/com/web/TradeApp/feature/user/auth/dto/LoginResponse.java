@@ -12,6 +12,7 @@ import lombok.Setter;
 @Setter
 public class LoginResponse {
     private String accessToken;
+    private long expiresAt;
     private UserLogin user;
 
     @Getter

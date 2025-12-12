@@ -1,5 +1,6 @@
-"use client";
+"use client"
 
+import { logout } from "@/actions/auth.actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/ui/shadcn/avatar";
 import { Button } from "@/app/ui/shadcn/button";
 import {
@@ -13,27 +14,30 @@ import {
 } from "@/app/ui/shadcn/dropdown-menu";
 import { LogOut, User, Settings } from "lucide-react";
 import Link from "next/link";
-import { useSignOut } from "@/hooks/useSignOut";
+import toast from "react-hot-toast";
 
 interface UserNavProps {
     user: {
-        name?: string | null;
-        email?: string | null;
-        image?: string | null;
-        username?: string | null;
-    };
+        name: string
+        email: string
+        image?: string | null
+        username: string
+    }
 }
 
 export function UserNav({ user }: UserNavProps) {
-    const { mutate: signOutUser } = useSignOut();
+    const handleLogout = async () => {
+        toast.success("Logout ... ")
+        await logout()
+    }
 
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="subtle">
                     <Avatar className="text-foreground">
-                        <AvatarImage src={user.image || ""} alt={user.name || ""} />
-                        <AvatarFallback>{user.username?.[0]?.toUpperCase() || "U"}</AvatarFallback>
+                        <AvatarImage src={user.image!} alt={user.name} />
+                        <AvatarFallback>{user.username[0].toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <span>{user.username}</span>
                 </Button>
@@ -63,7 +67,7 @@ export function UserNav({ user }: UserNavProps) {
                     </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => signOutUser()} variant="destructive">
+                <DropdownMenuItem onClick={() => handleLogout()} variant="destructive">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
                 </DropdownMenuItem>

@@ -12,6 +12,7 @@ import {
   CardDescription,
   CardContent,
 } from "@/app/ui/shadcn/card";
+
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
@@ -37,7 +38,7 @@ export default function PortfolioPerformanceChart({
   const series = [
     {
       name: "Portfolio Value",
-      data: data.map((d) => d.totalValue / 1000), // normalize
+      data: data.map((d) => d.totalValue / 1000), // normalize to k
     },
   ];
 
@@ -46,6 +47,7 @@ export default function PortfolioPerformanceChart({
       type: "area",
       background: "transparent",
       toolbar: { show: false },
+      zoom: { enabled: false },
     },
     theme: { mode: isDark ? "dark" : "light" },
     stroke: { curve: "smooth", width: 2 },
@@ -61,6 +63,10 @@ export default function PortfolioPerformanceChart({
     grid: {
       borderColor: isDark ? "#1e293b" : "#e5e7eb",
       strokeDashArray: 3,
+      padding: {
+        left: 10,
+        right: 0,
+      }
     },
     dataLabels: { enabled: false },
     xaxis: {
@@ -68,6 +74,9 @@ export default function PortfolioPerformanceChart({
       labels: {
         style: { colors: isDark ? "#9ca3af" : "#6b7280", fontSize: "12px" },
       },
+      tooltip: { enabled: false },
+      axisBorder: { show: false },
+      axisTicks: { show: false },
     },
     yaxis: {
       labels: {
@@ -80,28 +89,47 @@ export default function PortfolioPerformanceChart({
       theme: isDark ? "dark" : "light",
       y: { formatter: (val) => `$${(val * 1000).toLocaleString()}` },
     },
+    responsive: [
+      {
+        breakpoint: 768,
+        options: {
+          xaxis: {
+            labels: {
+              show: false,
+            },
+            axisBorder: { show: false },
+            axisTicks: { show: false },
+          },
+        },
+      },
+    ],
   };
 
   return (
-    <Card>
-      <CardHeader
-        className="flex flex-col gap-5 mb-4 sm:flex-row sm:items-center
-          sm:justify-between"
-      >
-        <div>
-          <CardTitle className="text-lg font-semibold">{title}</CardTitle>
-          <CardDescription className="mt-1 text-sm">{subtitle}</CardDescription>
+    <Card className="w-full">
+      <CardHeader className="flex flex-col gap-4 space-y-0 sm:flex-row sm:items-center sm:justify-between pb-4">
+        <div className="space-y-1">
+          <CardTitle className="text-lg font-semibold tracking-tight">{title}</CardTitle>
+          {subtitle && (
+            <CardDescription className="text-sm text-muted-foreground">
+              {subtitle}
+            </CardDescription>
+          )}
         </div>
 
-        <div className="flex items-center gap-0.5 rounded-lg p-0.5">
+        {/* Responsive Toolbar */}
+        <div className="flex items-center p-1 bg-muted/50 rounded-lg w-full sm:w-auto overflow-x-auto">
           {ranges.map((r) => (
             <Button
               key={r}
-              variant="subtle"
+              variant="ghost"
+              size="sm"
               className={cn(
+                "flex-1 sm:flex-none text-xs sm:text-sm font-medium rounded-md transition-all",
+                "hover:bg-background hover:text-foreground",
                 range === r
-                  ? "shadow-sm text-foreground"
-                  : "shadow-sm text-muted-foreground hover:text-foreground",
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground"
               )}
               onClick={() => setRange(r)}
             >
@@ -111,14 +139,15 @@ export default function PortfolioPerformanceChart({
         </div>
       </CardHeader>
 
-      <CardContent className="max-w-full overflow-x-auto overflow-hidden">
-        <div className="min-w-[900px] pl-2">
+      <CardContent className="px-1 sm:px-6 pb-4">
+        <div className="w-full h-[300px] sm:h-[350px]">
           <ReactApexChart
             key={theme}
             options={options}
             series={series}
             type="area"
-            height={350}
+            width="100%"
+            height="100%"
           />
         </div>
       </CardContent>

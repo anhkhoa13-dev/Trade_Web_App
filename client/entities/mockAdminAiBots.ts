@@ -2,7 +2,7 @@ import {
   BotStatus,
   RiskLevel,
   BotAction,
-} from "@/services/constants/botConstant";
+} from "@/backend/bot/botConstant";
 
 export interface AdminBot {
   id: string;

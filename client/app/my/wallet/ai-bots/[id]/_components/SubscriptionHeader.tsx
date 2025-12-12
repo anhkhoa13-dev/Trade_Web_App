@@ -1,7 +1,5 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/app/ui/shadcn/button";
 import { Card } from "@/app/ui/shadcn/card";
 import { Badge } from "@/app/ui/shadcn/badge";
 import { Label } from "@/app/ui/shadcn/label";
@@ -79,9 +77,8 @@ export default function SubscriptionHeader({
             </Label>
             <div className="flex items-center gap-2">
               <span
-                className={`text-sm font-medium ${
-                  isActive ? "text-green-600" : "text-muted-foreground"
-                }`}
+                className={`text-sm font-medium ${isActive ? "text-green-600" : "text-muted-foreground"
+                  }`}
               >
                 {isActive ? "Active" : "Paused"}
               </span>

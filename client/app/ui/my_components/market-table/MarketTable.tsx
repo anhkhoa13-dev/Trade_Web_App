@@ -33,6 +33,16 @@ import {
 } from "../../shadcn/tooltip";
 import Link from "next/link";
 import { Info, TrendingUp } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../shadcn/table";
 
 interface MarketTableProps {
   initialData: MarketCoin[];
@@ -61,7 +71,7 @@ export default function MarketTable({
     return data.filter(
       (coin) =>
         coin.name.toLowerCase().includes(lowerFilter) ||
-        coin.symbol.toLowerCase().includes(lowerFilter),
+        coin.symbol.toLowerCase().includes(lowerFilter)
     );
   }, [data, globalFilter]);
 
@@ -104,7 +114,10 @@ export default function MarketTable({
             />
             <div className="flex flex-col">
               <span className="font-bold">{info.row.original.symbol}</span>
-              <span className="text-xs text-foreground">
+              <span
+                className="text-xs text-foreground truncate max-w-[80px] sm:max-w-[140px]"
+                title={info.getValue() as string}
+              >
                 {info.getValue() as string}
               </span>
             </div>
@@ -154,7 +167,7 @@ export default function MarketTable({
         },
       },
       {
-        id: "actions", // Cột này không cần accessorKey vì không hiện data trực tiếp
+        id: "actions",
         header: "Actions",
         enableSorting: false,
         cell: ({ row }) => {
@@ -162,7 +175,6 @@ export default function MarketTable({
 
           return (
             <div className="flex items-center gap-2">
-              {/* Nút Details */}
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -178,7 +190,6 @@ export default function MarketTable({
                 </Tooltip>
               </TooltipProvider>
 
-              {/* Nút Trade */}
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -198,7 +209,7 @@ export default function MarketTable({
         },
       },
     ],
-    [],
+    []
   );
 
   const table = useReactTable({
@@ -220,10 +231,7 @@ export default function MarketTable({
 
   return (
     <Card>
-      <CardHeader
-        className="flex flex-col sm:flex-row items-start sm:items-center
-          justify-between gap-4"
-      >
+      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <CardTitle>Live Crypto Market</CardTitle>
         <div>
           <Input
@@ -237,61 +245,59 @@ export default function MarketTable({
       </CardHeader>
 
       <CardContent>
-        <table className="w-full text-left border-collapse">
-          <thead className="bg-muted/50">
+        <Table>
+          <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
+              <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <th
+                  <TableHead
                     key={header.id}
                     onClick={header.column.getToggleSortingHandler()}
-                    className="p-4 text-sm font-semibold text-muted-foreground
-                      cursor-pointer select-none hover:bg-muted
-                      transition-colors"
+                    className={cn(
+                      "cursor-pointer select-none",
+                      (header.column.id === "history" ||
+                        header.column.id === "actions") &&
+                      "hidden md:table-cell"
+                    )}
                   >
                     <div className="flex items-center gap-1">
                       {flexRender(
                         header.column.columnDef.header,
-                        header.getContext(),
+                        header.getContext()
                       )}
                       {{
                         asc: " ▲",
                         desc: " ▼",
                       }[header.column.getIsSorted() as string] ?? null}
                     </div>
-                  </th>
+                  </TableHead>
                 ))}
-              </tr>
+              </TableRow>
             ))}
-          </thead>
+          </TableHeader>
 
-          <tbody className="divide-y divide-border">
+          <TableBody>
             {currentData.length > 0 ? (
-              table
-                .getRowModel()
-                .rows.map((row) => (
-                  <RowWithMotion key={row.original.id} row={row} />
-                ))
+              table.getRowModel().rows.map((row) => (
+                <RowWithMotion key={row.original.id} row={row} />
+              ))
             ) : (
-              <tr>
-                <td
+              <TableRow>
+                <TableCell
                   colSpan={columns.length}
-                  className="p-8 text-center text-card-foreground"
+                  className="h-24 text-center"
                 >
                   No coins found matching "{globalFilter}"
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
 
         {/* Pagination Controls */}
-        <div
-          className="flex flex-col sm:flex-row items-center justify-between mt-4
-            gap-4 px-2"
-        >
+        <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-4 px-2">
           {/* Left: Rows per page Selector */}
-          <div className="flex items-center gap-2 text-sm text-card-foreground">
+          <div className="hidden md:flex items-center gap-2 text-sm text-card-foreground">
             <span>Show</span>
             <Select
               value={`${table.getState().pagination.pageSize}`}
@@ -319,7 +325,8 @@ export default function MarketTable({
           {/* Right: Navigation Buttons */}
           <div className="flex items-center gap-2">
             <Button
-              variant="subtle"
+              variant="outline"
+              size="sm"
               onClick={() => table.setPageIndex(0)}
               disabled={!table.getCanPreviousPage()}
               title="Go to first page"
@@ -327,7 +334,8 @@ export default function MarketTable({
               {"<<"} First
             </Button>
             <Button
-              variant="subtle"
+              variant="outline"
+              size="sm"
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
@@ -346,14 +354,16 @@ export default function MarketTable({
             </span>
 
             <Button
-              variant="subtle"
+              variant="outline"
+              size="sm"
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >
               Next
             </Button>
             <Button
-              variant="subtle"
+              variant="outline"
+              size="sm"
               onClick={() => table.setPageIndex(table.getPageCount() - 1)}
               disabled={!table.getCanNextPage()}
               title="Go to last page"
@@ -371,7 +381,7 @@ const RowWithMotion = ({ row }: { row: any }) => {
   return (
     <motion.tr
       layout
-      initial={false} // Không animate khi vào trang
+      initial={false}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
       transition={{
@@ -380,12 +390,18 @@ const RowWithMotion = ({ row }: { row: any }) => {
         damping: 40,
         duration: 0.3,
       }}
-      className="hover:bg-muted/50 bg-card"
+      className="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors"
     >
       {row.getVisibleCells().map((cell: any) => (
-        <td key={cell.id} className="p-4 align-middle">
+        <TableCell
+          key={cell.id}
+          className={cn(
+            (cell.column.id === "history" || cell.column.id === "actions") &&
+            "hidden md:table-cell"
+          )}
+        >
           {flexRender(cell.column.columnDef.cell, cell.getContext())}
-        </td>
+        </TableCell>
       ))}
     </motion.tr>
   );

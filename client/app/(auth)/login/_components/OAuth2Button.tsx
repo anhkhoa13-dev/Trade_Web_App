@@ -2,11 +2,11 @@ import { FcGoogle } from "react-icons/fc"
 import { FaGithub } from "react-icons/fa"
 import { Button } from "../../../ui/shadcn/button"
 
-export function GoogleButton({ onClick }: { onClick: () => void }) {
+export function GoogleButton({ ...props }: React.ComponentProps<"button">) {
     return (
         <Button
+            {...props}
             variant="outline"
-            onClick={onClick}
             className="bg-transparent text-inherit hover:bg-transparent hover:border-primary"
         >
             <FcGoogle className="h-5 w-5" />

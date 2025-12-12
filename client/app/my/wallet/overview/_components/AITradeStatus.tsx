@@ -12,10 +12,10 @@ import { Badge } from "@/app/ui/shadcn/badge";
 import { Bot, TrendingUp, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import type { BotSubOverview } from "@/services/interfaces/botSubInterfaces";
+import { BotSubOverview } from "@/backend/bot/botSub.types";
 
 interface AITradeStatusProps {
-  data: BotSubOverview;
+  data: BotSubOverview
 }
 
 export default function AITradeStatus({ data }: AITradeStatusProps) {

@@ -12,7 +12,7 @@ import {
 import { SectionCard } from "@/app/ui/my_components/Card/SectionCard";
 import { UseFormReturn, Controller } from "react-hook-form";
 import { SYMBOLS, COIN_LOGOS } from "@/services/constants/coinConstant";
-import { BotFormInputs } from "@/services/schemas/bot";
+import { BotFormInputs } from "@/schema/botSchema";
 
 interface Props {
   form: UseFormReturn<BotFormInputs>;

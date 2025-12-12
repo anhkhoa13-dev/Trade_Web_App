@@ -1,11 +1,12 @@
-"use client";
-
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/shadcn/card";
-import { useSearchParams } from "next/navigation";
 import VerifyForm from "./VerifyForm";
 
-export default function VerifyCard() {
-  const email = useSearchParams().get("email");
+interface VerifyCardProps {
+  token: string,
+  email: string
+}
+
+export default function VerifyCard({ token, email }: VerifyCardProps) {
 
   return (
     <Card className="w-full max-w-sm">
@@ -16,9 +17,9 @@ export default function VerifyCard() {
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground mb-4 text-center">
-          We sent a 6-digit code to {email ?? "your email"}.
+          We sent a 6-digit code to {email}.
         </p>
-        <VerifyForm />
+        <VerifyForm urlToken={token} />
       </CardContent>
     </Card>
   );

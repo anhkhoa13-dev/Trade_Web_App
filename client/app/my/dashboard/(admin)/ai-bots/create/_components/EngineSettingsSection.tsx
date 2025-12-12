@@ -5,7 +5,7 @@ import { Input } from "@/app/ui/shadcn/input";
 import { Info, Lock } from "lucide-react";
 import { SectionCard } from "@/app/ui/my_components/Card/SectionCard";
 import { UseFormReturn } from "react-hook-form";
-import { BotFormInputs } from "@/services/schemas/bot";
+import { BotFormInputs } from "@/schema/botSchema";
 
 interface Props {
   form: UseFormReturn<BotFormInputs>;

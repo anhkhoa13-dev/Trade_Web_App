@@ -16,7 +16,7 @@ import {
 import DataTable from "@/app/ui/my_components/data-table/AgDataTable";
 import { Button } from "@/app/ui/shadcn/button";
 import { Badge, BadgeVariant } from "@/app/ui/shadcn/badge";
-import { BotStatus } from "@/services/constants/botConstant";
+import { BotStatus } from "@/backend/bot/botConstant";
 
 // FIX: Ensure date-fns import is present
 import { format, isValid } from "date-fns";
