@@ -182,13 +182,26 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problem);
     }
 
+    @ExceptionHandler(PaymentException.class)
+    public ProblemDetail handlePaymentException(PaymentException ex) {
+        log.error("Payment Error: {}", ex.getMessage());
+
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        problem.setTitle("Payment Processing Error");
+        problem.setDetail(ex.getMessage());
+        problem.setType(URI.create("https://api.tradeapp.com/errors/payment-error"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGenericException(Exception ex) {
         ex.printStackTrace();
 
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
         problem.setTitle("Internal Server Error");
-        problem.setDetail(ex.getMessage());
+        // problem.setDetail(ex.getMessage());
+        problem.setDetail("An unexpected error occurred. Please try again later.");
         problem.setType(URI.create(""));
         problem.setProperty("timestamp", Instant.now());
         return problem;
