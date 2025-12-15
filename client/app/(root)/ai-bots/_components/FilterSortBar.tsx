@@ -8,22 +8,16 @@ import {
   SelectItem,
   SelectValue,
 } from "@/app/ui/shadcn/select";
+import { SortOption, TimeWindow } from "@/backend/bot/bot.types";
 import { cn } from "@/lib/utils";
-import { SortOption, TimeWindow } from "@/services/interfaces/botInterfaces";
-import { Search, Info, SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface FilterSortBarProps {
   enableSearch?: boolean;
-
   searchValue: string;
-  onSearchChange: (value: string) => void;
-
   sortValue: SortOption;
-  onSortChange: (value: SortOption) => void;
-
   timeWindow: TimeWindow;
-  onTimeWindowChange: (value: TimeWindow) => void;
-
   pageNumber?: number;
   className?: string;
 }
@@ -31,20 +25,43 @@ interface FilterSortBarProps {
 export function FilterSortBar({
   enableSearch = true,
   searchValue,
-  onSearchChange,
   sortValue,
-  onSortChange,
   timeWindow,
-  onTimeWindowChange,
   pageNumber,
   className,
 }: FilterSortBarProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const updateParams = (updates: Record<string, string>) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value) {
+        params.set(key, value);
+      } else {
+        params.delete(key);
+      }
+    });
+
+    // Reset to page 1 when filters change
+    if (
+      updates.search !== undefined ||
+      updates.sort !== undefined ||
+      updates.timeWindow !== undefined
+    ) {
+      params.set("page", "1");
+    }
+
+    router.push(`?${params.toString()}`);
+  };
+
   return (
     <div
       className={cn(
         `w-full flex flex-col md:flex-row md:items-center md:justify-between
         gap-4 `,
-        className,
+        className
       )}
     >
       {/* Left side: Search */}
@@ -52,7 +69,7 @@ export function FilterSortBar({
         <Input
           placeholder="Search bots..."
           value={searchValue}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onChange={(e) => updateParams({ search: e.target.value })}
           className="w-full md:max-w-xs"
         />
       )}
@@ -64,7 +81,7 @@ export function FilterSortBar({
         {/* Sort Dropdown */}
         <Select
           value={sortValue}
-          onValueChange={(v) => onSortChange(v as "pnl" | "roi" | "copied")}
+          onValueChange={(v) => updateParams({ sort: v })}
         >
           <SelectTrigger className="w-[150px]">
             <SlidersHorizontal className="w-5 h-5" />
@@ -80,9 +97,7 @@ export function FilterSortBar({
         {/* Time Window Dropdown */}
         <Select
           value={timeWindow}
-          onValueChange={(v) =>
-            onTimeWindowChange(v as "1d" | "7d" | "current")
-          }
+          onValueChange={(v) => updateParams({ timeWindow: v })}
         >
           <SelectTrigger className="w-[150px]">
             <SelectValue placeholder="Time Range" />

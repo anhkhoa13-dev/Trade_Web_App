@@ -1,6 +1,7 @@
 import "./globals.css";
 
 import { ThemeProvider } from "./providers/ThemeProvider";
+import AuthProvider from "./providers/AuthProvider";
 import { Toaster } from "react-hot-toast";
 
 export default function RootLayout({
@@ -11,15 +12,17 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange={false}
-        >
-          <Toaster position="top-center" />
-          {children}
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange={false}
+          >
+            <Toaster position="top-center" />
+            {children}
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );

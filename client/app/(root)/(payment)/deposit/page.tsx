@@ -30,8 +30,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/app/ui/shadcn/select";
-import { Badge } from "@/app/ui/shadcn/badge";
-import { usePaymentService } from "@/services/paymentService";
+import { initiateDeposit } from "@/actions/payment.action";
+import { PaymentService } from "@/backend/payment/payment.services";
+// import { usePaymentService } from "@/services/paymentService";
 
 // Interface for Exchange Rate API Response
 interface ExchangeRateResponse {
@@ -44,7 +45,7 @@ export default function DepositPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const paymentService = usePaymentService();
+  // const paymentService = usePaymentService();
 
   // State
   const [amount, setAmount] = useState<string>("");
@@ -65,7 +66,7 @@ export default function DepositPage() {
       router.replace("/my/deposit");
     } else if (status === "success") {
       toast.success(
-        message || "Payment successful! Your balance has been updated.",
+        message || "Payment successful! Your balance has been updated."
       );
       router.replace("/my/deposit");
     }
@@ -139,19 +140,17 @@ export default function DepositPage() {
     setError(null);
 
     try {
-      const result = await paymentService.initiateDeposit({
-        amount: finalAmountVND,
-      });
+      const result = await initiateDeposit(finalAmountVND);
 
-      if (result.url) {
-        window.location.href = result.url;
+      if (result.data?.url) {
+        window.location.href = result.data.url;
       }
     } catch (err) {
       console.error(err);
       setError(
         err instanceof Error
           ? err.message
-          : "Failed to initiate payment. Please try again.",
+          : "Failed to initiate payment. Please try again."
       );
     } finally {
       setIsSubmitting(false);
@@ -251,9 +250,7 @@ export default function DepositPage() {
               className="p-3 rounded-md bg-destructive/10 border
                 border-destructive/20 flex items-start gap-2"
             >
-              <AlertCircle
-                className="w-4 h-4 text-destructive mt-0.5 flex-shrink-0"
-              />
+              <AlertCircle className="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" />
               <p className="text-sm text-destructive font-medium">{error}</p>
             </div>
           )}

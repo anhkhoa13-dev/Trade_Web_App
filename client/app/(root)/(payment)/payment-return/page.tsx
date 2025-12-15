@@ -13,13 +13,14 @@ import {
   CardContent,
 } from "@/app/ui/shadcn/card";
 import { Button } from "@/app/ui/shadcn/button";
-import { usePaymentService } from "@/services/paymentService";
+import { verifyVnPayCallback } from "@/actions/payment.action";
+// import { usePaymentService } from "@/services/paymentService";
 
 export default function PaymentReturnPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
-  const paymentService = usePaymentService();
+  // const paymentService = usePaymentService();
   const hasProcessed = useRef(false);
 
   const [isProcessing, setIsProcessing] = useState(true);
@@ -52,30 +53,32 @@ export default function PaymentReturnPage() {
         if (vnpResponseCode === "00" && vnpTransactionStatus === "00") {
           // Call backend to verify and process payment
           try {
+            // Convert searchParams to query string
             const params = new URLSearchParams();
             searchParams.forEach((value, key) => {
               params.append(key, value);
             });
+            const queryString = params.toString();
 
-            const result = await paymentService.verifyVnPayCallback(params);
-
+            const result = await verifyVnPayCallback(queryString);
+            const data = result.data;
             // Store transaction details from backend response
             setTransactionDetails({
-              amount: result.amount,
-              convertedAmount: result.convertedAmount,
-              exchangeRate: result.exchangeRate,
-              description: result.description,
+              amount: data?.amount,
+              convertedAmount: data?.convertedAmount,
+              exchangeRate: data?.exchangeRate,
+              description: data?.description,
             });
 
-            if (result.status === "SUCCESS") {
+            if (data?.status === "SUCCESS") {
               setPaymentStatus("success");
               setMessage("Payment successful! Your balance has been updated.");
               toast.success("Payment completed successfully!");
             } else {
               setPaymentStatus("failed");
               setMessage(
-                result.description ||
-                  "Payment verification failed. Please contact support.",
+                data?.description ||
+                  "Payment verification failed. Please contact support."
               );
               toast.error("Payment verification failed");
             }
@@ -85,7 +88,7 @@ export default function PaymentReturnPage() {
             setMessage(
               error instanceof Error
                 ? error.message
-                : "Error verifying payment. Please contact support.",
+                : "Error verifying payment. Please contact support."
             );
             toast.error("Payment verification error");
           }
@@ -124,9 +127,7 @@ export default function PaymentReturnPage() {
     return (
       <div className="w-full min-h-screen flex items-center justify-center p-6">
         <Card className="w-full max-w-md">
-          <CardContent
-            className="flex flex-col items-center justify-center py-12"
-          >
+          <CardContent className="flex flex-col items-center justify-center py-12">
             <Loader2 className="w-16 h-16 animate-spin text-primary mb-4" />
             <p className="text-lg font-medium">Processing payment...</p>
             <p className="text-sm text-muted-foreground mt-2">
