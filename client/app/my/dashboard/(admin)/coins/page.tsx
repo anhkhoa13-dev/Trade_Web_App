@@ -5,10 +5,6 @@ import PortfolioPerformanceChart from "./_components/PortfolioPerformanceChart";
 import { mockPortfolioPerformance } from "@/entities/mockPortfolioPerformance";
 import PortfolioTable from "./_components/PortfolioTable";
 
-// export const getServerSideProps = async () => {
-
-// }
-
 export default function page() {
   return (
     <div className="flex flex-col gap-6">

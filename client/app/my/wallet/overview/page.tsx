@@ -7,10 +7,6 @@ import PortfolioAllocationChart from "./_components/PortfolioAllocationChart";
 import MarketTable from "@/app/ui/my_components/market-table/MarketTable";
 import { getCachedMarketData } from "@/actions/gecko.actions";
 import { getWallet } from "@/actions/wallet.actions";
-// import { historyService } from "@/services/historyService";
-import { auth } from "@/auth";
-import { forbidden } from "next/navigation";
-// import { getBotSubOverviewSSR } from "@/services/botSubService";
 import { Card } from "@/app/ui/shadcn/card";
 import Link from "next/link";
 import { Button } from "@/app/ui/shadcn/button";
@@ -20,10 +16,6 @@ import { getManualTransactions } from "@/actions/history.actions";
 import { getBotSubOverview } from "@/actions/botSub.actions";
 
 export default async function page() {
-  const session = await auth()
-
-  if (!session || !session.accessToken)
-    forbidden()
 
   const historyFilter = { page: 0, size: 5, sort: "createdAt,desc" };
 
@@ -36,9 +28,20 @@ export default async function page() {
     getBotSubOverview()
   ]);
 
-  const walletData = walletResponse.data!
-  const recentHistory = historyResponse.data!
-  const botOverview = botOverviewResponse.data!
+  if (walletResponse.status == "error") {
+    throw new Error(walletResponse.message);
+  }
+  if (historyResponse.status == "error") {
+    throw new Error(historyResponse.message);
+  }
+
+  if (botOverviewResponse.status == "error") {
+    throw new Error(botOverviewResponse.message);
+  }
+
+  const walletData = walletResponse.data
+  const recentHistory = historyResponse.data
+  const botOverview = botOverviewResponse.data
 
 
   return (

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { UserProfile } from "@/services/userService";
 import { Button } from "../../../ui/shadcn/button";
 import {
   Card,
@@ -14,6 +13,7 @@ import {
 import { Input } from "../../../ui/shadcn/input";
 import { Label } from "../../../ui/shadcn/label";
 import { CheckCircle2, Loader2 } from "lucide-react";
+import { UserProfile } from "@/backend/user/user.types";
 
 type ProfileCardProps = {
   profile: UserProfile;

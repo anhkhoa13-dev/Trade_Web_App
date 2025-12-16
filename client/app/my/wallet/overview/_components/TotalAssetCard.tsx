@@ -14,7 +14,6 @@ import { Button } from "@/app/ui/shadcn/button";
 import {
   TrendingUp,
   TrendingDown,
-  Loader2,
   Wallet,
   Eye,
   EyeOff,
@@ -29,7 +28,7 @@ const VND_TO_USDT = 24300;
 export function TotalAssetCard({ walletData }: { walletData: AssetDTO }) {
   const [isVisible, setIsVisible] = useState(true);
 
-  // --- LOGIC (Giữ nguyên) ---
+  // --- LOGIC ---
   const symbols = useMemo(() => {
     if (!walletData.coinHoldings) return [];
     return walletData.coinHoldings.map((coin) => coin.coinSymbol);
@@ -38,11 +37,13 @@ export function TotalAssetCard({ walletData }: { walletData: AssetDTO }) {
   const tickers = useLiveMarketStream(symbols);
 
   const { totalValue, weightedChange } = useMemo(() => {
-    if (!walletData?.coinHoldings || Object.keys(tickers).length === 0) {
-      return { totalValue: 0, weightedChange: 0 };
+    if (!walletData.coinHoldings || Object.keys(tickers).length === 0) {
+      return { totalValue: walletData.balance, weightedChange: 0 };
     }
+
     let total = walletData.balance;
     let totalChangeValue = 0;
+
     walletData.coinHoldings.forEach((coin) => {
       const ticker = tickers[coin.coinSymbol];
       if (ticker) {
@@ -51,22 +52,14 @@ export function TotalAssetCard({ walletData }: { walletData: AssetDTO }) {
         totalChangeValue += coinValue * (ticker.changePercent / 100);
       }
     });
+
     const change = total > 0 ? (totalChangeValue / total) * 100 : 0;
     return { totalValue: total, weightedChange: change };
   }, [walletData, tickers]);
 
   const isPositive = weightedChange >= 0;
-  // -------------------------
-
   const formatHidden = (value: string | number) => isVisible ? value : "******";
 
-  if (!walletData) {
-    return (
-      <Card className="w-full h-full flex items-center justify-center p-6 min-h-[220px]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </Card>
-    );
-  }
 
   return (
     <Card className="h-full p-0 gap-0 overflow-hidden border-muted-foreground/15">

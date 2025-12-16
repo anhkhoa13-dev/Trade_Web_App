@@ -9,12 +9,12 @@ import { getProfile } from "@/actions/user.action";
 export default async function ProfilePage() {
 
   const response = await getProfile()
-  const profile = response.data
 
-  if (!profile) {
-    console.error(response.message)
-    return null
+  if (response.status === "error") {
+    throw new Error(response.message)
   }
+
+  const profile = response.data;
 
   return (
     <div className="min-h-screen flex justify-center">
@@ -25,7 +25,7 @@ export default async function ProfilePage() {
             <AvatarImage
               src={
                 profile.avatarUrl ??
-                `https://ui-avatars.com/api/?name=${profile?.username}&background=random`
+                `https://ui-avatars.com/api/?name=${profile.username}&background=random`
               }
               alt={profile.username}
             />

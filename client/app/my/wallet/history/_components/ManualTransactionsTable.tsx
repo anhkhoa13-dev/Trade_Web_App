@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo, useTransition } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useMemo } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -19,14 +18,17 @@ import {
 } from "@/app/ui/shadcn/table";
 import { Badge } from "@/app/ui/shadcn/badge";
 import { Button } from "@/app/ui/shadcn/button";
-import { ChevronLeft, ChevronRight, Loader2, ArrowUpDown } from "lucide-react";
-import type {
-  HistoryResponse,
-  TransactionHistoryDTO,
-} from "@/services/historyService";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { TransactionHistoryDTO } from "@/backend/history/history.types";
+import { formatDate } from "@/lib/utils";
+import { useTableState } from "@/hooks/useTableState";
+import SortableHeader from "./SortableHeader";
+import { PaginatedResult } from "@/backend/constants/ApiResponse";
+import { Spinner } from "@/app/ui/shadcn/spinner";
+
 
 interface ManualTransactionsTableProps {
-  data: HistoryResponse<TransactionHistoryDTO>;
+  data: PaginatedResult<TransactionHistoryDTO>;
   currentPage: number;
   pageSize: number;
   showPagination?: boolean;
@@ -40,77 +42,28 @@ export function ManualTransactionsTable({
   pageSize,
   showPagination = true,
 }: ManualTransactionsTableProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
+  const { isPending, handlePageChange, handleSort, getSortDirection } = useTableState();
 
-  const totalPages = data.data?.meta.pages || 0;
+  const totalPages = data.meta.pages;
   const hasNextPage = currentPage < totalPages - 1;
   const hasPrevPage = currentPage > 0;
-
-  const handlePageChange = (newPage: number) => {
-    startTransition(() => {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("page", newPage.toString());
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    });
-  };
-
-  const handleSort = (columnId: string) => {
-    startTransition(() => {
-      const params = new URLSearchParams(searchParams.toString());
-      const currentSort = params.get("sort") || "";
-
-      // Toggle sort direction
-      let newSort = `${columnId},desc`;
-      if (currentSort === `${columnId},desc`) {
-        newSort = `${columnId},asc`;
-      } else if (currentSort === `${columnId},asc`) {
-        newSort = "createdAt,desc"; // Reset to default
-      }
-
-      params.set("sort", newSort);
-      params.set("page", "0"); // Reset to first page when sorting
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    });
-  };
-
-  const formatDate = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return {
-      date: date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }),
-      time: date.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      }),
-    };
-  };
 
   const columns = useMemo(
     () => [
       columnHelper.accessor("createdAt", {
         header: () => (
-          <button
-            onClick={() => handleSort("createdAt")}
-            className="flex items-center gap-1 hover:text-primary
-              transition-colors cursor-pointer"
-          >
-            Time
-            <ArrowUpDown className="h-3 w-3" />
-          </button>
+          <SortableHeader
+            label="Time"
+            columnId="createdAt"
+            direction={getSortDirection("createdAt")}
+            onSort={handleSort}
+          />
         ),
         cell: (info) => {
-          const { date, time } = formatDate(info.getValue());
+          const formattedString = formatDate(info.getValue());
           return (
-            <div>
-              <p className="text-sm">{date}</p>
-              <p className="font-mono text-xs text-muted-foreground">{time}</p>
+            <div className="text-sm">
+              {formattedString}
             </div>
           );
         },
@@ -162,14 +115,12 @@ export function ManualTransactionsTable({
       }),
       columnHelper.accessor("priceAtExecution", {
         header: () => (
-          <button
-            onClick={() => handleSort("priceAtExecution")}
-            className="flex items-center gap-1 hover:text-primary
-              transition-colors cursor-pointer"
-          >
-            Price
-            <ArrowUpDown className="h-3 w-3" />
-          </button>
+          <SortableHeader
+            label="Price"
+            columnId="priceAtExecution"
+            direction={getSortDirection("priceAtExecution")}
+            onSort={handleSort}
+          />
         ),
         cell: (info) => {
           const price = info.getValue();
@@ -178,9 +129,9 @@ export function ManualTransactionsTable({
               $
               {price != null
                 ? price.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })
                 : "0.00"}
             </span>
           );
@@ -188,14 +139,12 @@ export function ManualTransactionsTable({
       }),
       columnHelper.accessor("quantity", {
         header: () => (
-          <button
-            onClick={() => handleSort("quantity")}
-            className="flex items-center gap-1 hover:text-primary
-              transition-colors cursor-pointer"
-          >
-            Amount
-            <ArrowUpDown className="h-3 w-3" />
-          </button>
+          <SortableHeader
+            label="Amount"
+            columnId="quantity"
+            direction={getSortDirection("quantity")}
+            onSort={handleSort}
+          />
         ),
         cell: (info) => {
           const amount = info.getValue();
@@ -203,9 +152,9 @@ export function ManualTransactionsTable({
             <span className="font-mono text-sm">
               {amount != null
                 ? amount.toLocaleString("en-US", {
-                    minimumFractionDigits: amount < 1 ? 4 : 2,
-                    maximumFractionDigits: amount < 1 ? 8 : 4,
-                  })
+                  minimumFractionDigits: amount < 1 ? 4 : 2,
+                  maximumFractionDigits: amount < 1 ? 8 : 4,
+                })
                 : "0"}
             </span>
           );
@@ -213,14 +162,12 @@ export function ManualTransactionsTable({
       }),
       columnHelper.accessor("notionalValue", {
         header: () => (
-          <button
-            onClick={() => handleSort("notionalValue")}
-            className="flex items-center gap-1 hover:text-primary
-              transition-colors cursor-pointer"
-          >
-            Total
-            <ArrowUpDown className="h-3 w-3" />
-          </button>
+          <SortableHeader
+            label="total"
+            columnId="notionalValue"
+            direction={getSortDirection("notionalValue")}
+            onSort={handleSort}
+          />
         ),
         cell: (info) => {
           const total = info.getValue();
@@ -229,9 +176,9 @@ export function ManualTransactionsTable({
               $
               {total != null
                 ? total.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })
                 : "0.00"}
             </span>
           );
@@ -239,14 +186,12 @@ export function ManualTransactionsTable({
       }),
       columnHelper.accessor("feeTradeApplied", {
         header: () => (
-          <button
-            onClick={() => handleSort("feeTradeApplied")}
-            className="flex items-center gap-1 hover:text-primary
-              transition-colors cursor-pointer"
-          >
-            Fee
-            <ArrowUpDown className="h-3 w-3" />
-          </button>
+          <SortableHeader
+            label="Fee"
+            columnId="feeTradeApplied"
+            direction={getSortDirection("feeTradeApplied")}
+            onSort={handleSort}
+          />
         ),
         cell: (info) => {
           const fee = info.getValue();
@@ -258,11 +203,11 @@ export function ManualTransactionsTable({
         },
       }),
     ],
-    [handleSort],
+    [handleSort, , getSortDirection],
   );
 
   const table = useReactTable({
-    data: data.data?.result || [],
+    data: data.result,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -270,12 +215,7 @@ export function ManualTransactionsTable({
   return (
     <Card className="shadow-sm flex flex-col justify-between relative">
       {isPending && (
-        <div
-          className="absolute inset-0 bg-background/50 backdrop-blur-sm flex
-            items-center justify-center z-10 rounded-lg"
-        >
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
+        <Spinner />
       )}
       <div className="overflow-x-auto px-6">
         <Table>
@@ -287,9 +227,9 @@ export function ManualTransactionsTable({
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
                   </TableHead>
                 ))}
               </TableRow>

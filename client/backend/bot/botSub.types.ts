@@ -50,15 +50,15 @@ export interface FeaturedSubscription {
     maxDrawdown: number;
 }
 
-export interface SubscriptionPaginatedResponse {
-    meta: {
-        page: number;
-        pageSize: number;
-        pages: number;
-        total: number;
-    };
-    result: BotSubscription[];
-}
+// export interface SubscriptionPaginatedResponse {
+//     meta: {
+//         page: number;
+//         pageSize: number;
+//         pages: number;
+//         total: number;
+//     };
+//     result: BotSubscription[];
+// }
 
 export interface SubscriptionFilterParams {
     page: number;

@@ -1,69 +1,67 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import { Button } from "@/app/ui/shadcn/button";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
+
+import { Button } from "@/app/ui/shadcn/button";
 import { BasicInformationSection } from "../../../create/_components/BasicInformationSection";
 import { TradingConfigurationSection } from "../../../create/_components/TradingConfigurationSection";
 import { EngineSettingsSection } from "../../../create/_components/EngineSettingsSection";
-import { BotCategory, RiskLevel } from "@/backend/bot/botConstant";
-import {
-  useUpdateBot,
-  useBotForEdit,
-  useDeleteBot,
-} from "@/hooks/bot/useBotHook";
-import { BotFormInputs, BotFormSchema } from "@/schema/botSchema";
 import { EditQuickActions } from "./EditQuickActions";
 import { EditStatistics } from "./EditStatistics";
-import { useState } from "react";
 import { DeleteBotModal } from "../../../overview/_components/DeleteBotModal";
-import { BotResponse } from "@/services/interfaces/botInterfaces";
+
+import { BotCategory, RiskLevel } from "@/backend/bot/botConstant";
+import { BotFormInputs, BotFormSchema } from "@/schema/botSchema";
+
+import { updateBotAction, deleteBotAction } from "@/actions/bot.actions";
+import { BotResponse } from "@/backend/bot/bot.types";
+
 
 function BotEditForm({ bot, botId }: { bot: BotResponse; botId: string }) {
   const router = useRouter();
-  const { mutate: updateBot, isPending: isSaving } = useUpdateBot();
 
-  // Helper để map dữ liệu an toàn (Defensive Coding)
-  // Ép kiểu any tạm để fallback cho trường hợp backend trả về cấu trúc cũ
+  const [isPending, startTransition] = useTransition();
+
   const safeBot = bot as any;
 
   const initialValues: BotFormInputs = {
     name: bot.name,
     description: bot.description || "",
     category: (bot.category as BotCategory) || "AI_PREDICTIVE",
-
-    // Map Coin Symbol: Ưu tiên tradingConfig -> fallback coinSymbol cũ -> rỗng
     coinSymbol: bot.tradingConfig?.coinSymbol || safeBot.coinSymbol || "",
-
     tradingPair: bot.tradingConfig?.tradingPair || safeBot.tradingPair || "",
     riskLevel: (bot.tradingConfig?.riskLevel as RiskLevel) || "LOW",
-
-    websocketUrl:
-      bot.integrationConfig?.websocketUrl || safeBot.websocketUrl || "",
-    healthUrl:
-      bot.integrationConfig?.healthCheckUrl || safeBot.healthCheckUrl || "",
+    websocketUrl: bot.integrationConfig?.websocketUrl || safeBot.websocketUrl || "",
+    healthUrl: bot.integrationConfig?.healthCheckUrl || safeBot.healthCheckUrl || "",
   };
 
-  // Khởi tạo form với dữ liệu CÓ SẴN (Không cần useEffect reset)
   const form = useForm<BotFormInputs>({
     resolver: zodResolver(BotFormSchema),
-    defaultValues: initialValues, // Form nhận giá trị đúng ngay lập tức
+    defaultValues: initialValues,
   });
 
+  // 2. Handle Submit với Server Action
   const onSubmit = (data: BotFormInputs) => {
-    updateBot(
-      { id: botId, data },
-      {
-        onSuccess: () => {
-          // Redirect back to overview on success
-          router.refresh();
-          router.push("/my/dashboard/ai-bots/overview");
-        },
-      },
-    );
+
+    startTransition(async () => {
+      try {
+        const response = await updateBotAction(botId, data);
+
+        if (response.status == "success")
+          toast.success(`Bot "${data.name}" updated successfully!`);
+        else
+          toast.error(response.message)
+
+      } catch (error: any) {
+        console.error("Update failed:", error);
+        toast.error(error.message || "Failed to update bot");
+      }
+    });
   };
 
   return (
@@ -78,13 +76,13 @@ function BotEditForm({ bot, botId }: { bot: BotResponse; botId: string }) {
           type="button"
           variant="outline"
           onClick={() => router.push("/my/dashboard/ai-bots/overview")}
-          disabled={isSaving}
+          disabled={isPending}
         >
           Cancel
         </Button>
 
-        <Button type="submit" size="lg" disabled={isSaving}>
-          {isSaving ? (
+        <Button type="submit" size="lg" disabled={isPending}>
+          {isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
             </>
@@ -97,54 +95,41 @@ function BotEditForm({ bot, botId }: { bot: BotResponse; botId: string }) {
   );
 }
 
-// --- PHẦN 2: CONTAINER COMPONENT (Load Data) ---
-interface Props {
+// --- MAIN COMPONENT ---
+interface AdminBotEditProps {
+  bot: BotResponse;
   botId: string;
 }
 
-export default function AdminBotEdit({ botId }: Props) {
+export default function AdminBotEdit({ bot, botId }: AdminBotEditProps) {
   const router = useRouter();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  const { data: bot, isLoading, isError } = useBotForEdit(botId);
-  const { mutate: deleteBot, isPending: isDeleting } = useDeleteBot();
+  // 3. useTransition cho Delete Action
+  const [isDeleting, startDeleteTransition] = useTransition();
 
   const handleBackToList = () => {
     router.push("/my/dashboard/ai-bots/overview");
   };
 
+  // 4. Handle Delete với Server Action
   const handleDeleteConfirm = () => {
-    deleteBot(botId, {
-      onSuccess: () => {
-        // Modal closes automatically via navigation, but good practice to close state
+    startDeleteTransition(async () => {
+      try {
+        await deleteBotAction(botId);
+        toast.success("Bot deleted successfully");
         setIsDeleteModalOpen(false);
+        // Chuyển hướng về trang danh sách (Server Action đã revalidate list)
+        // router.push sẽ thấy dữ liệu mới ngay lập tức
         router.push("/my/dashboard/ai-bots/overview");
-      },
+      } catch (error: any) {
+        toast.error(error.message || "Failed to delete bot");
+      }
     });
   };
 
-  // 2. Loading State
-  if (isLoading) {
-    return (
-      <div className="flex h-96 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  // 3. Error State
-  if (isError || !bot) {
-    return (
-      <div className="flex flex-col items-center gap-4 pt-10">
-        <p className="text-red-500">Failed to load bot details.</p>
-        <Button onClick={handleBackToList}>Back to List</Button>
-      </div>
-    );
-  }
-
-  // 4. Render UI
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header */}
       <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={handleBackToList} className="gap-2">
@@ -168,8 +153,8 @@ export default function AdminBotEdit({ botId }: Props) {
         botName={bot.name}
         botStatus={bot.status}
         copyingUsers={bot.stats?.copyingUsers ?? 0}
-        onResetApi={() => toast.success("Coming soon")}
-        onPauseResume={() => toast.success("Coming soon")}
+        onResetApi={() => toast.success("Feature coming soon")}
+        onPauseResume={() => toast.success("Feature coming soon")}
         onDelete={() => setIsDeleteModalOpen(true)}
       />
 
@@ -181,8 +166,7 @@ export default function AdminBotEdit({ botId }: Props) {
         copyingUsers={bot.stats?.copyingUsers ?? 0}
       />
 
-      {/* QUAN TRỌNG: Truyền dữ liệu xuống component con */}
-      {/* BotEditForm chỉ được mount khi 'bot' đã tồn tại */}
+      {/* Form Section */}
       <BotEditForm bot={bot} botId={botId} />
 
       {/* Delete Confirmation Modal */}

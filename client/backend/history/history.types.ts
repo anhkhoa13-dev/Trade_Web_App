@@ -1,5 +1,3 @@
-import { ApiResponse, PaginatedResult } from "../constants/ApiResponse";
-
 export interface TransactionHistoryDTO {
     id: string;
     createdAt: string;
@@ -27,7 +25,6 @@ export interface BotTradeHistoryDTO {
     feeBotApplied: number;
 }
 
-export type HistoryResponse<T> = ApiResponse<PaginatedResult<T>>;
 
 export interface ManualTransactionParams {
     page?: number;

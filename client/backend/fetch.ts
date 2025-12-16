@@ -1,7 +1,7 @@
 import { auth } from "@/auth"
 import { NetworkError } from "@/lib/errors"
 import { ErrorResponse } from "./errorResponse"
-import { ApiResponse } from "./constants/ApiResponse"
+import { ApiError, ApiResponse } from "./constants/ApiResponse"
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
 async function _fetch<T>(endpoint: string, options: RequestInit = {}, withAuth: boolean) {
@@ -38,7 +38,7 @@ async function _fetch<T>(endpoint: string, options: RequestInit = {}, withAuth: 
                 message: error.detail,
                 data: null,
                 statusCode: error.status
-            }
+            } as ApiError
         }
 
         const data = await response.json() as ApiResponse<T>

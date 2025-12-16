@@ -1,22 +1,14 @@
-import { redirect } from "next/navigation";
 import { HistoryDashboard } from "./_components/HistoryDashboard";
-import { auth } from "@/auth";
-import { BotSubscription } from "@/backend/bot/botSub.types";
 import { getBotTransactions, getManualTransactions } from "@/actions/history.actions";
 import { getUserSubscriptions } from "@/actions/botSub.actions";
+import { BotSubscription } from "@/backend/bot/botSub.types";
 
 export default async function HistoryPage({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const session = await auth();
 
-  if (!session?.accessToken) {
-    redirect("/login");
-  }
-
-  // 1. Parse URL Parameters - await searchParams in Next.js 15+
   const params = await searchParams;
   const activeTab = (params.tab as "manual" | "bot") || "manual";
   const page = Number(params.page) || 0;
@@ -25,7 +17,7 @@ export default async function HistoryPage({
   const coinFilter = (params.coinSymbol as string) || "all";
   const sideFilter = (params.side as string) || "all";
   const timeRange = (params.timeRange as string) || "all";
-  const botId = (params.botId as string) || undefined;
+  const botIdParam = (params.botId as string) || undefined;
 
   // Calculate fromDate and toDate based on timeRange
   let fromDate: string | undefined;
@@ -54,9 +46,10 @@ export default async function HistoryPage({
   }
 
   // 2. Data Fetching Logic (Conditional SSR)
-  let manualData = null;
-  let botData = null;
+  let manualData = undefined;
+  let botData = undefined;
   let botSubscriptions: BotSubscription[] = [];
+  let activeBotId = botIdParam;
 
   // Common filters object
   const commonFilters = {
@@ -71,42 +64,42 @@ export default async function HistoryPage({
   };
 
   if (activeTab === "manual") {
-    // Only fetch manual data if on manual tab
-    manualData = await getManualTransactions(
-      commonFilters,
-    );
+    const manualResponse = await getManualTransactions(commonFilters);
+    if (manualResponse.status === "error")
+      throw new Error(manualResponse.message);
+
+    manualData = manualResponse.data;
+
   } else if (activeTab === "bot") {
-    // 1. Fetch Subscriptions (needed for the list)
-    const subscriptionsResponse = await getUserSubscriptions(
-      {
-        page: 1,
-        size: 100, // Fetch all subscriptions for the list
-        sortBy: "equity",
-      },
-    );
+    const subResponse = await getUserSubscriptions({
+      page: 1,
+      size: 100,
+      sortBy: "equity",
+    });
 
+    if (subResponse.status === "error")
+      throw new Error(subResponse.message);
 
-    if (subscriptionsResponse.status === "error" || !subscriptionsResponse.data) {
-      return null
+    botSubscriptions = subResponse.data.result;
+
+    // botId URL param -> First bot at list-> undefined
+    if (!activeBotId && botSubscriptions.length > 0) {
+      activeBotId = botSubscriptions[0].subscriptionId;
     }
 
-    botSubscriptions = subscriptionsResponse.data.result;
-
-    // 2. Determine which bot is selected (URL param or default to first)
-    const activeBotId = botId || botSubscriptions[0]?.subscriptionId;
-
-    // 3. Fetch Transactions for that specific bot
+    // Fetch Transactions for Bot
     if (activeBotId) {
-      botData = await getBotTransactions(
-        {
-          ...commonFilters,
-          botSubId: activeBotId,
-        },
-      )
+      const botResponse = await getBotTransactions({
+        ...commonFilters,
+        botSubId: activeBotId,
+      });
+
+      if (botResponse.status === "error") throw new Error(botResponse.message);
+
+      botData = botResponse.data;
     }
   }
 
-  // 3. Fetch Available Coins (for filter dropdown)
   const availableCoins = [
     "Bitcoin",
     "Ethereum",
@@ -122,7 +115,6 @@ export default async function HistoryPage({
       manualData={manualData}
       botData={botData}
       botSubscriptions={botSubscriptions}
-      accessToken={session.accessToken}
       availableCoins={availableCoins}
       currentFilters={{
         coinSymbol: coinFilter,
@@ -130,7 +122,7 @@ export default async function HistoryPage({
         timeRange,
         page,
         size,
-        botId: botId || botSubscriptions[0]?.subscriptionId,
+        botId: activeBotId
       }}
     />
   );

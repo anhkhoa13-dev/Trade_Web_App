@@ -9,14 +9,14 @@ import { Separator } from "../ui/shadcn/separator";
 import { ModeToggle } from "../ui/my_components/Theme/ModeToggle";
 import { UserNav } from "../(root)/_components/Header/UserNav";
 import { auth } from "@/auth";
-import { forbidden } from "next/navigation";
+import { redirect } from "next/navigation";
 
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
   const session = await auth()
 
   if (!session) {
-    forbidden()
+    redirect("/login")
   }
 
   return (

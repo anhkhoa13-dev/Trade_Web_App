@@ -1,7 +1,7 @@
 import { Badge } from "@/app/ui/shadcn/badge";
 import { Card } from "@/app/ui/shadcn/card";
+import { BotSubscription } from "@/backend/bot/botSub.types";
 import { Bot, Circle } from "lucide-react";
-import type { BotSubscription } from "@/services/interfaces/botSubInterfaces";
 
 interface BotSubscriptionsListProps {
   subscriptions: BotSubscription[];
@@ -26,11 +26,10 @@ export function BotSubscriptionsList({
                 key={sub.subscriptionId}
                 onClick={() => onSelectSubscription(sub.subscriptionId)}
                 className={`w-full rounded-xl border-2 p-4 text-left
-                transition-all hover:shadow-md ${
-                  isSelected
+                transition-all hover:shadow-md ${isSelected
                     ? "border-primary bg-accent shadow-sm"
                     : "border-border bg-card hover:border-primary/30"
-                }`}
+                  }`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2">
@@ -42,9 +41,8 @@ export function BotSubscriptionsList({
                     </div>
                     <div>
                       <p
-                        className={`font-medium ${
-                          isSelected ? "text-primary" : ""
-                        }`}
+                        className={`font-medium ${isSelected ? "text-primary" : ""
+                          }`}
                       >
                         {sub.botName}
                       </p>
@@ -62,9 +60,8 @@ export function BotSubscriptionsList({
                     }
                   >
                     <Circle
-                      className={`mr-1 h-2 w-2 ${
-                        sub.active ? "fill-primary" : "fill-muted-foreground"
-                      }`}
+                      className={`mr-1 h-2 w-2 ${sub.active ? "fill-primary" : "fill-muted-foreground"
+                        }`}
                     />
                     {sub.active ? "Running" : "Stopped"}
                   </Badge>
@@ -72,11 +69,10 @@ export function BotSubscriptionsList({
                 <div className="mt-3 flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">PnL</span>
                   <span
-                    className={`font-mono font-semibold ${
-                      sub.pnl >= 0
-                        ? "text-green-600 dark:text-green-400"
-                        : "text-red-600 dark:text-red-400"
-                    }`}
+                    className={`font-mono font-semibold ${sub.pnl >= 0
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-red-600 dark:text-red-400"
+                      }`}
                   >
                     {sub.pnl >= 0 ? "+" : ""}${sub.pnl.toFixed(2)}
                   </span>
