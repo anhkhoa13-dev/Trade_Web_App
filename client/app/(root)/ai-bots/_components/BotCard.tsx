@@ -3,13 +3,14 @@
 import { Badge } from "@/app/ui/shadcn/badge";
 import { Button } from "@/app/ui/shadcn/button";
 import { Card } from "@/app/ui/shadcn/card";
-import { SortOption, TimeWindow } from "@/services/interfaces/botInterfaces";
+
 import { Users, Copy } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { BotConfigDialog } from "./BotConfigDialog";
+import { SortOption, TimeWindow } from "@/backend/bot/bot.types";
 
 // Priority type: determines which metric should be highlighted
 // "roi" → ROI becomes the main large metric
@@ -121,11 +122,10 @@ export function BotCard({
               {mainMetricLabel}
             </p>
             <p
-              className={`text-3xl font-bold ${
-                mainMetric >= 0
-                  ? "text-[var(--chart-3)]"
-                  : "text-[var(--destructive)]"
-              }`}
+              className={`text-3xl font-bold ${mainMetric >= 0
+                ? "text-[var(--chart-3)]"
+                : "text-[var(--destructive)]"
+                }`}
             >
               {mainMetricFormatted}
             </p>
@@ -139,11 +139,10 @@ export function BotCard({
                   PnL ({label})
                 </p>
                 <p
-                  className={`${
-                    pnl >= 0
-                      ? "text-[var(--chart-3)]"
-                      : "text-[var(--destructive)]"
-                  }`}
+                  className={`${pnl >= 0
+                    ? "text-[var(--chart-3)]"
+                    : "text-[var(--destructive)]"
+                    }`}
                 >
                   {pnl >= 0 ? "+" : ""}${pnl.toFixed(2)}
                 </p>
@@ -154,11 +153,10 @@ export function BotCard({
                   ROI ({label})
                 </p>
                 <p
-                  className={`${
-                    roi >= 0
-                      ? "text-[var(--chart-3)]"
-                      : "text-[var(--destructive)]"
-                  }`}
+                  className={`${roi >= 0
+                    ? "text-[var(--chart-3)]"
+                    : "text-[var(--destructive)]"
+                    }`}
                 >
                   {roi >= 0 ? "+" : ""}
                   {roi.toFixed(2)}%

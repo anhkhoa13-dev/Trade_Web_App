@@ -5,7 +5,7 @@ import { getCachedMarketData } from "@/actions/gecko.actions";
 import MarketStats from "./_components/MarketStats";
 
 export default async function MarketPage() {
-  const initialCoins = await getCachedMarketData(1000);
+  const initialCoins = await getCachedMarketData(500);
 
   return (
     <main className="flex flex-col items-center w-full bg-background">

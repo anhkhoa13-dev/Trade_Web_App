@@ -1,16 +1,25 @@
-
 import { NetworkError } from "@/lib/errors";
 import { ApiResponse } from "@/backend/constants/ApiResponse";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 
-type ActionFunction<T, R> = (params: T) => Promise<R>;
+// no argument
+export function withAuthError<R>(
+    action: () => Promise<R>
+): () => Promise<R | ApiResponse<any>>;
 
-export function withAuthError<T, R>(action: ActionFunction<T, R>): ActionFunction<T, R | ApiResponse<any>> {
-    return async (params: T): Promise<R | ApiResponse<any>> => {
+// with argument
+export function withAuthError<T, R>(
+    action: (params: T) => Promise<R>
+): (params: T) => Promise<R | ApiResponse<any>>;
+
+
+export function withAuthError(action: any) {
+
+    return async (...args: any[]) => {
         try {
-            return await action(params);
+            return await action(...args);
         } catch (error) {
-            // Redirect error
+            // Redirect error (Next.js logic)
             if (isRedirectError(error)) {
                 throw error;
             }

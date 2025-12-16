@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useTransition } from "react"; // Thêm useTransition
 import { ColDef, ICellRendererParams } from "ag-grid-community";
 import { useRouter } from "next/navigation";
 import {
@@ -17,12 +17,12 @@ import DataTable from "@/app/ui/my_components/data-table/AgDataTable";
 import { Button } from "@/app/ui/shadcn/button";
 import { Badge, BadgeVariant } from "@/app/ui/shadcn/badge";
 import { BotStatus } from "@/backend/bot/botConstant";
-
-// FIX: Ensure date-fns import is present
 import { format, isValid } from "date-fns";
 import { DeleteBotModal } from "./DeleteBotModal";
-import { useDeleteBot } from "@/hooks/bot/useBotHook";
-import { BotResponse } from "@/services/interfaces/botInterfaces";
+
+import { deleteBotAction } from "@/actions/bot.actions";
+import toast from "react-hot-toast";
+import { BotResponse } from "@/backend/bot/bot.types";
 
 interface BotTableProps {
   bots: BotResponse[];
@@ -40,7 +40,9 @@ export default function BotTable({
   paginationPageSize = 12,
 }: BotTableProps) {
   const router = useRouter();
-  const { mutate: deleteBot, isPending: isDeleting } = useDeleteBot();
+
+  // Thay thế React Query mutation bằng useTransition
+  const [isPending, startTransition] = useTransition();
   const [botToDelete, setBotToDelete] = useState<BotResponse | null>(null);
 
   const handleEdit = useCallback(
@@ -51,19 +53,24 @@ export default function BotTable({
   );
 
   const handleDeleteClick = (bot: BotResponse) => {
-    setBotToDelete(bot); // Open Modal
-  };
-  const handleConfirmDelete = () => {
-    if (botToDelete) {
-      deleteBot(botToDelete.id, {
-        onSuccess: () => {
-          setBotToDelete(null); // Close Modal on success
-        },
-      });
-    }
+    setBotToDelete(bot);
   };
 
-  //TODOS: Handlers (Placeholder logic for now - not yet implements)
+  const handleConfirmDelete = () => {
+    if (!botToDelete) return;
+
+    startTransition(async () => {
+      try {
+        await deleteBotAction(botToDelete.id);
+
+        toast.success("Bot deleted successfully");
+        setBotToDelete(null);
+      } catch (error: any) {
+        toast.error(error.message || "Failed to delete bot");
+      }
+    });
+  };
+
   const handlePauseResume = (bot: BotResponse) => console.log("Toggle", bot.id);
   const handleView = (bot: BotResponse) => console.log("View", bot.id);
 
@@ -76,23 +83,12 @@ export default function BotTable({
         <Button variant="ghost" size="icon" onClick={() => handleView(bot)}>
           <Eye className="h-4 w-4" />
         </Button>
-
         <Button variant="ghost" size="icon" onClick={() => handleEdit(bot)}>
           <Pencil className="h-4 w-4" />
         </Button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => handlePauseResume(bot)}
-        >
-          {bot.status === "PAUSED" ? (
-            <Pause className="h-4 w-4" />
-          ) : (
-            <Play className="h-4 w-4" />
-          )}
+        <Button variant="ghost" size="icon" onClick={() => handlePauseResume(bot)}>
+          {bot.status === "PAUSED" ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
         </Button>
-
         <Button
           variant="ghost"
           size="icon"
@@ -106,6 +102,7 @@ export default function BotTable({
   };
 
   const columns: ColDef<BotResponse>[] = [
+    // ... Copy y nguyên phần columns definition của bạn vào đây
     {
       headerName: "Bot Name",
       field: "name",
@@ -189,15 +186,12 @@ export default function BotTable({
     },
     {
       headerName: "Last Signal",
-      // FIX: Use valueGetter to access nested 'stats.lastSignalAt'
       valueGetter: (p) => p.data?.stats?.lastSignalAt,
       flex: 1,
       minWidth: 160,
       valueFormatter: (params) => {
-        // FIX: Safely check validity before formatting
         if (!params.value) return "-";
         const date = new Date(params.value);
-        // Ensure it's a valid date object
         if (!isValid(date)) return "-";
         return format(date, "MMM dd, HH:mm");
       },
@@ -229,7 +223,7 @@ export default function BotTable({
         onClose={() => setBotToDelete(null)}
         onConfirm={handleConfirmDelete}
         botName={botToDelete?.name || ""}
-        isDeleting={isDeleting}
+        isDeleting={isPending}
       />
     </>
   );

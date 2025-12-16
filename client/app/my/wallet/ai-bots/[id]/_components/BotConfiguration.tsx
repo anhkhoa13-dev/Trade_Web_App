@@ -2,7 +2,6 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/ui/shadcn/card";
 import { Button } from "@/app/ui/shadcn/button";
 import {
@@ -22,6 +21,7 @@ import {
 import { BotUpdateRequest } from "@/backend/bot/botSub.services";
 import { updateBotSub } from "@/actions/botSub.actions";
 import { Spinner } from "@/app/ui/shadcn/spinner";
+import toast from "react-hot-toast";
 
 interface BotConfigurationProps {
   subscriptionId: string;
@@ -73,8 +73,13 @@ export default function BotConfiguration({
           : values.maxDailyLossPercentage) / 100,
     }
 
-    await updateBotSub(subscriptionId, payload)
-    // updateMutation.mutate({ id: subscriptionId, payload });
+    const response = await updateBotSub(subscriptionId, payload)
+
+    if (response.status === "success") {
+      toast.success(response.message)
+    } else {
+      toast.error(response.message)
+    }
   };
 
   return (

@@ -1,5 +1,5 @@
 import { Badge } from '@/app/ui/shadcn/badge'
-import { Card, CardContent, CardHeader } from '@/app/ui/shadcn/card'
+import { Card, CardContent } from '@/app/ui/shadcn/card'
 import React from 'react'
 
 export interface AssetCardProps {

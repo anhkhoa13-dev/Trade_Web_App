@@ -1,83 +1,68 @@
-"use client";
+import { getAllBotsAction } from "@/actions/bot.actions";
 
-import { useState, useMemo } from "react";
 import { Bot, Activity, Users } from "lucide-react";
-
-import { AdminBot, adminBotDatabase } from "@/entities/mockAdminAiBots";
 import { StatsCard } from "./_components/StatsCard";
 import BotTable from "./_components/BotTable";
 import { BotFilterBar } from "./_components/BotFilterBar";
-import { BotAction, BotStatus } from "@/backend/bot/botConstant";
-import { useAllBots } from "@/hooks/bot/useBotHook";
-import { BotResponse } from "@/services/interfaces/botInterfaces";
+import { BotStatus } from "@/backend/bot/botConstant";
+import { BotResponse } from "@/backend/bot/bot.types";
 
-export default function AdminOverview() {
-  const [statusFilter, setStatusFilter] = useState<BotStatus | "all">("all");
-  const [coinFilter, setCoinFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("copying-users");
+interface PageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
 
-  // 1. Fetch Real Data
-  const { data: bots, isLoading, isError } = useAllBots();
+export default async function AdminBotPage(props: PageProps) {
+  const searchParams = await props.searchParams;
 
-  // 2. Calculate Summary Stats
-  const totalBots = bots?.length || 0;
-  const activeBots = bots?.filter((b) => b.status === "ACTIVE").length || 0;
-  const totalUsers =
-    bots?.reduce((sum, b) => sum + (b.stats?.copyingUsers || 0), 0) || 0;
+  const statusFilter = (searchParams.status as BotStatus | "all") || "all";
+  const coinFilter = (searchParams.coin as string) || "all";
+  const sortBy = (searchParams.sort as string) || "copying-users";
 
-  // 3. Extract Unique Coins for Filter
-  const uniqueCoins = useMemo(() => {
-    if (!bots) return [];
+  const botsReponse = await getAllBotsAction();
 
-    const coins = bots
-      .map((b) => b.tradingConfig?.coinSymbol)
-      .filter((symbol): symbol is string => !!symbol);
+  if (botsReponse.status == "error")
+    throw new Error(botsReponse.message)
 
-    return Array.from(new Set(coins));
-  }, [bots]);
+  const allBots = botsReponse.data
+  // Calculate Stats (Server Side)
+  const totalBots = allBots.length;
+  const activeBots = allBots.filter((b) => b.status === "ACTIVE").length;
+  const totalUsers = allBots.reduce((sum, b) => sum + (b.stats?.copyingUsers || 0), 0);
 
-  // Filtering + Sorting
-  const filteredBots: BotResponse[] = useMemo(() => {
-    if (!bots) return [];
+  // Extract Unique Coins
+  const uniqueCoins = Array.from(
+    new Set(
+      allBots
+        .map((b) => b.tradingConfig?.coinSymbol)
+        .filter((symbol): symbol is string => !!symbol)
+    )
+  );
 
-    return bots
-      .filter((bot) => {
-        // Status Filter (Assuming your FilterBar passes "all" or specific status)
-        // Note: Check if your FilterBar uses "all" or just ignores it
-        const statusMatch =
-          statusFilter === "all" || (statusFilter as string) === bot.status;
+  // 6. Filter & Sort Logic (Chuyển từ useMemo client sang xử lý Server)
+  let filteredBots = allBots.filter((bot) => {
+    const statusMatch = statusFilter === "all" || bot.status === statusFilter;
+    const coinMatch = coinFilter === "all" || bot.tradingConfig?.coinSymbol === coinFilter;
+    return statusMatch && coinMatch;
+  });
 
-        // Coin Filter
-        const coinMatch =
-          coinFilter === "all" || bot.tradingConfig?.coinSymbol === coinFilter;
+  filteredBots.sort((a, b) => {
+    const getRoi = (bot: BotResponse) => bot.stats?.roi24h ?? 0;
+    const getPnl = (bot: BotResponse) => bot.stats?.pnl24h ?? 0;
+    const getUsers = (bot: BotResponse) => bot.stats?.copyingUsers ?? 0;
 
-        return statusMatch && coinMatch;
-      })
-      .sort((a, b) => {
-        // Helper to safely get stats (default to 0)
-        const getRoi = (bot: BotResponse) => bot.stats?.roi24h ?? 0;
-        const getPnl = (bot: BotResponse) => bot.stats?.pnl24h ?? 0;
-        const getUsers = (bot: BotResponse) => bot.stats?.copyingUsers ?? 0;
-
-        switch (sortBy) {
-          case "roi-24h":
-            return getRoi(b) - getRoi(a);
-          case "pnl-24h":
-            return getPnl(b) - getPnl(a);
-          case "status": {
-            // Simple sort: Active first
-            const order: Record<string, number> = {
-              ACTIVE: 1,
-              PAUSED: 2,
-              ERROR: 3,
-            };
-            return (order[a.status] || 99) - (order[b.status] || 99);
-          }
-          default: // "copying-users"
-            return getUsers(b) - getUsers(a);
-        }
-      });
-  }, [bots, statusFilter, coinFilter, sortBy]);
+    switch (sortBy) {
+      case "roi-24h":
+        return getRoi(b) - getRoi(a);
+      case "pnl-24h":
+        return getPnl(b) - getPnl(a);
+      case "status": {
+        const order: Record<string, number> = { ACTIVE: 1, PAUSED: 2, ERROR: 3 };
+        return (order[a.status] || 99) - (order[b.status] || 99);
+      }
+      default: // "copying-users"
+        return getUsers(b) - getUsers(a);
+    }
+  });
 
   return (
     <div className="flex flex-col space-y-8 max-w-7xl mx-auto px-6 py-10">
@@ -111,15 +96,14 @@ export default function AdminOverview() {
         />
       </div>
 
+      {/* Filter Bar & Table */}
       <BotFilterBar
         uniqueCoins={uniqueCoins}
         coinFilter={coinFilter}
         statusFilter={statusFilter as any}
         sortBy={sortBy}
-        onCoinChange={setCoinFilter}
-        onStatusChange={setStatusFilter}
-        onSortChange={setSortBy}
       />
+
       <BotTable bots={filteredBots} />
     </div>
   );

@@ -77,7 +77,7 @@ const registerLogic = async (params: RegisterInput): Promise<ApiResponse<Registe
     return await response.json() as ApiResponse<RegisterResponse>
 }
 
-const activateLogic = async ({ urlToken, params }: { urlToken: string, params: VerificationInput }): Promise<ApiResponse> => {
+const activateLogic = async ({ urlToken, params }: { urlToken: string, params: VerificationInput }): Promise<ApiResponse<void>> => {
     const response = await AuthService.active({ urlToken, ...params })
 
     if (!response.ok) {
@@ -91,7 +91,7 @@ const activateLogic = async ({ urlToken, params }: { urlToken: string, params: V
         }
     }
 
-    return await response.json() as ApiResponse
+    return await response.json() as ApiResponse<void>
 }
 
 const logoutLogic = async () => {
