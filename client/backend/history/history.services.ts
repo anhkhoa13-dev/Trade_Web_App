@@ -1,5 +1,6 @@
+import { PaginatedResult } from "../constants/ApiResponse";
 import { api } from "../fetch";
-import { BotTradeHistoryDTO, BotTransactionParams, HistoryResponse, ManualTransactionParams, TransactionHistoryDTO } from "./history.types";
+import { BotTradeHistoryDTO, BotTransactionParams, ManualTransactionParams, TransactionHistoryDTO } from "./history.types";
 
 export const HistoryService = {
     async getManualTransactions(
@@ -20,7 +21,7 @@ export const HistoryService = {
 
         const endpoint = `/history/transactions/user?${queryParams.toString()}`
 
-        const res = await api.get<HistoryResponse<TransactionHistoryDTO>>({
+        const res = await api.get<PaginatedResult<TransactionHistoryDTO>>({
             endpoint: endpoint,
             options: {
                 cache: "no-store",
@@ -49,7 +50,7 @@ export const HistoryService = {
 
         const endpoint = `/history/transactions/bot?${queryParams.toString()}`;
 
-        const res = await api.get<HistoryResponse<BotTradeHistoryDTO>>({
+        const res = await api.get<PaginatedResult<BotTradeHistoryDTO>>({
             endpoint: endpoint,
             options: {
                 cache: "no-store",

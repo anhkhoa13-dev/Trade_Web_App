@@ -4,35 +4,17 @@ import React from "react";
 import { Card, CardContent } from "@/app/ui/shadcn/card";
 import PnLLineChart from "@/app/ui/my_components/charts/PnLLineChart";
 import MetricBox from "@/app/ui/my_components/MetricBox";
-import { Loader2 } from "lucide-react";
 import { AssetDTO } from "@/backend/wallet/wallet.types";
-// import { useWallet } from "@/hooks/useWallet";
 
-export default function ProfitLostAnalysis({ walletData }: { walletData: AssetDTO | null; }) {
-  // const { data: assetData, isLoading } = useWallet();
+export default function ProfitLostAnalysis({ walletData }: { walletData: AssetDTO }) {
 
-  if (!walletData) {
-    return (
-      <Card className="w-full shadow-sm border border-border bg-card">
-        <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!walletData) {
-    return null;
-  }
-
-  // Format chart data for PnLLineChart
-  const chartData = walletData.pnlChartData.map((point) => ({
+  const chartData = (walletData.pnlChartData || []).map((point) => ({
     timestamp: point.timestamp,
     pnl: point.value,
   }));
 
   return (
-    <Card >
+    <Card>
       <CardContent className="pt-6">
         {/* Title */}
         <h3 className="text-lg font-semibold mb-4">Profit / Loss Analysis</h3>

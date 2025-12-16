@@ -1,9 +1,11 @@
+
+import { PaginatedResult } from "../constants/ApiResponse";
 import { api } from "../fetch";
 import {
     BotSubscriptionDetail,
-    SubscriptionPaginatedResponse,
     SubscriptionFilterParams,
     BotSubOverview,
+    BotSubscription,
 } from "./botSub.types";
 
 export type BotCopyRequest = {
@@ -72,7 +74,7 @@ export const BotSubService = {
             queryParams.append("sortBy", params.sortBy);
         }
 
-        const res = await api.get<SubscriptionPaginatedResponse>({
+        const res = await api.get<PaginatedResult<BotSubscription>>({
             endpoint: `/bot-sub?${queryParams.toString()}`,
             options: {
                 cache: "no-store",

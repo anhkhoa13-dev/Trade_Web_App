@@ -7,7 +7,7 @@ import {
   UserPortfolioCoin,
 } from "./UserPortfolioColumns";
 import { Button } from "@/app/ui/shadcn/button";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { COIN_LOGOS } from "@/services/constants/coinConstant";
 import { useLiveMarketStream } from "@/hooks/ws/useLiveMarketStream-v1";
@@ -16,13 +16,13 @@ import { Card, CardHeader } from "@/app/ui/shadcn/card";
 
 const TOP_NUMBER = 5;
 
-export default function PortfolioAssetTable({ walletData }: { walletData: AssetDTO | null }) {
+export default function PortfolioAssetTable({ walletData }: { walletData: AssetDTO }) {
   const router = useRouter();
-
 
   // Extract coin symbols from wallet holdings
   const symbols = useMemo(() => {
-    if (!walletData?.coinHoldings) return [];
+
+    if (!walletData.coinHoldings) return [];
     return walletData.coinHoldings.map((coin) => coin.coinSymbol);
   }, [walletData]);
 
@@ -31,12 +31,13 @@ export default function PortfolioAssetTable({ walletData }: { walletData: AssetD
 
   // Calculate portfolio data with real-time prices
   const portfolioData: UserPortfolioCoin[] = useMemo(() => {
-    if (!walletData?.coinHoldings || Object.keys(tickers).length === 0) {
+    if (!walletData.coinHoldings) {
       return [];
     }
 
     // Calculate total portfolio value first
     let totalValue = walletData.balance; // Include USDT balance
+
     walletData.coinHoldings.forEach((coin) => {
       const ticker = tickers[coin.coinSymbol];
       if (ticker) {
@@ -75,19 +76,6 @@ export default function PortfolioAssetTable({ walletData }: { walletData: AssetD
     router.push("/my/wallet/portfolio");
   };
 
-  if (!walletData) {
-    return (
-      <div
-        className="flex flex-col gap-4 w-full h-full border border-border
-          bg-card rounded-xl overflow-hidden p-6"
-      >
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <Card
       className="flex flex-col gap-4 justify-between w-full h-full border border-border bg-card
@@ -95,7 +83,7 @@ export default function PortfolioAssetTable({ walletData }: { walletData: AssetD
     >
       {/* Header Section */}
       <CardHeader
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between"
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-0"
       >
         <div>
           <h2 className="text-2xl font-semibold tracking-tight">
@@ -117,7 +105,6 @@ export default function PortfolioAssetTable({ walletData }: { walletData: AssetD
         </Button>
       </CardHeader>
 
-
       <DataTable
         columns={userPortfolioColumns}
         data={topFive}
@@ -125,8 +112,6 @@ export default function PortfolioAssetTable({ walletData }: { walletData: AssetD
         enablePagination={false}
         enableSorting={false}
       />
-      {/* Table (overview only) */}
-
     </Card>
   );
 }

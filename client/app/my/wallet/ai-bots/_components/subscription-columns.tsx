@@ -73,8 +73,7 @@ export function getSubscriptionColumns({
         return (
           <Badge
             variant="outline"
-            className={`rounded-full px-3 py-1 ${
-              isActive
+            className={`rounded-full px-3 py-1 ${isActive
                 ? `bg-green-500/10 text-green-700 dark:text-green-400
                   border-green-500/20`
                 : `bg-red-500/10 text-red-700 dark:text-red-400
@@ -113,8 +112,7 @@ export function getSubscriptionColumns({
         const absolutePnl = Math.abs(pnl);
         return (
           <div
-            className={`font-medium ${
-              isPositive
+            className={`font-medium ${isPositive
                 ? "text-green-600 dark:text-green-400"
                 : "text-red-600 dark:text-red-400"
               }`}
@@ -147,8 +145,7 @@ export function getSubscriptionColumns({
             <Button
               variant="ghost"
               size="sm"
-              className={`gap-2 ${
-                sub.active
+              className={`gap-2 ${sub.active
                   ? `text-destructive hover:bg-destructive/10
                     hover:text-destructive`
                   : `text-green-600 hover:bg-green-500/10 hover:text-green-600
