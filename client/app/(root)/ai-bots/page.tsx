@@ -35,13 +35,19 @@ export default async function AiBotPage({ searchParams }: Props) {
   const totalPages = meta?.pages || 1;
   const totalItems = meta?.total || 0;
 
+  const activeTraders = bots.reduce(
+    (sum, bot) => sum + (bot.activeSubscribers || 0),
+    0
+  );
+  const totalValue = bots.reduce((sum, bot) => sum + (bot.totalEquity || 0), 0);
+
   return (
     <main className="flex flex-col w-full max-w-6xl mx-auto px-4 py-8 bg-background">
       {/* Intro section */}
       <AiBotIntro
         totalBots={totalItems}
-        activeTraders={53244}
-        totalValue={351000}
+        activeTraders={activeTraders}
+        totalValue={totalValue}
       />
 
       {/* Sort / Filter Bar */}

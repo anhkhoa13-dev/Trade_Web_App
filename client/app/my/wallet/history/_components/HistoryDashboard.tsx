@@ -16,14 +16,20 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/ui/shadcn/tabs";
 
 import { ManualTransactionsTable } from "./ManualTransactionsTable";
-import { BotTradeHistoryDTO, TransactionHistoryDTO } from "@/backend/history/history.types";
+import {
+  BotTradeHistoryDTO,
+  TransactionHistoryDTO,
+  DepositTransactionDTO,
+} from "@/backend/history/history.types";
 import { PaginatedResult } from "@/backend/constants/ApiResponse";
 import { BotSubscription } from "@/backend/bot/botSub.types";
+import { DepositTransactionsTable } from "./DepositTransactionsTable";
 
 interface HistoryDashboardProps {
-  activeTab: "manual" | "bot";
+  activeTab: "manual" | "bot" | "deposit";
   manualData?: PaginatedResult<TransactionHistoryDTO>;
   botData?: PaginatedResult<BotTradeHistoryDTO>;
+  depositData?: PaginatedResult<DepositTransactionDTO>;
   botSubscriptions: BotSubscription[];
   availableCoins: string[];
   currentFilters: {
@@ -40,6 +46,7 @@ export function HistoryDashboard({
   activeTab,
   manualData,
   botData,
+  depositData,
   botSubscriptions,
   availableCoins,
   currentFilters,
@@ -50,6 +57,7 @@ export function HistoryDashboard({
 
   const manualTradesCount = manualData?.meta.total;
   const botTradesCount = botData?.meta.total;
+  const depositCount = depositData?.meta.total;
 
   const updateFilter = (key: string, value: string) => {
     const currentParam = searchParams.get(key);
@@ -96,10 +104,9 @@ export function HistoryDashboard({
         value={activeTab}
         onValueChange={(val) => updateFilter("tab", val)}
       >
-        <Card className="shadow-sm">
+        <Card className="shadow-sm mb-4">
           <div className="space-y-4 p-6">
-
-            <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsList className="grid w-full max-w-2xl grid-cols-3 divide-x">
               <TabsTrigger value="manual">
                 Manual Orders{" "}
                 {manualTradesCount !== undefined && `(${manualTradesCount})`}
@@ -108,8 +115,10 @@ export function HistoryDashboard({
                 Bot Transactions{" "}
                 {botTradesCount !== undefined && `(${botTradesCount})`}
               </TabsTrigger>
+              <TabsTrigger value="deposit">
+                Deposits {depositCount !== undefined && `(${depositCount})`}
+              </TabsTrigger>
             </TabsList>
-
 
             <div className="flex flex-wrap gap-4">
               {/* Time Range Filter */}
@@ -149,20 +158,37 @@ export function HistoryDashboard({
                 </Select>
               )}
 
-              {/* Side Filter */}
-              <Select
-                value={currentFilters.side}
-                onValueChange={(val) => updateFilter("side", val)}
-              >
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Side" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sides</SelectItem>
-                  <SelectItem value="BUY">Buy</SelectItem>
-                  <SelectItem value="SELL">Sell</SelectItem>
-                </SelectContent>
-              </Select>
+              {/* Side/Status Filter */}
+              {activeTab === "deposit" ? (
+                <Select
+                  value={currentFilters.side}
+                  onValueChange={(val) => updateFilter("side", val)}
+                >
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="SUCCESS">Success</SelectItem>
+                    <SelectItem value="PENDING">Pending</SelectItem>
+                    <SelectItem value="FAILED">Failed</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Select
+                  value={currentFilters.side}
+                  onValueChange={(val) => updateFilter("side", val)}
+                >
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Side" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Sides</SelectItem>
+                    <SelectItem value="BUY">Buy</SelectItem>
+                    <SelectItem value="SELL">Sell</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
         </Card>
@@ -191,10 +217,21 @@ export function HistoryDashboard({
             />
           ) : (
             <div className="p-4 text-center">Loading bot data...</div>
-          )
-          }
+          )}
+        </TabsContent>
+
+        <TabsContent value="deposit" className="mt-0">
+          {depositData ? (
+            <DepositTransactionsTable
+              data={depositData}
+              currentPage={currentFilters.page}
+              pageSize={currentFilters.size}
+            />
+          ) : (
+            <div className="p-4 text-center">Loading deposit data...</div>
+          )}
         </TabsContent>
       </Tabs>
-    </div >
+    </div>
   );
 }

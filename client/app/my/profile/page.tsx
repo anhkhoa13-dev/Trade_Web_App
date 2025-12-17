@@ -7,11 +7,10 @@ import SecurityCard from "./_components/SecurityCard";
 import { getProfile } from "@/actions/user.action";
 
 export default async function ProfilePage() {
-
-  const response = await getProfile()
+  const response = await getProfile();
 
   if (response.status === "error") {
-    throw new Error(response.message)
+    throw new Error(response.message);
   }
 
   const profile = response.data;
@@ -36,9 +35,7 @@ export default async function ProfilePage() {
 
           <div className="flex flex-col items-center">
             <div className="text-3xl font-semibold">{profile.username}</div>
-            <div className="text-sm text-muted-foreground">
-              {profile.email}
-            </div>
+            <div className="text-sm text-muted-foreground">{profile.email}</div>
           </div>
         </div>
 
@@ -54,10 +51,7 @@ export default async function ProfilePage() {
           </TabsList>
 
           <TabsContent value="profile" className="space-y-5">
-            <ProfileCard
-              profile={profile}
-            // onSave={(updatedProfile) => updateProfile(updatedProfile)}
-            />
+            <ProfileCard profile={profile} />
           </TabsContent>
 
           <TabsContent value="account" className="space-y-5">

@@ -43,16 +43,16 @@ export default function BotTable({
 
   // Thay thế React Query mutation bằng useTransition
   const [isPending, startTransition] = useTransition();
-  const [botToDelete, setBotToDelete] = useState<BotResponse | null>(null);
+  const [botToDelete, setBotToDelete] = useState<BotMetricsDTO | null>(null);
 
   const handleEdit = useCallback(
-    (bot: BotResponse) => {
-      router.push(`/my/dashboard/ai-bots/${bot.id}/edit`);
+    (bot: BotMetricsDTO) => {
+      router.push(`/my/dashboard/ai-bots/${bot.botId}/edit`);
     },
     [router]
   );
 
-  const handleDeleteClick = (bot: BotResponse) => {
+  const handleDeleteClick = (bot: BotMetricsDTO) => {
     setBotToDelete(bot);
   };
 
@@ -61,7 +61,7 @@ export default function BotTable({
 
     startTransition(async () => {
       try {
-        await deleteBotAction(botToDelete.id);
+        await deleteBotAction(botToDelete.botId);
 
         toast.success("Bot deleted successfully");
         setBotToDelete(null);
@@ -71,10 +71,10 @@ export default function BotTable({
     });
   };
 
-  const handlePauseResume = (bot: BotResponse) => console.log("Toggle", bot.id);
-  const handleView = (bot: BotResponse) => console.log("View", bot.id);
+  const handlePauseResume = (bot: BotMetricsDTO) =>
+    console.log("Toggle", bot.botId);
 
-  const ActionsRenderer = (params: ICellRendererParams<BotResponse>) => {
+  const ActionsRenderer = (params: ICellRendererParams<BotMetricsDTO>) => {
     const bot = params.data;
     if (!bot) return null;
 

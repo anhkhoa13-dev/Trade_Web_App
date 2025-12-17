@@ -17,16 +17,16 @@ const TickerTapeMemo = memo(TickerTape);
 
 interface HeaderProps {
   user?: {
-    email: string
-    username: string
-    fullname: string
-    avatarUrl?: string | null
-  }
+    email: string;
+    username: string;
+    fullname: string;
+    avatarUrl?: string | null;
+  };
 }
 
 export default function SiteHeader({ user }: HeaderProps) {
-  const [isScrolled, setIsScrolled] = useState(false)
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -55,15 +55,19 @@ export default function SiteHeader({ user }: HeaderProps) {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* LEFT: Logo & Main Menu */}
         <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-90">
-            <Image
+          <Link
+            href="/"
+            className="flex items-center gap-2 transition-opacity hover:opacity-90 font-bold text-lg"
+          >
+            {/* <Image
               src="/next.svg"
               alt="Logo"
               width={100}
               height={24}
               className="dark:invert h-6 w-auto"
               priority
-            />
+            /> */}
+            COINSANTRA
           </Link>
 
           {/* Desktop Menu */}
@@ -74,18 +78,19 @@ export default function SiteHeader({ user }: HeaderProps) {
 
         {/* RIGHT: Actions */}
         <div className="flex items-center gap-1">
-
           {/* Theme Toggle */}
           <ModeToggle />
 
           {/* Auth State */}
           {isAuthenticated ? (
-            <UserNav user={{
-              name: user.fullname,
-              username: user.username,
-              email: user.email,
-              image: user.avatarUrl
-            }} />
+            <UserNav
+              user={{
+                name: user.fullname,
+                username: user.username,
+                email: user.email,
+                image: user.avatarUrl,
+              }}
+            />
           ) : (
             <div className="hidden items-center gap-2 md:flex">
               <Button variant="ghost" asChild className="text-sm font-medium">
@@ -104,7 +109,11 @@ export default function SiteHeader({ user }: HeaderProps) {
             className="md:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
           >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {mobileOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </Button>
         </div>
       </div>

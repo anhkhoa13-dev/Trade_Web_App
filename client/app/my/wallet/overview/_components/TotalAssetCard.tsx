@@ -7,7 +7,7 @@ import {
   CardTitle,
   CardContent,
   CardFooter,
-  CardAction
+  CardAction,
 } from "@/app/ui/shadcn/card";
 import { Badge } from "@/app/ui/shadcn/badge";
 import { Button } from "@/app/ui/shadcn/button";
@@ -17,16 +17,19 @@ import {
   Wallet,
   Eye,
   EyeOff,
-  Plus
+  Plus,
+  Router,
 } from "lucide-react";
 import { useLiveMarketStream } from "@/hooks/ws/useLiveMarketStream-v1";
 import { AssetDTO } from "@/backend/wallet/wallet.types";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 const VND_TO_USDT = 24300;
 
 export function TotalAssetCard({ walletData }: { walletData: AssetDTO }) {
   const [isVisible, setIsVisible] = useState(true);
+  const router = useRouter();
 
   // --- LOGIC ---
   const symbols = useMemo(() => {
@@ -58,12 +61,15 @@ export function TotalAssetCard({ walletData }: { walletData: AssetDTO }) {
   }, [walletData, tickers]);
 
   const isPositive = weightedChange >= 0;
-  const formatHidden = (value: string | number) => isVisible ? value : "******";
+  const formatHidden = (value: string | number) =>
+    isVisible ? value : "******";
 
+  const handleToDepositPage = () => {
+    router.push("/deposit");
+  };
 
   return (
     <Card className="h-full p-0 gap-0 overflow-hidden border-muted-foreground/15">
-
       <CardHeader className="p-6 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
           Total Net Worth
@@ -75,7 +81,11 @@ export function TotalAssetCard({ walletData }: { walletData: AssetDTO }) {
             className="h-8 w-8 text-muted-foreground hover:text-foreground -mr-2"
             onClick={() => setIsVisible(!isVisible)}
           >
-            {isVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+            {isVisible ? (
+              <Eye className="h-4 w-4" />
+            ) : (
+              <EyeOff className="h-4 w-4" />
+            )}
           </Button>
         </CardAction>
       </CardHeader>
@@ -85,7 +95,9 @@ export function TotalAssetCard({ walletData }: { walletData: AssetDTO }) {
           <span className="text-4xl md:text-5xl font-bold tracking-tight text-foreground">
             {isVisible ? totalValue.toFixed(2) : "********"}
           </span>
-          <span className="text-xl font-medium text-muted-foreground">USDT</span>
+          <span className="text-xl font-medium text-muted-foreground">
+            USDT
+          </span>
         </div>
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -98,14 +110,17 @@ export function TotalAssetCard({ walletData }: { walletData: AssetDTO }) {
                 : "bg-red-500/10 text-red-700 ring-red-600/20 dark:bg-red-900/10 dark:text-red-400 dark:ring-red-900/20"
             )}
           >
-            {isPositive ? <TrendingUp className="mr-1 h-3.5 w-3.5" /> : <TrendingDown className="mr-1 h-3.5 w-3.5" />}
+            {isPositive ? (
+              <TrendingUp className="mr-1 h-3.5 w-3.5" />
+            ) : (
+              <TrendingDown className="mr-1 h-3.5 w-3.5" />
+            )}
             {Math.abs(weightedChange).toFixed(2)}%
           </Badge>
 
           <p className="text-sm text-muted-foreground font-medium">
             ≈ {formatHidden((totalValue * VND_TO_USDT).toLocaleString())} VNĐ
           </p>
-
         </div>
       </CardContent>
 
@@ -122,17 +137,22 @@ export function TotalAssetCard({ walletData }: { walletData: AssetDTO }) {
               <span className="text-lg font-bold tabular-nums leading-none">
                 {formatHidden(walletData.balance.toFixed(2))}
               </span>
-              <span className="text-xs font-medium text-muted-foreground">USDT</span>
+              <span className="text-xs font-medium text-muted-foreground">
+                USDT
+              </span>
             </div>
           </div>
         </div>
 
-        <Button size="sm" className="h-8 px-3 gap-1 shadow-none">
+        <Button
+          size="sm"
+          className="h-8 px-3 gap-1 shadow-none"
+          onClick={handleToDepositPage}
+        >
           <Plus className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">Deposit</span>
         </Button>
       </CardFooter>
-
     </Card>
   );
 }

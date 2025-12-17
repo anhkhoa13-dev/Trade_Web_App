@@ -14,17 +14,20 @@ import { Input } from "../../../ui/shadcn/input";
 import { Label } from "../../../ui/shadcn/label";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { UserProfile } from "@/backend/user/user.types";
+import { updateProfile } from "@/actions/user.action";
+import { useRouter } from "next/navigation";
 
 type ProfileCardProps = {
   profile: UserProfile;
-  onSave?: (updatedProfile: UserProfile) => Promise<void> | void;
 };
 
-export default function ProfileCard({ profile, onSave }: ProfileCardProps) {
+export default function ProfileCard({ profile }: ProfileCardProps) {
+  const router = useRouter();
   const [form, setForm] = useState<UserProfile>(profile);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setForm(profile);
@@ -40,17 +43,37 @@ export default function ProfileCard({ profile, onSave }: ProfileCardProps) {
   };
 
   const handleSave = async () => {
-    if (!onSave) return;
     setIsSaving(true);
+    setError(null);
+
     try {
-      await onSave(form);
+      const payload = {
+        username: form.username,
+        firstName: form.firstName || "",
+        lastName: form.lastName || "",
+        phoneNum: form.phoneNum || "",
+        description: form.description || "",
+      };
+
+      const result = await updateProfile(payload);
+
+      if (result.status === "error") {
+        setError(result.message || "Failed to update profile");
+        setIsSaving(false);
+        return;
+      }
+
       setIsSaving(false);
       setIsDirty(false);
       setIsSaved(true);
 
+      // Refresh the page data
+      router.refresh();
+
       setTimeout(() => setIsSaved(false), 2000);
     } catch (err) {
       console.error("Save failed:", err);
+      setError("An unexpected error occurred");
       setIsSaving(false);
     }
   };
@@ -83,7 +106,11 @@ export default function ProfileCard({ profile, onSave }: ProfileCardProps) {
 
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="phoneNum">Phone number</Label>
-          <Input id="phoneNum" value={form.phoneNum ?? ""} onChange={(e) => handleChange("phoneNum", e.target.value)} />
+          <Input
+            id="phoneNum"
+            value={form.phoneNum ?? ""}
+            onChange={(e) => handleChange("phoneNum", e.target.value)}
+          />
         </div>
 
         <div className="space-y-2 sm:col-span-2">
@@ -98,6 +125,7 @@ export default function ProfileCard({ profile, onSave }: ProfileCardProps) {
       </CardContent>
 
       <CardFooter className="flex justify-end items-center space-x-3">
+        {error && <span className="text-red-600 text-sm">{error}</span>}
         {isSaving && (
           <span className="text-muted-foreground text-sm flex items-center">
             <Loader2 className="w-4 h-4 mr-1 animate-spin" />

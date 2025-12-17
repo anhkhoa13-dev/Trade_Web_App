@@ -1,5 +1,9 @@
 import { HistoryDashboard } from "./_components/HistoryDashboard";
-import { getBotTransactions, getManualTransactions } from "@/actions/history.actions";
+import {
+  getBotTransactions,
+  getManualTransactions,
+  getDepositTransactions,
+} from "@/actions/history.actions";
 import { getUserSubscriptions } from "@/actions/botSub.actions";
 import { BotSubscription } from "@/backend/bot/botSub.types";
 
@@ -8,9 +12,8 @@ export default async function HistoryPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-
   const params = await searchParams;
-  const activeTab = (params.tab as "manual" | "bot") || "manual";
+  const activeTab = (params.tab as "manual" | "bot" | "deposit") || "manual";
   const page = Number(params.page) || 0;
   const size = Number(params.size) || 10;
   const sort = (params.sort as string) || "createdAt,desc";
@@ -39,7 +42,7 @@ export default async function HistoryPage({
         break;
       case "7d":
         fromDate = new Date(
-          now.getTime() - 7 * 24 * 60 * 60 * 1000,
+          now.getTime() - 7 * 24 * 60 * 60 * 1000
         ).toISOString();
         break;
     }
@@ -48,6 +51,7 @@ export default async function HistoryPage({
   // 2. Data Fetching Logic (Conditional SSR)
   let manualData = undefined;
   let botData = undefined;
+  let depositData = undefined;
   let botSubscriptions: BotSubscription[] = [];
   let activeBotId = botIdParam;
 
@@ -69,7 +73,6 @@ export default async function HistoryPage({
       throw new Error(manualResponse.message);
 
     manualData = manualResponse.data;
-
   } else if (activeTab === "bot") {
     const subResponse = await getUserSubscriptions({
       page: 1,
@@ -77,8 +80,7 @@ export default async function HistoryPage({
       sortBy: "equity",
     });
 
-    if (subResponse.status === "error")
-      throw new Error(subResponse.message);
+    if (subResponse.status === "error") throw new Error(subResponse.message);
 
     botSubscriptions = subResponse.data.result;
 
@@ -98,6 +100,20 @@ export default async function HistoryPage({
 
       botData = botResponse.data;
     }
+  } else if (activeTab === "deposit") {
+    const depositResponse = await getDepositTransactions({
+      page,
+      size,
+      sort,
+      ...(sideFilter !== "all" && {
+        status: sideFilter as "SUCCESS" | "PENDING" | "FAILED",
+      }),
+    });
+
+    if (depositResponse.status === "error")
+      throw new Error(depositResponse.message);
+
+    depositData = depositResponse.data;
   }
 
   const availableCoins = [
@@ -114,6 +130,7 @@ export default async function HistoryPage({
       activeTab={activeTab}
       manualData={manualData}
       botData={botData}
+      depositData={depositData}
       botSubscriptions={botSubscriptions}
       availableCoins={availableCoins}
       currentFilters={{
@@ -122,7 +139,7 @@ export default async function HistoryPage({
         timeRange,
         page,
         size,
-        botId: activeBotId
+        botId: activeBotId,
       }}
     />
   );

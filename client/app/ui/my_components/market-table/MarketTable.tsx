@@ -175,7 +175,7 @@ export default function MarketTable({
 
           return (
             <div className="flex items-center gap-2">
-              <TooltipProvider>
+              {/* <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -188,7 +188,7 @@ export default function MarketTable({
                     <p>View Details</p>
                   </TooltipContent>
                 </Tooltip>
-              </TooltipProvider>
+              </TooltipProvider> */}
 
               <TooltipProvider>
                 <Tooltip>
@@ -257,7 +257,7 @@ export default function MarketTable({
                       "cursor-pointer select-none",
                       (header.column.id === "history" ||
                         header.column.id === "actions") &&
-                      "hidden md:table-cell"
+                        "hidden md:table-cell"
                     )}
                   >
                     <div className="flex items-center gap-1">
@@ -278,9 +278,11 @@ export default function MarketTable({
 
           <TableBody>
             {currentData.length > 0 ? (
-              table.getRowModel().rows.map((row) => (
-                <RowWithMotion key={row.original.id} row={row} />
-              ))
+              table
+                .getRowModel()
+                .rows.map((row) => (
+                  <RowWithMotion key={row.original.id} row={row} />
+                ))
             ) : (
               <TableRow>
                 <TableCell
@@ -397,7 +399,7 @@ const RowWithMotion = ({ row }: { row: any }) => {
           key={cell.id}
           className={cn(
             (cell.column.id === "history" || cell.column.id === "actions") &&
-            "hidden md:table-cell"
+              "hidden md:table-cell"
           )}
         >
           {flexRender(cell.column.columnDef.cell, cell.getContext())}
