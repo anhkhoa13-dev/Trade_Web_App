@@ -106,7 +106,7 @@ export function HistoryDashboard({
       >
         <Card className="shadow-sm mb-4">
           <div className="space-y-4 p-6">
-            <TabsList className="grid w-full max-w-2xl grid-cols-3 divide-x">
+            <TabsList className="grid w-full max-w-2xl grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x mb-16 sm:mb-4">
               <TabsTrigger value="manual">
                 Manual Orders{" "}
                 {manualTradesCount !== undefined && `(${manualTradesCount})`}
@@ -120,7 +120,7 @@ export function HistoryDashboard({
               </TabsTrigger>
             </TabsList>
 
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-4 pt-4 border-t sm:border-t-0 sm:pt-0">
               {/* Time Range Filter */}
               <Select
                 value={currentFilters.timeRange}
