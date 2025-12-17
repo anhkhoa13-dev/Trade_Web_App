@@ -1,6 +1,8 @@
 package com.web.TradeApp.utils;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
@@ -38,5 +40,14 @@ public class CommonUtils {
         }
 
         return FALLBACK_EXCHANGE_RATE;
+    }
+
+    public static Instant getCompareTime(String timeframe) {
+        return switch (timeframe.toLowerCase()) {
+            case "1d" -> Instant.now().minus(1, ChronoUnit.DAYS);
+            case "7d" -> Instant.now().minus(7, ChronoUnit.DAYS);
+            case "current" -> Instant.EPOCH;
+            default -> throw new IllegalArgumentException("Invalid timeframe: " + timeframe);
+        };
     }
 }

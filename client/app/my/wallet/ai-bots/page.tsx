@@ -21,12 +21,13 @@ export default async function MySubscriptionsPage(props: PageProps) {
   });
 
   if (subscriptionResponse.status == "error") {
-    throw new Error(subscriptionResponse.message)
+    throw new Error(subscriptionResponse.message);
   }
 
-  const subscriptionData = subscriptionResponse.data
+  const subscriptionData = subscriptionResponse.data;
 
-  const hasSubscriptions = subscriptionData.result && subscriptionData.result.length > 0;
+  const hasSubscriptions =
+    subscriptionData.result && subscriptionData.result.length > 0;
 
   if (!hasSubscriptions && page === 1) {
     return (

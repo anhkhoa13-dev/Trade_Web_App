@@ -2,6 +2,8 @@ package com.web.TradeApp.feature.aibot.dto.Bot;
 
 import java.math.BigDecimal;
 
+import com.web.TradeApp.feature.aibot.enums.BotStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,6 +24,7 @@ public class BotGridItemDTO {
     private String name;
     private String coinSymbol;
     private String tradingPair;
+    private BotStatus status;
 
     // Metrics (computed at service layer)
     private Integer activeSubscribers;

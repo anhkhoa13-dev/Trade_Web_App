@@ -20,9 +20,9 @@ export async function getBotDetailAction(
 
 // --- Admin / Fetch Actions ---
 
-export async function getAllBotsAction() {
-  return await BotService.getAllBots();
-}
+// export async function getAllBotsAction() {
+//   return await BotService.getAllBots();
+// }
 
 export async function getBotForEditAction(botId: string) {
   return await BotService.getBotForEdit(botId);

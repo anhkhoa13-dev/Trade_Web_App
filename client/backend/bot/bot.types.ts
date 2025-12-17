@@ -43,6 +43,7 @@ export interface BotMetricsDTO {
   name: string;
   coinSymbol: string;
   tradingPair: string;
+  status: BotStatus;
   activeSubscribers: number;
   totalPnl: number;
   averageRoi: number;

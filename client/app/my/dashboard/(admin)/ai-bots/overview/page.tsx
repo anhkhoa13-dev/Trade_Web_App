@@ -1,11 +1,10 @@
-import { getAllBotsAction } from "@/actions/bot.actions";
-
 import { Bot, Activity, Users } from "lucide-react";
 import { StatsCard } from "./_components/StatsCard";
 import BotTable from "./_components/BotTable";
 import { BotFilterBar } from "./_components/BotFilterBar";
 import { BotStatus } from "@/backend/bot/botConstant";
-import { BotResponse } from "@/backend/bot/bot.types";
+import { BotMetricsDTO, BotResponse } from "@/backend/bot/bot.types";
+import { getPublicBotsAction } from "@/actions/bot.actions";
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -18,37 +17,44 @@ export default async function AdminBotPage(props: PageProps) {
   const coinFilter = (searchParams.coin as string) || "all";
   const sortBy = (searchParams.sort as string) || "copying-users";
 
-  const botsReponse = await getAllBotsAction();
+  const botsReponse = await getPublicBotsAction({
+    page: 1,
+    size: 10,
+  });
 
-  if (botsReponse.status == "error")
-    throw new Error(botsReponse.message)
+  if (botsReponse.status == "error") throw new Error(botsReponse.message);
 
-  const allBots = botsReponse.data
+  const allBots = botsReponse.data;
+  const allBotsData = allBots.result;
+  const meta = allBots.meta;
   // Calculate Stats (Server Side)
-  const totalBots = allBots.length;
-  const activeBots = allBots.filter((b) => b.status === "ACTIVE").length;
-  const totalUsers = allBots.reduce((sum, b) => sum + (b.stats?.copyingUsers || 0), 0);
+  const totalBots = meta.total;
+  const activeBots = allBotsData.filter((b) => b.status === "ACTIVE").length;
+  const totalUsers = allBotsData.reduce(
+    (sum, b) => sum + (b.activeSubscribers || 0),
+    0
+  );
 
   // Extract Unique Coins
   const uniqueCoins = Array.from(
     new Set(
-      allBots
-        .map((b) => b.tradingConfig?.coinSymbol)
+      allBotsData
+        .map((b) => b.coinSymbol)
         .filter((symbol): symbol is string => !!symbol)
     )
   );
 
   // 6. Filter & Sort Logic (Chuyển từ useMemo client sang xử lý Server)
-  let filteredBots = allBots.filter((bot) => {
+  let filteredBots = allBotsData.filter((bot) => {
     const statusMatch = statusFilter === "all" || bot.status === statusFilter;
-    const coinMatch = coinFilter === "all" || bot.tradingConfig?.coinSymbol === coinFilter;
+    const coinMatch = coinFilter === "all" || bot.coinSymbol === coinFilter;
     return statusMatch && coinMatch;
   });
 
   filteredBots.sort((a, b) => {
-    const getRoi = (bot: BotResponse) => bot.stats?.roi24h ?? 0;
-    const getPnl = (bot: BotResponse) => bot.stats?.pnl24h ?? 0;
-    const getUsers = (bot: BotResponse) => bot.stats?.copyingUsers ?? 0;
+    const getRoi = (bot: BotMetricsDTO) => bot.averageRoi ?? 0;
+    const getPnl = (bot: BotMetricsDTO) => bot.totalPnl ?? 0;
+    const getUsers = (bot: BotMetricsDTO) => bot.activeSubscribers ?? 0;
 
     switch (sortBy) {
       case "roi-24h":
@@ -56,7 +62,11 @@ export default async function AdminBotPage(props: PageProps) {
       case "pnl-24h":
         return getPnl(b) - getPnl(a);
       case "status": {
-        const order: Record<string, number> = { ACTIVE: 1, PAUSED: 2, ERROR: 3 };
+        const order: Record<string, number> = {
+          ACTIVE: 1,
+          PAUSED: 2,
+          ERROR: 3,
+        };
         return (order[a.status] || 99) - (order[b.status] || 99);
       }
       default: // "copying-users"

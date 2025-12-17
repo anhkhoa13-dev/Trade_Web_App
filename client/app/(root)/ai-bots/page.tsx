@@ -81,10 +81,10 @@ export default async function AiBotPage({ searchParams }: Props) {
         currentPage={currentPage}
       />
 
-      <section id="how-to">
+      {/* <section id="how-to">
         <h2>How To Use</h2>
         <p>Here is the tutorial...</p>
-      </section>
+      </section> */}
     </main>
   );
 }

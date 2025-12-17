@@ -22,10 +22,10 @@ import { DeleteBotModal } from "./DeleteBotModal";
 
 import { deleteBotAction } from "@/actions/bot.actions";
 import toast from "react-hot-toast";
-import { BotResponse } from "@/backend/bot/bot.types";
+import { BotMetricsDTO, BotResponse } from "@/backend/bot/bot.types";
 
 interface BotTableProps {
-  bots: BotResponse[];
+  bots: BotMetricsDTO[];
   enableSorting?: boolean;
   enableSearch?: boolean;
   enablePagination?: boolean;
@@ -49,7 +49,7 @@ export default function BotTable({
     (bot: BotResponse) => {
       router.push(`/my/dashboard/ai-bots/${bot.id}/edit`);
     },
-    [router],
+    [router]
   );
 
   const handleDeleteClick = (bot: BotResponse) => {
@@ -80,14 +80,22 @@ export default function BotTable({
 
     return (
       <div className="flex items-center justify-end gap-1 pr-2">
-        <Button variant="ghost" size="icon" onClick={() => handleView(bot)}>
+        {/* <Button variant="ghost" size="icon" onClick={() => handleView(bot)}>
           <Eye className="h-4 w-4" />
-        </Button>
+        </Button> */}
         <Button variant="ghost" size="icon" onClick={() => handleEdit(bot)}>
           <Pencil className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={() => handlePauseResume(bot)}>
-          {bot.status === "PAUSED" ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => handlePauseResume(bot)}
+        >
+          {bot.status === "PAUSED" ? (
+            <Pause className="h-4 w-4" />
+          ) : (
+            <Play className="h-4 w-4" />
+          )}
         </Button>
         <Button
           variant="ghost"
@@ -101,7 +109,7 @@ export default function BotTable({
     );
   };
 
-  const columns: ColDef<BotResponse>[] = [
+  const columns: ColDef<BotMetricsDTO>[] = [
     // ... Copy y nguyên phần columns definition của bạn vào đây
     {
       headerName: "Bot Name",
@@ -111,7 +119,7 @@ export default function BotTable({
     },
     {
       headerName: "Coin",
-      valueGetter: (p) => p.data?.tradingConfig?.coinSymbol,
+      valueGetter: (p) => p.data?.coinSymbol,
       width: 90,
       cellRenderer: (params: ICellRendererParams) => (
         <div className="px-2 py-1 rounded-full border text-xs font-medium">
@@ -136,7 +144,7 @@ export default function BotTable({
     },
     {
       headerName: "ROI (24h)",
-      valueGetter: (p) => p.data?.stats?.roi24h ?? 0,
+      valueGetter: (p) => p.data?.averageRoi ?? 0,
       width: 120,
       sortable: enableSorting,
       cellRenderer: (params: ICellRendererParams) => {
@@ -157,7 +165,7 @@ export default function BotTable({
     },
     {
       headerName: "PnL (24h)",
-      valueGetter: (p) => p.data?.stats?.pnl24h ?? 0,
+      valueGetter: (p) => p.data?.totalPnl ?? 0,
       width: 120,
       sortable: enableSorting,
       cellRenderer: (params: ICellRendererParams) => {
@@ -178,15 +186,15 @@ export default function BotTable({
     },
     {
       headerName: "Copying Users",
-      valueGetter: (p) => p.data?.stats?.copyingUsers ?? 0,
+      valueGetter: (p) => p.data?.activeSubscribers ?? 0,
       width: 150,
       sortable: enableSorting,
       cellRenderer: (params: ICellRendererParams) =>
         params.value?.toLocaleString(),
     },
     {
-      headerName: "Last Signal",
-      valueGetter: (p) => p.data?.stats?.lastSignalAt,
+      headerName: "Max dd (%)",
+      valueGetter: (p) => p.data?.maxDrawdownPercent ?? 0,
       flex: 1,
       minWidth: 160,
       valueFormatter: (params) => {
@@ -206,7 +214,7 @@ export default function BotTable({
 
   return (
     <>
-      <DataTable<BotResponse>
+      <DataTable<BotMetricsDTO>
         title="All Bots"
         columns={columns}
         rowData={bots}
@@ -215,7 +223,7 @@ export default function BotTable({
         enablePagination={enablePagination}
         paginationPageSize={paginationPageSize}
         fallback="No bots found..."
-        getRowId={(p) => p.data.id}
+        getRowId={(p) => p.data.botId}
       />
       {/* Delete Confirmation Modal */}
       <DeleteBotModal

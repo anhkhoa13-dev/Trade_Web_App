@@ -34,13 +34,13 @@ export const BotService = {
     return res;
   },
 
-  async getAllBots() {
-    const res = await api.get<BotResponse[]>({
-      endpoint: "/admin/bots?includesStats=true",
-      withAuth: true,
-    });
-    return res;
-  },
+  // async getAllBots() {
+  //   const res = await api.get<BotResponse[]>({
+  //     endpoint: "/admin/bots?includesStats=true",
+  //     withAuth: true,
+  //   });
+  //   return res;
+  // },
 
   async getBotForEdit(botId: string) {
     const res = await api.get<BotResponse>({

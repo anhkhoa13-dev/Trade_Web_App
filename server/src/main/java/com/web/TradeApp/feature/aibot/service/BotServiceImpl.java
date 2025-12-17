@@ -19,7 +19,9 @@ import com.web.TradeApp.feature.aibot.repository.BotSubscriptionRepository;
 import com.web.TradeApp.utils.SecurityUtil;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BotServiceImpl implements BotService {
