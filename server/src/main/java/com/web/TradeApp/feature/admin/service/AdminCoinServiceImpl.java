@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.web.TradeApp.exception.IdInvalidException;
 import com.web.TradeApp.feature.admin.dto.CoinDepositRequest;
 import com.web.TradeApp.feature.admin.dto.CoinDepositResponse;
+import com.web.TradeApp.feature.admin.dto.CoinFeeUpdateRequest;
 import com.web.TradeApp.feature.admin.dto.CoinWithdrawRequest;
 import com.web.TradeApp.feature.admin.dto.CoinWithdrawResponse;
 import com.web.TradeApp.feature.coin.dto.CoinInfoResponse;
@@ -120,6 +121,18 @@ public class AdminCoinServiceImpl implements AdminCoinService {
                                 .withdrewQuantity(request.getQuantity())
                                 .newQuantity(adminHolding.getAmount())
                                 .build();
+        }
+
+        @Override
+        @Transactional
+        public void updateCoinFees(CoinFeeUpdateRequest request) {
+                for (CoinFeeUpdateRequest.CoinFeeUpdateItem item : request.getCoins()) {
+                        Coin coin = coinRepository.findBySymbol(item.getSymbol())
+                                        .orElseThrow(() -> new IdInvalidException(
+                                                        "Coin not found: " + item.getSymbol()));
+                        coin.setFee(item.getFee());
+                        coinRepository.save(coin);
+                }
         }
 
         // =========================================================================

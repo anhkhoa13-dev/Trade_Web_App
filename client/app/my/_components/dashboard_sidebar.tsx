@@ -91,7 +91,20 @@ export default function DashboardSidebar({
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader></SidebarHeader>
+      <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
+        <Link
+          href="/"
+          className="flex flex-col transition-all hover:opacity-80"
+        >
+          <span className="text-xl font-black tracking-tight">
+            <span className="text-primary">COIN</span>
+            <span className="text-foreground">SANTRA</span>
+          </span>
+          <span className="text-[11px] text-muted-foreground font-semibold tracking-widest uppercase mt-0.5">
+            Dashboard
+          </span>
+        </Link>
+      </SidebarHeader>
 
       <SidebarContent>
         <NavMain items={filteredNavItems} />

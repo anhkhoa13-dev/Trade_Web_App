@@ -3,7 +3,7 @@
 import { useState, useEffect, memo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Hexagon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/app/ui/shadcn/button";
@@ -56,17 +56,14 @@ export default function SiteHeader({ user }: HeaderProps) {
         <div className="flex items-center gap-8">
           <Link
             href="/"
-            className="flex items-center gap-2 transition-opacity hover:opacity-90 font-bold text-lg"
+            className="flex items-center gap-2 transition-all hover:opacity-90 group"
           >
-            <Image
-              src="/logo.jpg"
-              alt="Logo"
-              width={100}
-              height={48}
-              className="dark:invert h-6 w-auto"
-              priority
-            />
-            {/* COINSANTRA */}
+            <div className="flex flex-col leading-none">
+              <span className="text-base sm:text-lg font-extrabold tracking-tight">
+                <span className="text-primary">COIN</span>
+                <span className="text-foreground">SANTRA</span>
+              </span>
+            </div>
           </Link>
 
           {/* Desktop Menu */}
