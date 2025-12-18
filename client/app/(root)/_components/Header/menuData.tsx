@@ -14,6 +14,7 @@ export const menuData: Menu[] = [
   {
     id: 3,
     title: "Trade",
+    path: "/trade",
     subMenu: [
       {
         id: 31,
@@ -126,34 +127,39 @@ export const menuData: Menu[] = [
       },
     ],
   },
+  // {
+  //   id: 7,
+  //   title: "More",
+  //   subMenu: [
+  //     {
+  //       id: 71,
+  //       title: "Referral",
+  //       path: "/referral",
+  //       description: "Invite friends and earn commission from their trading",
+  //     },
+  //     {
+  //       id: 72,
+  //       title: "Vouchers",
+  //       path: "/vouchers",
+  //       description: "Claim rewards, vouchers, and join promotions",
+  //     },
+  //     {
+  //       id: 73,
+  //       title: "Support",
+  //       path: "/support",
+  //       description: "Help center, FAQs, and 24/7 customer support",
+  //     },
+  //     {
+  //       id: 74,
+  //       title: "Academy",
+  //       path: "/academy",
+  //       description: "Learn crypto basics with free educational resources",
+  //     },
+  //   ],
+  // },
   {
     id: 7,
-    title: "More",
-    subMenu: [
-      {
-        id: 71,
-        title: "Referral",
-        path: "/referral",
-        description: "Invite friends and earn commission from their trading",
-      },
-      {
-        id: 72,
-        title: "Vouchers",
-        path: "/vouchers",
-        description: "Claim rewards, vouchers, and join promotions",
-      },
-      {
-        id: 73,
-        title: "Support",
-        path: "/support",
-        description: "Help center, FAQs, and 24/7 customer support",
-      },
-      {
-        id: 74,
-        title: "Academy",
-        path: "/academy",
-        description: "Learn crypto basics with free educational resources",
-      },
-    ],
+    title: "Deposit",
+    path: "/deposit",
   },
 ];

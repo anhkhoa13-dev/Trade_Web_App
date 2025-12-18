@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useTransition } from "react"; // Thêm useTransition
 import { ColDef, ICellRendererParams } from "ag-grid-community";
 import { useRouter } from "next/navigation";
 import {
@@ -16,16 +16,16 @@ import {
 import DataTable from "@/app/ui/my_components/data-table/AgDataTable";
 import { Button } from "@/app/ui/shadcn/button";
 import { Badge, BadgeVariant } from "@/app/ui/shadcn/badge";
-import { BotStatus } from "@/services/constants/botConstant";
-
-// FIX: Ensure date-fns import is present
+import { BotStatus } from "@/backend/bot/botConstant";
 import { format, isValid } from "date-fns";
 import { DeleteBotModal } from "./DeleteBotModal";
-import { useDeleteBot } from "@/hooks/bot/useBotHook";
-import { BotResponse } from "@/services/interfaces/botInterfaces";
+
+import { deleteBotAction } from "@/actions/bot.actions";
+import toast from "react-hot-toast";
+import { BotMetricsDTO, BotResponse } from "@/backend/bot/bot.types";
 
 interface BotTableProps {
-  bots: BotResponse[];
+  bots: BotMetricsDTO[];
   enableSorting?: boolean;
   enableSearch?: boolean;
   enablePagination?: boolean;
@@ -40,47 +40,52 @@ export default function BotTable({
   paginationPageSize = 12,
 }: BotTableProps) {
   const router = useRouter();
-  const { mutate: deleteBot, isPending: isDeleting } = useDeleteBot();
-  const [botToDelete, setBotToDelete] = useState<BotResponse | null>(null);
+
+  // Thay thế React Query mutation bằng useTransition
+  const [isPending, startTransition] = useTransition();
+  const [botToDelete, setBotToDelete] = useState<BotMetricsDTO | null>(null);
 
   const handleEdit = useCallback(
-    (bot: BotResponse) => {
-      router.push(`/my/dashboard/ai-bots/${bot.id}/edit`);
+    (bot: BotMetricsDTO) => {
+      router.push(`/my/dashboard/ai-bots/${bot.botId}/edit`);
     },
-    [router],
+    [router]
   );
 
-  const handleDeleteClick = (bot: BotResponse) => {
-    setBotToDelete(bot); // Open Modal
+  const handleDeleteClick = (bot: BotMetricsDTO) => {
+    setBotToDelete(bot);
   };
+
   const handleConfirmDelete = () => {
-    if (botToDelete) {
-      deleteBot(botToDelete.id, {
-        onSuccess: () => {
-          setBotToDelete(null); // Close Modal on success
-        },
-      });
-    }
+    if (!botToDelete) return;
+
+    startTransition(async () => {
+      try {
+        await deleteBotAction(botToDelete.botId);
+
+        toast.success("Bot deleted successfully");
+        setBotToDelete(null);
+      } catch (error: any) {
+        toast.error(error.message || "Failed to delete bot");
+      }
+    });
   };
 
-  //TODOS: Handlers (Placeholder logic for now - not yet implements)
-  const handlePauseResume = (bot: BotResponse) => console.log("Toggle", bot.id);
-  const handleView = (bot: BotResponse) => console.log("View", bot.id);
+  const handlePauseResume = (bot: BotMetricsDTO) =>
+    console.log("Toggle", bot.botId);
 
-  const ActionsRenderer = (params: ICellRendererParams<BotResponse>) => {
+  const ActionsRenderer = (params: ICellRendererParams<BotMetricsDTO>) => {
     const bot = params.data;
     if (!bot) return null;
 
     return (
       <div className="flex items-center justify-end gap-1 pr-2">
-        <Button variant="ghost" size="icon" onClick={() => handleView(bot)}>
+        {/* <Button variant="ghost" size="icon" onClick={() => handleView(bot)}>
           <Eye className="h-4 w-4" />
-        </Button>
-
+        </Button> */}
         <Button variant="ghost" size="icon" onClick={() => handleEdit(bot)}>
           <Pencil className="h-4 w-4" />
         </Button>
-
         <Button
           variant="ghost"
           size="icon"
@@ -92,7 +97,6 @@ export default function BotTable({
             <Play className="h-4 w-4" />
           )}
         </Button>
-
         <Button
           variant="ghost"
           size="icon"
@@ -105,7 +109,8 @@ export default function BotTable({
     );
   };
 
-  const columns: ColDef<BotResponse>[] = [
+  const columns: ColDef<BotMetricsDTO>[] = [
+    // ... Copy y nguyên phần columns definition của bạn vào đây
     {
       headerName: "Bot Name",
       field: "name",
@@ -114,7 +119,7 @@ export default function BotTable({
     },
     {
       headerName: "Coin",
-      valueGetter: (p) => p.data?.tradingConfig?.coinSymbol,
+      valueGetter: (p) => p.data?.coinSymbol,
       width: 90,
       cellRenderer: (params: ICellRendererParams) => (
         <div className="px-2 py-1 rounded-full border text-xs font-medium">
@@ -139,7 +144,7 @@ export default function BotTable({
     },
     {
       headerName: "ROI (24h)",
-      valueGetter: (p) => p.data?.stats?.roi24h ?? 0,
+      valueGetter: (p) => p.data?.averageRoi ?? 0,
       width: 120,
       sortable: enableSorting,
       cellRenderer: (params: ICellRendererParams) => {
@@ -160,7 +165,7 @@ export default function BotTable({
     },
     {
       headerName: "PnL (24h)",
-      valueGetter: (p) => p.data?.stats?.pnl24h ?? 0,
+      valueGetter: (p) => p.data?.totalPnl ?? 0,
       width: 120,
       sortable: enableSorting,
       cellRenderer: (params: ICellRendererParams) => {
@@ -181,23 +186,20 @@ export default function BotTable({
     },
     {
       headerName: "Copying Users",
-      valueGetter: (p) => p.data?.stats?.copyingUsers ?? 0,
+      valueGetter: (p) => p.data?.activeSubscribers ?? 0,
       width: 150,
       sortable: enableSorting,
       cellRenderer: (params: ICellRendererParams) =>
         params.value?.toLocaleString(),
     },
     {
-      headerName: "Last Signal",
-      // FIX: Use valueGetter to access nested 'stats.lastSignalAt'
-      valueGetter: (p) => p.data?.stats?.lastSignalAt,
+      headerName: "Max dd (%)",
+      valueGetter: (p) => p.data?.maxDrawdownPercent ?? 0,
       flex: 1,
       minWidth: 160,
       valueFormatter: (params) => {
-        // FIX: Safely check validity before formatting
         if (!params.value) return "-";
         const date = new Date(params.value);
-        // Ensure it's a valid date object
         if (!isValid(date)) return "-";
         return format(date, "MMM dd, HH:mm");
       },
@@ -212,7 +214,7 @@ export default function BotTable({
 
   return (
     <>
-      <DataTable<BotResponse>
+      <DataTable<BotMetricsDTO>
         title="All Bots"
         columns={columns}
         rowData={bots}
@@ -221,7 +223,7 @@ export default function BotTable({
         enablePagination={enablePagination}
         paginationPageSize={paginationPageSize}
         fallback="No bots found..."
-        getRowId={(p) => p.data.id}
+        getRowId={(p) => p.data.botId}
       />
       {/* Delete Confirmation Modal */}
       <DeleteBotModal
@@ -229,7 +231,7 @@ export default function BotTable({
         onClose={() => setBotToDelete(null)}
         onConfirm={handleConfirmDelete}
         botName={botToDelete?.name || ""}
-        isDeleting={isDeleting}
+        isDeleting={isPending}
       />
     </>
   );

@@ -4,7 +4,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -90,6 +89,7 @@ public class AuthController {
                  * (invalid)
                  */
                 // Check valid
+
                 Jwt decodedToken = this.securityUtil.checkValidRefreshToken(refreshToken);
                 String email = decodedToken.getSubject();
 
@@ -123,14 +123,12 @@ public class AuthController {
 
         @PostMapping("/logout")
         @ApiMessage("Logout successfully")
-        public ResponseEntity<Void> logout() {
-                String email = SecurityUtil.getCurrentUserLogin().isPresent()
-                                ? SecurityUtil.getCurrentUserLogin().get()
-                                : "";
+        public ResponseEntity<Void> logout(
+                        @CookieValue(name = "refresh_token") String refreshToken) {
 
-                if (email.equals("")) {
-                        throw new AuthenticationCredentialsNotFoundException("No authenticated user found");
-                }
+                Jwt decodedToken = this.securityUtil.checkValidRefreshToken(refreshToken);
+                String email = decodedToken.getSubject();
+
                 // update refresh token in db = null
                 this.userService.updateUserToken(null, email);
 

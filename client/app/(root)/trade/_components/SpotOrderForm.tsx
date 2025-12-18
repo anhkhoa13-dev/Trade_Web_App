@@ -8,7 +8,7 @@ import { Slider } from "@/app/ui/shadcn/slider";
 import { Label } from "@/app/ui/shadcn/label";
 import { Checkbox } from "@/app/ui/shadcn/checkbox";
 import { cn } from "@/lib/utils";
-import { executeMarketOrder } from "@/lib/actions/trade.actions";
+import { executeMarketOrder } from "@/actions/trade.actions";
 import { toast } from "react-hot-toast";
 
 interface OrderInputSectionProps {
@@ -21,6 +21,7 @@ interface OrderInputSectionProps {
   disabled?: boolean;
   showTPSL: boolean;
   onToggleTPSL: (checked: boolean) => void;
+  onOrderSuccess?: () => void;
 }
 
 const OrderInputSection = ({
@@ -33,10 +34,11 @@ const OrderInputSection = ({
   disabled,
   showTPSL,
   onToggleTPSL,
+  onOrderSuccess,
 }: OrderInputSectionProps) => {
   // STATE
   const [priceVal, setPriceVal] = useState<string>(
-    orderType === "limit" ? currentPrice.toString() : "",
+    orderType === "limit" ? currentPrice.toString() : ""
   );
   const [amountVal, setAmountVal] = useState<string>("");
   const [percentage, setPercentage] = useState([0]);
@@ -116,6 +118,8 @@ const OrderInputSection = ({
           // Reset form
           setAmountVal("");
           setPercentage([0]);
+          // Trigger refresh of history
+          onOrderSuccess?.();
         } else {
           toast.error(result.message);
         }
@@ -146,7 +150,7 @@ const OrderInputSection = ({
                 text-muted-foreground`,
               `[appearance:textfield]
               [&::-webkit-outer-spin-button]:appearance-none
-              [&::-webkit-inner-spin-button]:appearance-none`,
+              [&::-webkit-inner-spin-button]:appearance-none`
             )}
             placeholder="Market Price"
             value={isMarket ? "Market Price" : priceVal}
@@ -227,7 +231,7 @@ const OrderInputSection = ({
                     ? side === "buy"
                       ? "border-[#0ecb81] bg-[#0ecb81]"
                       : "border-[#f6465d] bg-[#f6465d]"
-                    : "border-muted-foreground/30",
+                    : "border-muted-foreground/30"
                 )}
               />
             );
@@ -248,7 +252,7 @@ const OrderInputSection = ({
                 [&_span[data-slot=slider-thumb]]:ring-[#0ecb81]/30`
               : `[&_span[data-slot=slider-range]]:bg-[#f6465d]
                 [&_span[data-slot=slider-thumb]]:border-[#f6465d]
-                [&_span[data-slot=slider-thumb]]:ring-[#f6465d]/30`,
+                [&_span[data-slot=slider-thumb]]:ring-[#f6465d]/30`
           )}
         />
       </div>
@@ -268,9 +272,7 @@ const OrderInputSection = ({
         </Label>
       </div>
       {showTPSL && (
-        <div
-          className="space-y-3 mt-2 animate-in slide-in-from-top-2 duration-200"
-        >
+        <div className="space-y-3 mt-2 animate-in slide-in-from-top-2 duration-200">
           <div className="relative w-full group">
             <Input
               className="h-10 pr-15 text-right font-mono text-sm"
@@ -311,7 +313,7 @@ const OrderInputSection = ({
           className={cn(
             `w-full font-bold text-base h-10 mt-2 text-white transition-all
               hover:brightness-110`,
-            btnColor,
+            btnColor
           )}
         >
           {isPending ? "Processing..." : `${isBuy ? "Buy" : "Sell"} ${symbol}`}
@@ -321,7 +323,7 @@ const OrderInputSection = ({
           className={cn(
             `w-full font-bold text-base h-10 mt-2 text-white transition-all
               hover:brightness-110`,
-            btnColor,
+            btnColor
           )}
         >
           Log In
@@ -337,6 +339,7 @@ interface SpotOrderFormProps {
   currency: string;
   price: number;
   isLoggedIn: boolean;
+  onOrderSuccess?: () => void;
 }
 
 export default function SpotOrderForm({
@@ -344,6 +347,7 @@ export default function SpotOrderForm({
   currency = "USDT",
   price = 601.86,
   isLoggedIn,
+  onOrderSuccess,
 }: SpotOrderFormProps) {
   const [activeTab, setActiveTab] = useState<string>("buy");
   const [orderType, setOrderType] = useState<"limit" | "market">("limit");
@@ -354,9 +358,7 @@ export default function SpotOrderForm({
   const fakeBalanceCoin = 0.45;
 
   return (
-    <div
-      className="flex flex-col h-full w-full bg-background text-foreground px-4"
-    >
+    <div className="flex flex-col h-full w-full bg-background text-foreground px-4">
       <Tabs
         value={orderType}
         onValueChange={(val) => setOrderType(val as "limit" | "market")}
@@ -420,6 +422,7 @@ export default function SpotOrderForm({
               disabled={!isLoggedIn}
               showTPSL={showTPSL}
               onToggleTPSL={setShowTPSL}
+              onOrderSuccess={onOrderSuccess}
             />
           </TabsContent>
           <TabsContent value="sell" className="mt-0 h-full">
@@ -433,6 +436,7 @@ export default function SpotOrderForm({
               disabled={!isLoggedIn}
               showTPSL={showTPSL}
               onToggleTPSL={setShowTPSL}
+              onOrderSuccess={onOrderSuccess}
             />
           </TabsContent>
         </Tabs>
@@ -451,6 +455,7 @@ export default function SpotOrderForm({
             disabled={!isLoggedIn}
             showTPSL={showTPSL}
             onToggleTPSL={setShowTPSL}
+            onOrderSuccess={onOrderSuccess}
           />
         </div>
         <div className="flex flex-col">
@@ -464,6 +469,7 @@ export default function SpotOrderForm({
             disabled={!isLoggedIn}
             showTPSL={showTPSL}
             onToggleTPSL={setShowTPSL}
+            onOrderSuccess={onOrderSuccess}
           />
         </div>
       </div>

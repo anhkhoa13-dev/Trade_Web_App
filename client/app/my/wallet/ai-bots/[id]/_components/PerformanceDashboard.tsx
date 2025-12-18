@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/app/ui/shadcn/card";
 import { Tabs, TabsList, TabsTrigger } from "@/app/ui/shadcn/tabs";
 import MetricBox from "@/app/ui/my_components/MetricBox";
 import PnLLineChart from "@/app/ui/my_components/charts/PnLLineChart";
-import { ChartDataPoint } from "@/services/interfaces/botSubInterfaces";
+import { ChartDataPoint } from "@/backend/bot/botSub.types";
 
 interface PerformanceDashboardProps {
   timeframe: "current" | "1d" | "7d";

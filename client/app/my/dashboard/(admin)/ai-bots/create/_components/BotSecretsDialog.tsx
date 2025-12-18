@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Copy, Check, AlertTriangle, Eye, EyeOff } from "lucide-react";
-// Ensure these paths match your project structure exactly
+
 import { Button } from "@/app/ui/shadcn/button";
 import {
   Dialog,
@@ -15,7 +15,8 @@ import {
 import { Input } from "@/app/ui/shadcn/input";
 import { Textarea } from "@/app/ui/shadcn/textarea";
 import { Label } from "@/app/ui/shadcn/label";
-import { BotSecretResponse } from "@/services/interfaces/botInterfaces";
+import { BotSecretResponse } from "@/backend/bot/bot.types";
+
 
 interface Props {
   open: boolean;

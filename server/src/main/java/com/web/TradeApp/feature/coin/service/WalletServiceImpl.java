@@ -34,13 +34,13 @@ public class WalletServiceImpl implements WalletService {
                 // Get latest snapshot data for performance metrics
                 WalletSnapshot latestSnapshot = walletSnapshotRepository.getLatestSnapshot(wallet.getId());
 
-                // Calculate timeframe for metrics (30 days ago)
-                Instant thirtyDaysAgo = Instant.now().minus(30, ChronoUnit.DAYS);
+                // Calculate timeframe for metrics (1 day ago)
+                Instant thirtyDaysAgo = Instant.now().minus(1, ChronoUnit.DAYS);
 
-                // Calculate PnL (last 30 days)
+                // Calculate PnL (last 1 day)
                 BigDecimal pnl = calculatePnl(wallet.getId(), thirtyDaysAgo);
 
-                // Calculate ROI (last 30 days)
+                // Calculate ROI (last 1 day)
                 BigDecimal roi = calculateRoi(wallet.getId(), thirtyDaysAgo);
 
                 // Calculate Max Drawdown (all-time)
@@ -58,6 +58,7 @@ public class WalletServiceImpl implements WalletService {
                                                                 .coinSymbol(holding.getCoin().getSymbol())
                                                                 .coinName(holding.getCoin().getName())
                                                                 .amount(holding.getAmount())
+                                                                .fee(holding.getCoin().getFee())
                                                                 .build())
                                                 .collect(Collectors.toList()))
                                 // Performance metrics from latest snapshot

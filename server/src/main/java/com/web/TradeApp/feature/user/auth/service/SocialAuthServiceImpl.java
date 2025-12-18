@@ -1,6 +1,7 @@
 package com.web.TradeApp.feature.user.auth.service;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.Objects;
@@ -16,6 +17,8 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.web.TradeApp.exception.GoogleUserCreationException;
 import com.web.TradeApp.exception.InvalidGoogleTokenException;
+import com.web.TradeApp.feature.coin.entity.Wallet;
+import com.web.TradeApp.feature.coin.repository.WalletRepository;
 import com.web.TradeApp.feature.user.auth.constant.AuthProvider;
 import com.web.TradeApp.feature.user.auth.constant.Role;
 import com.web.TradeApp.feature.user.auth.dto.GoogleLoginRequest;
@@ -30,6 +33,7 @@ import lombok.RequiredArgsConstructor;
 public class SocialAuthServiceImpl implements SocialAuthService {
     private final UserRepository userRepository;
     private final AuthService authService;
+    private final WalletRepository walletRepository;
 
     @Value("${google.oauth2.client-id}")
     private String googleClientId;
@@ -100,7 +104,17 @@ public class SocialAuthServiceImpl implements SocialAuthService {
                 .roles(Set.of(Role.TRADER))
                 .build();
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        // Create wallet for new google user
+        Wallet wallet = Wallet.builder()
+                .user(savedUser)
+                .balance(BigDecimal.ZERO)
+                .netInvestment(BigDecimal.ZERO)
+                .build();
+        walletRepository.save(wallet);
+
+        return savedUser;
     }
 
     private void syncGoogleProfile(String email, String fullname, String firstName, String lastName, String avatarUrl,

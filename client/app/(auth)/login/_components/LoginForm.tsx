@@ -9,58 +9,30 @@ import {
   FormMessage,
 } from "../../../ui/shadcn/form";
 import { Input, PasswordInput } from "../../../ui/shadcn/input";
-import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "../../../ui/shadcn/button";
-import { signIn } from "next-auth/react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { AuthService } from "@/services/authService";
-
-export const loginSchema = z.object({
-  email: z.email({ error: "Invalid email" }),
-  password: z.string().trim().min(1, { message: "Required password" }),
-});
+import { LoginInput, loginSchema } from "@/schema/loginSchema";
+import { login } from "@/actions/auth.actions";
 
 export default function LoginForm() {
   const router = useRouter();
 
-  const handleLogin = async (values: z.infer<typeof loginSchema>) => {
-    const { email, password } = values;
+  const handleLogin = async (values: LoginInput) => {
+    const res = await login(values);
 
-    try {
-      // Call backend login directly from browser
-      const res = await AuthService.login({ email, password });
-
-      if (res.statusCode !== 200 || !res.data) {
-        toast.error(res.message ?? "Invalid credentials");
-        return;
-      }
-
-      // browser will store refresh_token cookie automatically
-      // Tell NextAuth to store accessToken + user data in session
-      // persist data
-      await signIn("credentials", {
-        redirect: false,
-        callbackUrl: "/", // where to redirect after login
-        accessToken: res.data.accessToken,
-        user: JSON.stringify(res.data.user), // send user object as string
-      });
-
+    if (res.status === "success") {
       router.push("/");
-      toast.success("Logged in successfully");
-    } catch (error: any) {
-      console.error("Login failed:", error);
-      if (error.status === 401) {
-        toast.error("Invalid username or password");
-      } else {
-        toast.error("Failed to login. Please try again.");
-      }
+      router.refresh();
+      toast.success(res.message);
+    } else {
+      toast.error(res.message);
     }
   };
 
-  const form = useForm<z.infer<typeof loginSchema>>({
+  const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
@@ -70,21 +42,25 @@ export default function LoginForm() {
   const { isSubmitting } = form.formState;
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-4">
+      <form
+        onSubmit={form.handleSubmit(handleLogin)}
+        className="space-y-3 sm:space-y-4"
+      >
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Email</FormLabel>
               <FormControl>
                 <Input
                   placeholder="you@example.com"
                   type="email"
+                  className="h-10 sm:h-11"
                   {...field}
                 ></Input>
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
@@ -93,20 +69,21 @@ export default function LoginForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Password</FormLabel>
               <FormControl>
                 <PasswordInput
                   placeholder="••••••••"
+                  className="h-10 sm:h-11"
                   {...field}
                 ></PasswordInput>
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
         <Button
           type="submit"
-          className="w-full cursor-pointer"
+          className="w-full cursor-pointer h-10 sm:h-11 text-sm sm:text-base"
           disabled={isSubmitting}
         >
           {isSubmitting ? "Processing..." : "Login"}

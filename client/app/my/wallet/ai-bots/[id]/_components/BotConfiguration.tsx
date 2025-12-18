@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/ui/shadcn/card";
 import { Button } from "@/app/ui/shadcn/button";
 import {
@@ -19,9 +17,11 @@ import { Input } from "@/app/ui/shadcn/input";
 import {
   BotSubUpdateSchema,
   BotSubUpdateInputs,
-} from "@/services/schemas/botSub";
-import { useBotSub } from "@/hooks/bot/useBotSub";
-import { BotCopyRequest, BotUpdateRequest } from "@/services/botSubService";
+} from "@/schema/botSubSchema";
+import { BotUpdateRequest } from "@/backend/bot/botSub.services";
+import { updateBotSub } from "@/actions/botSub.actions";
+import { Spinner } from "@/app/ui/shadcn/spinner";
+import toast from "react-hot-toast";
 
 interface BotConfigurationProps {
   subscriptionId: string;
@@ -38,7 +38,7 @@ export default function BotConfiguration({
   tradePercentage,
   maxDailyLossPercentage,
 }: BotConfigurationProps) {
-  const { updateMutation, isPending } = useBotSub();
+  // const { updateMutation, isPending } = useBotSub();
 
   const form = useForm<BotSubUpdateInputs>({
     resolver: zodResolver(BotSubUpdateSchema),
@@ -51,7 +51,9 @@ export default function BotConfiguration({
     },
   });
 
-  const onSubmit = (values: BotSubUpdateInputs) => {
+  const { isSubmitting } = form.formState;
+
+  const onSubmit = async (values: BotSubUpdateInputs) => {
     const payload: BotUpdateRequest = {
       botWalletBalance:
         typeof values.botWalletBalance === "string"
@@ -69,8 +71,15 @@ export default function BotConfiguration({
         (typeof values.maxDailyLossPercentage === "string"
           ? parseFloat(values.maxDailyLossPercentage)
           : values.maxDailyLossPercentage) / 100,
-    };
-    updateMutation.mutate({ id: subscriptionId, payload });
+    }
+
+    const response = await updateBotSub(subscriptionId, payload)
+
+    if (response.status === "success") {
+      toast.success(response.message)
+    } else {
+      toast.error(response.message)
+    }
   };
 
   return (
@@ -214,11 +223,11 @@ export default function BotConfiguration({
             <div className="pt-2">
               <Button
                 type="submit"
-                disabled={isPending}
+                disabled={isSubmitting}
                 className="w-full bg-primary text-primary-foreground
                   hover:bg-primary/90"
               >
-                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSubmitting && <Spinner />}
                 Save Changes
               </Button>
             </div>

@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import com.web.TradeApp.feature.common.entity.BaseTrade.TradeType;
 import com.web.TradeApp.feature.common.response.ResultPaginationResponse;
+import com.web.TradeApp.feature.vnpayment.entity.PaymentStatus;
 
 public interface HistoryService {
         ResultPaginationResponse getInventoryHistory(Pageable pageable);
@@ -25,5 +26,10 @@ public interface HistoryService {
                         String coinName,
                         Instant beginTime,
                         Instant endTime,
+                        Pageable pageable);
+
+        ResultPaginationResponse getPaymentTransactionHistory(
+                        UUID userId,
+                        PaymentStatus status,
                         Pageable pageable);
 }

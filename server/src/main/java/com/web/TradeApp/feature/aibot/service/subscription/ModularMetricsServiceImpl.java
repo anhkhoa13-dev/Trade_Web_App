@@ -2,7 +2,6 @@ package com.web.TradeApp.feature.aibot.service.subscription;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -26,6 +25,7 @@ import com.web.TradeApp.feature.aibot.model.BotSubscription;
 import com.web.TradeApp.feature.aibot.repository.BotRepository;
 import com.web.TradeApp.feature.aibot.repository.BotSubscriptionRepository;
 import com.web.TradeApp.feature.aibot.repository.SnapshotMetricsRepository;
+import com.web.TradeApp.utils.CommonUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,7 +60,7 @@ public class ModularMetricsServiceImpl implements ModularMetricsService {
             String searchName,
             Pageable pageable) {
 
-        Instant compareTime = getCompareTime(timeframe);
+        Instant compareTime = CommonUtils.getCompareTime(timeframe);
 
         // 1. Get all bots (can filter by name)
         List<Bot> allBots;
@@ -93,6 +93,7 @@ public class ModularMetricsServiceImpl implements ModularMetricsService {
                         .name(bot.getName())
                         .coinSymbol(bot.getCoinSymbol())
                         .tradingPair(bot.getTradingPair())
+                        .status(bot.getStatus())
                         .activeSubscribers(activeSubscribers != null ? activeSubscribers.intValue() : 0)
                         .totalPnl(totalPnl != null ? totalPnl : BigDecimal.ZERO)
                         .averageRoi(averageRoi != null ? averageRoi : BigDecimal.ZERO)
@@ -134,7 +135,7 @@ public class ModularMetricsServiceImpl implements ModularMetricsService {
         Bot bot = botRepo.findById(botId)
                 .orElseThrow(() -> new IdInvalidException("Bot not found: " + botId));
 
-        Instant compareTime = getCompareTime(timeframe);
+        Instant compareTime = CommonUtils.getCompareTime(timeframe);
 
         Long activeSubscribers = subscriptionRepo.countByBotIdAndActiveTrue(botId);
         BigDecimal totalPnl = metricsRepo.calcBotPnl(botId, compareTime);
@@ -221,7 +222,7 @@ public class ModularMetricsServiceImpl implements ModularMetricsService {
                 .orElseThrow(() -> new IdInvalidException("Subscription not found: " + subscriptionId));
 
         Bot bot = subscription.getBot();
-        Instant compareTime = getCompareTime(timeframe);
+        Instant compareTime = CommonUtils.getCompareTime(timeframe);
 
         // 2. Calculate metrics
         BigDecimal pnl = metricsRepo.calcSubPnl(subscriptionId, compareTime);
@@ -284,7 +285,7 @@ public class ModularMetricsServiceImpl implements ModularMetricsService {
         Bot bot = botRepo.findById(botId)
                 .orElseThrow(() -> new IdInvalidException("Bot not found with id: " + botId));
 
-        Instant compareTime = getCompareTime(timeframe);
+        Instant compareTime = CommonUtils.getCompareTime(timeframe);
 
         // 1. Tính các metrics (reuse existing queries)
         Long activeSubscribers = subscriptionRepo.countByBotIdAndActiveTrue(botId);
@@ -369,15 +370,6 @@ public class ModularMetricsServiceImpl implements ModularMetricsService {
                     .sorted(Comparator.comparing(SubItemDTO::getBotName))
                     .collect(Collectors.toList());
             default -> subs; // No sorting
-        };
-    }
-
-    private Instant getCompareTime(String timeframe) {
-        return switch (timeframe.toLowerCase()) {
-            case "1d" -> Instant.now().minus(1, ChronoUnit.DAYS);
-            case "7d" -> Instant.now().minus(7, ChronoUnit.DAYS);
-            case "current" -> Instant.EPOCH;
-            default -> throw new IllegalArgumentException("Invalid timeframe: " + timeframe);
         };
     }
 

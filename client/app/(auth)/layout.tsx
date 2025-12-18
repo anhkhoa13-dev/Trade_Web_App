@@ -1,15 +1,20 @@
-import React from 'react'
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+import React from "react";
 
-export default function Authlayout({
-    children,
+export default async function Authlayout({
+  children,
 }: Readonly<{
-    children: React.ReactNode;
+  children: React.ReactNode;
 }>) {
-    return (
-        <main >
-            <div className="min-h-screen flex items-center justify-center">
-                {children}
-            </div>
-        </main>
-    )
+  const session = await auth();
+  if (session) redirect("/");
+
+  return (
+    <main>
+      <div className="min-h-screen flex items-center justify-center p-4 sm:p-6">
+        {children}
+      </div>
+    </main>
+  );
 }

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.web.TradeApp.exception.IdInvalidException;
 import com.web.TradeApp.feature.common.response.ResultPaginationResponse;
 import com.web.TradeApp.feature.history.dto.BotSubHistoryRequest;
+import com.web.TradeApp.feature.history.dto.PaymentHistoryRequest;
 import com.web.TradeApp.feature.history.dto.TransactionHistoryRequest;
 import com.web.TradeApp.feature.history.service.HistoryService;
 import com.web.TradeApp.utils.SecurityUtil;
@@ -164,6 +165,67 @@ public class HistoryController {
                                 filter.getCoinName(),
                                 filter.getFromDate(),
                                 filter.getToDate(), pageable);
+                return ResponseEntity.ok().body(result);
+        }
+
+        /**
+         * Get user's payment/deposit transaction history with optional status filter
+         * 
+         * Testing examples:
+         * 
+         * 1. Basic pagination (first page, 10 items):
+         * GET /history/payments?page=0&size=10
+         * 
+         * 2. With sorting (by createdAt descending - newest first):
+         * GET /history/payments?page=0&size=10&sort=createdAt,desc
+         * 
+         * 3. Sort by amount descending (highest payments first):
+         * GET /history/payments?sort=amount,desc&page=0&size=10
+         * 
+         * 4. Sort by multiple fields (status ascending, then amount descending):
+         * GET /history/payments?sort=status,asc&sort=amount,desc
+         * 
+         * 5. Filter by status (SUCCESS only):
+         * GET /history/payments?status=SUCCESS&page=0&size=10
+         * 
+         * 6. Filter by status (PENDING):
+         * GET /history/payments?status=PENDING&page=0&size=10
+         * 
+         * 7. Filter by status (FAILED):
+         * GET /history/payments?status=FAILED&page=0&size=10
+         * 
+         * 8. Combined filter and sorting (SUCCESS payments sorted by amount):
+         * GET /history/payments?status=SUCCESS&sort=amount,desc&page=0&size=20
+         * 
+         * 9. Sort by exchange rate:
+         * GET /history/payments?sort=exchangeRate,asc&page=0&size=10
+         * 
+         * Filterable: status (PENDING, SUCCESS, FAILED)
+         * Sortable fields: createdAt, amount, convertedAmount, exchangeRate, status,
+         * vnpTxnRef
+         */
+        @GetMapping("/payments")
+        @PreAuthorize("hasAuthority('TRADER')")
+        public ResponseEntity<?> getPaymentTransactionHistory(
+                        Pageable pageable,
+                        @ModelAttribute PaymentHistoryRequest filter) {
+                UUID userId = SecurityUtil.getCurrentUserId()
+                                .orElseThrow(() -> new IdInvalidException("Unauthenticated user"));
+
+                // Default sort by createdAt desc if no sort provided
+                if (pageable.getSort().isUnsorted()) {
+                        pageable = org.springframework.data.domain.PageRequest.of(
+                                        pageable.getPageNumber(),
+                                        pageable.getPageSize(),
+                                        org.springframework.data.domain.Sort.by(
+                                                        org.springframework.data.domain.Sort.Direction.DESC,
+                                                        "createdAt"));
+                }
+
+                ResultPaginationResponse result = historyService.getPaymentTransactionHistory(
+                                userId,
+                                filter.getStatus(),
+                                pageable);
                 return ResponseEntity.ok().body(result);
         }
 }

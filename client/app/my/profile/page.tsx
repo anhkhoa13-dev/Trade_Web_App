@@ -1,36 +1,19 @@
-"use client";
-
-import { useUserProfile } from "@/hooks/useUserProfile";
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/ui/shadcn/avatar";
 import { TabsContent } from "@radix-ui/react-tabs";
-import { useUpdateProfile } from "@/hooks/useUserUpdateProfile";
 import { Tabs, TabsList, TabsTrigger } from "@/app/ui/shadcn/tabs";
 import ProfileCard from "./_components/ProfileCard";
 import AccountCard from "./_components/AccountCard";
 import SecurityCard from "./_components/SecurityCard";
+import { getProfile } from "@/actions/user.action";
 
-export default function ProfilePage() {
-  const { data: profile, isLoading, error } = useUserProfile();
-  const { mutate: updateProfile, isPending } = useUpdateProfile();
+export default async function ProfilePage() {
+  const response = await getProfile();
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading profile...
-      </div>
-    );
+  if (response.status === "error") {
+    throw new Error(response.message);
   }
 
-  if (error || !profile) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center
-          text-destructive"
-      >
-        Failed to load profile.
-      </div>
-    );
-  }
+  const profile = response.data;
 
   return (
     <div className="min-h-screen flex justify-center">
@@ -40,21 +23,23 @@ export default function ProfilePage() {
           <Avatar className="h-15 w-15">
             <AvatarImage
               src={
-                profile?.avatarUrl ??
-                `https://ui-avatars.com/api/?name=${profile?.username}&background=random`
+                profile.avatarUrl ??
+                `https://ui-avatars.com/api/?name=${profile.username}&background=random`
               }
-              alt={profile?.username}
+              alt={profile.username}
             />
             <AvatarFallback>
-              {profile?.username?.slice(0, 2).toUpperCase()}
+              {profile.username
+                ? profile.username.slice(0, 2).toUpperCase()
+                : profile.firstName
+                  ? profile.firstName.slice(0, 2).toUpperCase()
+                  : ""}
             </AvatarFallback>
           </Avatar>
 
           <div className="flex flex-col items-center">
-            <div className="text-3xl font-semibold">{profile?.username}</div>
-            <div className="text-sm text-muted-foreground">
-              {profile?.email}
-            </div>
+            <div className="text-3xl font-semibold">{profile.username}</div>
+            <div className="text-sm text-muted-foreground">{profile.email}</div>
           </div>
         </div>
 
@@ -70,10 +55,7 @@ export default function ProfilePage() {
           </TabsList>
 
           <TabsContent value="profile" className="space-y-5">
-            <ProfileCard
-              profile={profile}
-              onSave={(updatedProfile) => updateProfile(updatedProfile)}
-            />
+            <ProfileCard profile={profile} />
           </TabsContent>
 
           <TabsContent value="account" className="space-y-5">

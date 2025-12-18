@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { Download, Calendar } from "lucide-react";
+import { Download } from "lucide-react";
 import { Button } from "@/app/ui/shadcn/button";
 import { Card } from "@/app/ui/shadcn/card";
 import toast from "react-hot-toast";
@@ -13,21 +13,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/app/ui/shadcn/select";
-import { Tabs, TabsList, TabsTrigger } from "@/app/ui/shadcn/tabs";
-import type {
-  HistoryResponse,
-  TransactionHistoryDTO,
-  BotTradeHistoryDTO,
-} from "@/services/historyService";
-import type { BotSubscription } from "@/services/interfaces/botSubInterfaces";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/ui/shadcn/tabs";
+
 import { ManualTransactionsTable } from "./ManualTransactionsTable";
+import {
+  BotTradeHistoryDTO,
+  TransactionHistoryDTO,
+  DepositTransactionDTO,
+} from "@/backend/history/history.types";
+import { PaginatedResult } from "@/backend/constants/ApiResponse";
+import { BotSubscription } from "@/backend/bot/botSub.types";
+import { DepositTransactionsTable } from "./DepositTransactionsTable";
 
 interface HistoryDashboardProps {
-  activeTab: "manual" | "bot";
-  manualData: HistoryResponse<TransactionHistoryDTO> | null;
-  botData: HistoryResponse<BotTradeHistoryDTO> | null;
+  activeTab: "manual" | "bot" | "deposit";
+  manualData?: PaginatedResult<TransactionHistoryDTO>;
+  botData?: PaginatedResult<BotTradeHistoryDTO>;
+  depositData?: PaginatedResult<DepositTransactionDTO>;
   botSubscriptions: BotSubscription[];
-  accessToken: string;
   availableCoins: string[];
   currentFilters: {
     coinSymbol: string;
@@ -43,6 +46,7 @@ export function HistoryDashboard({
   activeTab,
   manualData,
   botData,
+  depositData,
   botSubscriptions,
   availableCoins,
   currentFilters,
@@ -51,13 +55,14 @@ export function HistoryDashboard({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // Calculate counts based on fetched data or defaults
-  // Note: If you want total counts for both tabs always visible,
-  // you might need to fetch basic stats for both in page.tsx
-  const manualTradesCount = manualData?.data?.meta.total || 0;
-  const botTradesCount = botData?.data?.meta.total || 0;
+  const manualTradesCount = manualData?.meta.total;
+  const botTradesCount = botData?.meta.total;
+  const depositCount = depositData?.meta.total;
 
   const updateFilter = (key: string, value: string) => {
+    const currentParam = searchParams.get(key);
+    if (currentParam === value) return;
+
     const params = new URLSearchParams(searchParams.toString());
 
     if (value === "all") {
@@ -66,7 +71,7 @@ export function HistoryDashboard({
       params.set(key, value);
     }
 
-    if (key !== "page" && key !== "tab") {
+    if (key !== "page") {
       params.set("page", "0");
     }
 
@@ -94,106 +99,115 @@ export function HistoryDashboard({
       </div>
 
       {/* Filter & Control Bar */}
-      <Card className="shadow-sm">
-        <div className="space-y-4 p-6">
-          <Tabs
-            className="w-full"
-            value={activeTab}
-            onValueChange={(val) => updateFilter("tab", val)}
-          >
-            <TabsList className="grid w-full max-w-md grid-cols-2">
+      <Tabs
+        className="w-full"
+        value={activeTab}
+        onValueChange={(val) => updateFilter("tab", val)}
+      >
+        <Card className="shadow-sm mb-4">
+          <div className="space-y-4 p-6">
+            <TabsList className="grid w-full max-w-2xl grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x mb-16 sm:mb-4">
               <TabsTrigger value="manual">
                 Manual Orders{" "}
-                {activeTab === "manual" && `(${manualTradesCount})`}
+                {manualTradesCount !== undefined && `(${manualTradesCount})`}
               </TabsTrigger>
               <TabsTrigger value="bot">
-                Bot Transactions {activeTab === "bot" && `(${botTradesCount})`}
+                Bot Transactions{" "}
+                {botTradesCount !== undefined && `(${botTradesCount})`}
+              </TabsTrigger>
+              <TabsTrigger value="deposit">
+                Deposits {depositCount !== undefined && `(${depositCount})`}
               </TabsTrigger>
             </TabsList>
-          </Tabs>
 
-          <div className="flex flex-wrap gap-4">
-            {/* Time Range Filter */}
-            <Select
-              value={currentFilters.timeRange}
-              onValueChange={(val) => updateFilter("timeRange", val)}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Time Range" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Time</SelectItem>
-                <SelectItem value="5m">Last 5 Minutes</SelectItem>
-                <SelectItem value="1h">Last 1 Hour</SelectItem>
-                <SelectItem value="24h">Last 24 Hours</SelectItem>
-                <SelectItem value="7d">Last 7 Days</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Coin Filter - Only show for manual tab */}
-            {activeTab === "manual" && (
+            <div className="flex flex-wrap gap-4 pt-4 border-t sm:border-t-0 sm:pt-0">
+              {/* Time Range Filter */}
               <Select
-                value={currentFilters.coinSymbol}
-                onValueChange={(val) => updateFilter("coinSymbol", val)}
+                value={currentFilters.timeRange}
+                onValueChange={(val) => updateFilter("timeRange", val)}
               >
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Coin" />
+                  <SelectValue placeholder="Time Range" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Coins</SelectItem>
-                  {availableCoins.map((coin) => (
-                    <SelectItem key={coin} value={coin}>
-                      {coin}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="all">All Time</SelectItem>
+                  <SelectItem value="5m">Last 5 Minutes</SelectItem>
+                  <SelectItem value="1h">Last 1 Hour</SelectItem>
+                  <SelectItem value="24h">Last 24 Hours</SelectItem>
+                  <SelectItem value="7d">Last 7 Days</SelectItem>
                 </SelectContent>
               </Select>
-            )}
 
-            {/* Side Filter */}
-            <Select
-              value={currentFilters.side}
-              onValueChange={(val) => updateFilter("side", val)}
-            >
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Side" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Sides</SelectItem>
-                <SelectItem value="BUY">Buy</SelectItem>
-                <SelectItem value="SELL">Sell</SelectItem>
-              </SelectContent>
-            </Select>
+              {/* Coin Filter - Only show for manual tab */}
+              {activeTab === "manual" && (
+                <Select
+                  value={currentFilters.coinSymbol}
+                  onValueChange={(val) => updateFilter("coinSymbol", val)}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Coin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Coins</SelectItem>
+                    {availableCoins.map((coin) => (
+                      <SelectItem key={coin} value={coin}>
+                        {coin}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
+              {/* Side/Status Filter */}
+              {activeTab === "deposit" ? (
+                <Select
+                  value={currentFilters.side}
+                  onValueChange={(val) => updateFilter("side", val)}
+                >
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="SUCCESS">Success</SelectItem>
+                    <SelectItem value="PENDING">Pending</SelectItem>
+                    <SelectItem value="FAILED">Failed</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Select
+                  value={currentFilters.side}
+                  onValueChange={(val) => updateFilter("side", val)}
+                >
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Side" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Sides</SelectItem>
+                    <SelectItem value="BUY">Buy</SelectItem>
+                    <SelectItem value="SELL">Sell</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
           </div>
-        </div>
-      </Card>
+        </Card>
 
-      {/* Main Content - Render based on Active Tab with Smooth Transition */}
-      <div className="relative min-h-[400px]">
-        <div
-          className={`transition-opacity duration-300 ${
-            activeTab === "manual"
-              ? "opacity-100"
-              : "opacity-0 absolute inset-0 pointer-events-none"
-            }`}
-        >
-          {activeTab === "manual" && manualData && (
+        {/* Main Content - Render based on Active Tab with Smooth Transition */}
+        <TabsContent value="manual" className="mt-0">
+          {manualData ? (
             <ManualTransactionsTable
               data={manualData}
               currentPage={currentFilters.page}
               pageSize={currentFilters.size}
             />
+          ) : (
+            <div className="p-4 text-center">Loading manual data...</div>
           )}
-        </div>
+        </TabsContent>
 
-        <div
-          className={`transition-opacity duration-300 ${
-            activeTab === "bot"
-              ? "opacity-100"
-              : "opacity-0 absolute inset-0 pointer-events-none"
-            }`}
-        >
-          {activeTab === "bot" && (
+        <TabsContent value="bot" className="mt-0">
+          {botData ? (
             <BotTransactionsView
               data={botData}
               subscriptions={botSubscriptions}
@@ -201,9 +215,23 @@ export function HistoryDashboard({
               currentPage={currentFilters.page}
               pageSize={currentFilters.size}
             />
+          ) : (
+            <div className="p-4 text-center">Loading bot data...</div>
           )}
-        </div>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="deposit" className="mt-0">
+          {depositData ? (
+            <DepositTransactionsTable
+              data={depositData}
+              currentPage={currentFilters.page}
+              pageSize={currentFilters.size}
+            />
+          ) : (
+            <div className="p-4 text-center">Loading deposit data...</div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

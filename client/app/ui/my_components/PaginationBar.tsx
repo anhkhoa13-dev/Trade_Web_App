@@ -2,12 +2,12 @@
 
 import { cn } from "@/lib/utils";
 import { Button } from "../shadcn/button";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface PaginationProps {
   totalItems: number;
   itemsPerPage?: number;
   currentPage: number;
-  onPageChange: (page: number) => void;
   className?: string;
 }
 
@@ -15,10 +15,17 @@ export function PaginationBar({
   totalItems,
   itemsPerPage = 9,
   currentPage,
-  onPageChange,
   className,
 }: PaginationProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", page.toString());
+    router.push(`?${params.toString()}`);
+  };
 
   if (totalPages <= 1) return null;
 
@@ -59,7 +66,7 @@ export function PaginationBar({
         variant="outline"
         size="sm"
         disabled={currentPage === 1}
-        onClick={() => onPageChange(currentPage - 1)}
+        onClick={() => handlePageChange(currentPage - 1)}
         className="min-w-[80px]"
       >
         Previous
@@ -82,13 +89,13 @@ export function PaginationBar({
               size="sm"
               className={cn(
                 "w-9 h-9 p-0",
-                page === currentPage && "font-semibold",
+                page === currentPage && "font-semibold"
               )}
-              onClick={() => onPageChange(page)} // page is guaranteed number here
+              onClick={() => handlePageChange(page)}
             >
               {page}
             </Button>
-          ),
+          )
         )}
       </div>
 
@@ -97,7 +104,7 @@ export function PaginationBar({
         variant="outline"
         size="sm"
         disabled={currentPage === totalPages}
-        onClick={() => onPageChange(currentPage + 1)}
+        onClick={() => handlePageChange(currentPage + 1)}
         className="min-w-[80px]"
       >
         Next

@@ -1,11 +1,9 @@
-// app/components/layout/SiteHeader.tsx
 "use client";
 
 import { useState, useEffect, memo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useSession } from "next-auth/react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Hexagon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/app/ui/shadcn/button";
@@ -17,8 +15,16 @@ import { UserNav } from "./UserNav";
 import TickerTape from "@/app/ui/widgets/TicketTape";
 const TickerTapeMemo = memo(TickerTape);
 
-export default function SiteHeader() {
-  const { data: session, status } = useSession();
+interface HeaderProps {
+  user?: {
+    email: string;
+    username: string;
+    fullname: string;
+    avatarUrl?: string | null;
+  };
+}
+
+export default function SiteHeader({ user }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -31,7 +37,7 @@ export default function SiteHeader() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const isAuthenticated = status === "authenticated";
+  const isAuthenticated = !!user;
 
   return (
     <header
@@ -47,17 +53,17 @@ export default function SiteHeader() {
       </div>
 
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        {/* LEFT: Logo & Main Menu */}
         <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-90">
-            <Image
-              src="/next.svg"
-              alt="Logo"
-              width={100}
-              height={24}
-              className="dark:invert h-6 w-auto"
-              priority
-            />
+          <Link
+            href="/"
+            className="flex items-center gap-2 transition-all hover:opacity-90 group"
+          >
+            <div className="flex flex-col leading-none">
+              <span className="text-base sm:text-lg font-extrabold tracking-tight">
+                <span className="text-primary">COIN</span>
+                <span className="text-foreground">SANTRA</span>
+              </span>
+            </div>
           </Link>
 
           {/* Desktop Menu */}
@@ -68,18 +74,19 @@ export default function SiteHeader() {
 
         {/* RIGHT: Actions */}
         <div className="flex items-center gap-1">
-
           {/* Theme Toggle */}
           <ModeToggle />
 
           {/* Auth State */}
           {isAuthenticated ? (
-            <UserNav user={{
-              name: session?.user?.fullname,
-              username: session?.user?.username,
-              email: session?.user?.email,
-              image: session?.user?.avatarUrl
-            }} />
+            <UserNav
+              user={{
+                name: user.fullname,
+                username: user.username,
+                email: user.email,
+                image: user.avatarUrl,
+              }}
+            />
           ) : (
             <div className="hidden items-center gap-2 md:flex">
               <Button variant="ghost" asChild className="text-sm font-medium">
@@ -98,7 +105,11 @@ export default function SiteHeader() {
             className="md:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
           >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {mobileOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </Button>
         </div>
       </div>
@@ -106,16 +117,18 @@ export default function SiteHeader() {
       {mobileOpen && (
         <div className="border-b bg-background p-4 md:hidden animate-in slide-in-from-top-2">
           <nav className="grid gap-2">
-            {menuData.map((item, index) => (
-              <Link
-                key={index}
-                href={item.path || "#"}
-                className="flex w-full items-center rounded-md p-2 text-sm font-medium hover:bg-accent"
-                onClick={() => setMobileOpen(false)}
-              >
-                {item.title}
-              </Link>
-            ))}
+            {menuData
+              .filter((item) => item.path)
+              .map((item, index) => (
+                <Link
+                  key={index}
+                  href={item.path || "#"}
+                  className="flex w-full items-center rounded-md p-2 text-sm font-medium hover:bg-accent"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {item.title}
+                </Link>
+              ))}
             {!isAuthenticated && (
               <div className="mt-4 grid gap-2">
                 <Button w-full variant="outline" asChild>

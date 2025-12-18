@@ -9,63 +9,71 @@ import {
   FormMessage,
 } from "../../ui/shadcn/form";
 import { Input } from "../../ui/shadcn/input";
-import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "../../ui/shadcn/button";
-import useActivateAcc from "@/hooks/useActivateAcc";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import {
+  VerificationInput,
+  verificationSchema,
+} from "@/schema/verificationSchema";
+import { activate } from "@/actions/auth.actions";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
-const verificationSchema = z.object({
-  code: z.string().length(6, "Code must be 6 digits"),
-});
-
-export default function VerifyForm() {
-  const form = useForm<z.infer<typeof verificationSchema>>({
+export default function VerifyForm({ urlToken }: { urlToken: string }) {
+  const router = useRouter();
+  const form = useForm<VerificationInput>({
     resolver: zodResolver(verificationSchema),
     defaultValues: {
-      code: ""
-    }
+      activateCode: "",
+    },
   });
-  const activate = useActivateAcc();
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const urlToken = searchParams.get("token");
 
-  useEffect(() => {
-    if (!urlToken) {
-      toast.error("Invalid verification link. Please register again.");
-      router.replace("/register");
-    }
-  }, [urlToken, router]);
+  const { isSubmitting } = form.formState;
 
-  const handleVerify = async (values: z.infer<typeof verificationSchema>) => {
-    if (!urlToken) {
-      return alert("Invalid or missing token");
+  const handleVerify = async (params: VerificationInput) => {
+    const res = await activate({ urlToken, params });
+
+    if (res.status === "success") {
+      toast.success(res.message);
+      router.push(`/login`);
+    } else {
+      toast.error(res.message);
     }
-    activate.mutate({ urlToken, activateCode: values.code });
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleVerify)} className="space-y-4">
+      <form
+        onSubmit={form.handleSubmit(handleVerify)}
+        className="space-y-3 sm:space-y-4"
+      >
         <FormField
           control={form.control}
-          name="code"
+          name="activateCode"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Verification Code</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">
+                Verification Code
+              </FormLabel>
               <FormControl>
-                <Input placeholder="123456" maxLength={6} {...field} />
+                <Input
+                  placeholder="123456"
+                  maxLength={6}
+                  className="h-10 sm:h-11 text-center text-lg tracking-widest"
+                  {...field}
+                />
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full" disabled={activate.isPending}>
-          {activate.isPending ? "Verifying..." : "Verify Account"}
+        <Button
+          type="submit"
+          className="w-full h-10 sm:h-11 text-sm sm:text-base"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Verifying..." : "Verify Account"}
         </Button>
       </form>
     </Form>

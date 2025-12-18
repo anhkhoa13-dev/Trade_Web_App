@@ -4,9 +4,10 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Settings, StopCircle, Play } from "lucide-react";
 import { Button } from "@/app/ui/shadcn/button";
 import { Badge } from "@/app/ui/shadcn/badge";
-import { BotSubscription } from "@/services/interfaces/botSubInterfaces";
+
 import { COIN_LOGOS } from "@/services/constants/coinConstant";
 import Image from "next/image";
+import { BotSubscription } from "@/backend/bot/botSub.types";
 
 interface SubscriptionColumnsProps {
   onNavigateToDetail: (subscriptionId: string) => void;
@@ -73,11 +74,10 @@ export function getSubscriptionColumns({
         return (
           <Badge
             variant="outline"
-            className={`rounded-full px-3 py-1 ${
-              isActive
-                ? `bg-green-500/10 text-green-700 dark:text-green-400
+            className={`rounded-full px-3 py-1 ${isActive
+              ? `bg-green-500/10 text-green-700 dark:text-green-400
                   border-green-500/20`
-                : `bg-red-500/10 text-red-700 dark:text-red-400
+              : `bg-red-500/10 text-red-700 dark:text-red-400
                   border-red-500/20`
               }`}
           >
@@ -113,10 +113,9 @@ export function getSubscriptionColumns({
         const absolutePnl = Math.abs(pnl);
         return (
           <div
-            className={`font-medium ${
-              isPositive
-                ? "text-green-600 dark:text-green-400"
-                : "text-red-600 dark:text-red-400"
+            className={`font-medium ${isPositive
+              ? "text-green-600 dark:text-green-400"
+              : "text-red-600 dark:text-red-400"
               }`}
           >
             {isPositive ? "+" : "-"}$
@@ -147,11 +146,10 @@ export function getSubscriptionColumns({
             <Button
               variant="ghost"
               size="sm"
-              className={`gap-2 ${
-                sub.active
-                  ? `text-destructive hover:bg-destructive/10
+              className={`gap-2 ${sub.active
+                ? `text-destructive hover:bg-destructive/10
                     hover:text-destructive`
-                  : `text-green-600 hover:bg-green-500/10 hover:text-green-600
+                : `text-green-600 hover:bg-green-500/10 hover:text-green-600
                     dark:text-green-400`
                 }`}
               onClick={() =>

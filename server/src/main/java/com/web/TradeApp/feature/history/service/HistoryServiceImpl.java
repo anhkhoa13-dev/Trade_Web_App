@@ -17,8 +17,12 @@ import com.web.TradeApp.feature.common.entity.BaseTrade.TradeType;
 import com.web.TradeApp.feature.common.response.ResultPaginationResponse;
 import com.web.TradeApp.feature.history.dto.BotTradeHistoryResponse;
 import com.web.TradeApp.feature.history.dto.InventoryHistoryResponse;
+import com.web.TradeApp.feature.history.dto.PaymentHistoryResponse;
 import com.web.TradeApp.feature.history.entity.InventoryHistory;
 import com.web.TradeApp.feature.history.repository.InventoryHistoryRepository;
+import com.web.TradeApp.feature.vnpayment.entity.PaymentStatus;
+import com.web.TradeApp.feature.vnpayment.entity.PaymentTransaction;
+import com.web.TradeApp.feature.vnpayment.repository.PaymentTransactionRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,6 +34,8 @@ public class HistoryServiceImpl implements HistoryService {
         private final TransactionRepository transactionRepository;
 
         private final BotTradeRepository botTradeRepository;
+
+        private final PaymentTransactionRepository paymentTransactionRepository;
 
         @Override
         public ResultPaginationResponse getInventoryHistory(Pageable pageable) {
@@ -180,6 +186,41 @@ public class HistoryServiceImpl implements HistoryService {
                                 .priceAtExecution(botTrade.getPriceAtExecution())
                                 .notionalValue(botTrade.getNotionalValue())
                                 // .feeBotApplied(botTrade.getFeeBotApplied())
+                                .build();
+        }
+
+        @Override
+        public ResultPaginationResponse getPaymentTransactionHistory(
+                        UUID userId, PaymentStatus status, Pageable pageable) {
+                Page<PaymentTransaction> pagePaymentTransactions = this.paymentTransactionRepository
+                                .findPaymentTransactions(userId, status, pageable);
+
+                ResultPaginationResponse res = new ResultPaginationResponse();
+                ResultPaginationResponse.PageMeta meta = new ResultPaginationResponse.PageMeta();
+
+                meta.setPage(pageable.getPageNumber());
+                meta.setPageSize(pageable.getPageSize());
+                meta.setPages(pagePaymentTransactions.getTotalPages());
+                meta.setTotal(pagePaymentTransactions.getTotalElements());
+
+                res.setMeta(meta);
+                List<PaymentHistoryResponse> paymentDtos = pagePaymentTransactions
+                                .getContent()
+                                .stream()
+                                .map(this::toPaymentHistoryDto)
+                                .toList();
+                res.setResult(paymentDtos);
+                return res;
+        }
+
+        private PaymentHistoryResponse toPaymentHistoryDto(PaymentTransaction payment) {
+                return PaymentHistoryResponse.builder()
+                                .id(payment.getId())
+                                .createdAt(payment.getCreatedAt())
+                                .amount(payment.getAmount())
+                                .convertedAmount(payment.getConvertedAmount())
+                                .exchangeRate(payment.getExchangeRate())
+                                .status(payment.getStatus())
                                 .build();
         }
 

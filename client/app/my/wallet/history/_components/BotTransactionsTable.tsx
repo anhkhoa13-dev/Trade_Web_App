@@ -1,21 +1,16 @@
 "use client";
 
-import { useMemo, useTransition } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useMemo } from "react";
 import {
   useReactTable,
   getCoreRowModel,
   flexRender,
   createColumnHelper,
-  getSortedRowModel,
-  SortingState,
 } from "@tanstack/react-table";
 import {
   Bot,
   ChevronLeft,
   ChevronRight,
-  ArrowUpDown,
-  Loader2,
 } from "lucide-react";
 import { Card } from "@/app/ui/shadcn/card";
 import {
@@ -28,13 +23,16 @@ import {
 } from "@/app/ui/shadcn/table";
 import { Badge } from "@/app/ui/shadcn/badge";
 import { Button } from "@/app/ui/shadcn/button";
-import type {
-  HistoryResponse,
-  BotTradeHistoryDTO,
-} from "@/services/historyService";
+import { BotTradeHistoryDTO } from "@/backend/history/history.types";
+import { formatDate } from "@/lib/utils";
+import { PaginatedResult } from "@/backend/constants/ApiResponse";
+import { useTableState } from "@/hooks/useTableState";
+import SortableHeader from "./SortableHeader";
+import { Spinner } from "@/app/ui/shadcn/spinner";
+
 
 interface BotTransactionsTableProps {
-  data: HistoryResponse<BotTradeHistoryDTO>;
+  data: PaginatedResult<BotTradeHistoryDTO>;
   selectedBotName?: string;
   currentPage: number;
   pageSize: number;
@@ -48,78 +46,32 @@ export function BotTransactionsTable({
   currentPage,
   pageSize,
 }: BotTransactionsTableProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
-  const transactions = data.data?.result || [];
+  const { isPending, handlePageChange, handleSort, getSortDirection } = useTableState();
 
-  const totalPages = data.data?.meta.pages || 0;
+  const transactions = data.result;
+
+  const totalPages = data.meta.pages;
   const hasNextPage = currentPage < totalPages - 1;
   const hasPrevPage = currentPage > 0;
 
-  const handlePageChange = (newPage: number) => {
-    startTransition(() => {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("page", newPage.toString());
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    });
-  };
 
-  const handleSort = (columnId: string) => {
-    startTransition(() => {
-      const params = new URLSearchParams(searchParams.toString());
-      const currentSort = params.get("sort") || "";
-
-      // Toggle sort direction
-      let newSort = `${columnId},desc`;
-      if (currentSort === `${columnId},desc`) {
-        newSort = `${columnId},asc`;
-      } else if (currentSort === `${columnId},asc`) {
-        newSort = "createdAt,desc"; // Reset to default
-      }
-
-      params.set("sort", newSort);
-      params.set("page", "0"); // Reset to first page when sorting
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    });
-  };
-
-  const formatDate = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return {
-      date: date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }),
-      time: date.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      }),
-    };
-  };
 
   const columns = useMemo(
     () => [
       columnHelper.accessor("createdAt", {
         header: () => (
-          <button
-            onClick={() => handleSort("createdAt")}
-            className="flex items-center gap-1 hover:text-primary
-              transition-colors"
-          >
-            Time
-            <ArrowUpDown className="h-3 w-3" />
-          </button>
+          <SortableHeader
+            label="Time"
+            columnId="createdAt"
+            direction={getSortDirection("createdAt")}
+            onSort={handleSort}
+          />
         ),
         cell: (info) => {
-          const { date, time } = formatDate(info.getValue());
+          const formattedString = formatDate(info.getValue());
           return (
-            <div>
-              <p className="text-sm">{date}</p>
-              <p className="font-mono text-xs text-muted-foreground">{time}</p>
+            <div className="text-sm">
+              {formattedString}
             </div>
           );
         },
@@ -166,14 +118,12 @@ export function BotTransactionsTable({
       }),
       columnHelper.accessor("priceAtExecution", {
         header: () => (
-          <button
-            onClick={() => handleSort("priceAtExecution")}
-            className="flex items-center gap-1 hover:text-primary
-              transition-colors"
-          >
-            Avg Price
-            <ArrowUpDown className="h-3 w-3" />
-          </button>
+          <SortableHeader
+            label="Average Price"
+            columnId="priceAtExecution"
+            direction={getSortDirection("priceAtExecution")}
+            onSort={handleSort}
+          />
         ),
         cell: (info) => {
           const price = info.getValue();
@@ -182,9 +132,9 @@ export function BotTransactionsTable({
               $
               {price != null
                 ? price.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })
                 : "0.00"}
             </span>
           );
@@ -192,14 +142,12 @@ export function BotTransactionsTable({
       }),
       columnHelper.accessor("quantity", {
         header: () => (
-          <button
-            onClick={() => handleSort("quantity")}
-            className="flex items-center gap-1 hover:text-primary
-              transition-colors"
-          >
-            Executed Amount
-            <ArrowUpDown className="h-3 w-3" />
-          </button>
+          <SortableHeader
+            label="Executed Amount"
+            columnId="quantity"
+            direction={getSortDirection("quantity")}
+            onSort={handleSort}
+          />
         ),
         cell: (info) => {
           const amount = info.getValue();
@@ -207,9 +155,9 @@ export function BotTransactionsTable({
             <span className="font-mono text-sm">
               {amount != null
                 ? amount.toLocaleString("en-US", {
-                    minimumFractionDigits: amount < 1 ? 4 : 2,
-                    maximumFractionDigits: amount < 1 ? 8 : 4,
-                  })
+                  minimumFractionDigits: amount < 1 ? 4 : 2,
+                  maximumFractionDigits: amount < 1 ? 8 : 4,
+                })
                 : "0"}
             </span>
           );
@@ -217,14 +165,12 @@ export function BotTransactionsTable({
       }),
       columnHelper.accessor("notionalValue", {
         header: () => (
-          <button
-            onClick={() => handleSort("notionalValue")}
-            className="flex items-center gap-1 hover:text-primary
-              transition-colors"
-          >
-            Total
-            <ArrowUpDown className="h-3 w-3" />
-          </button>
+          <SortableHeader
+            label="Total"
+            columnId="notionalValue"
+            direction={getSortDirection("notionalValue")}
+            onSort={handleSort}
+          />
         ),
         cell: (info) => {
           const total = info.getValue();
@@ -233,9 +179,9 @@ export function BotTransactionsTable({
               $
               {total != null
                 ? total.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })
                 : "0.00"}
             </span>
           );
@@ -253,7 +199,7 @@ export function BotTransactionsTable({
         },
       }),
     ],
-    [handleSort],
+    [handleSort, getSortDirection],
   );
 
   const table = useReactTable({
@@ -265,12 +211,7 @@ export function BotTransactionsTable({
   return (
     <Card className="shadow-sm flex flex-col justify-between relative">
       {isPending && (
-        <div
-          className="absolute inset-0 bg-background/50 backdrop-blur-sm flex
-            items-center justify-center z-10 rounded-lg"
-        >
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
+        <Spinner />
       )}
       {selectedBotName && (
         <div className="border-b p-6">
@@ -286,8 +227,8 @@ export function BotTransactionsTable({
                 History: {selectedBotName}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {data.data?.meta.total || 0} transaction
-                {data.data?.meta.total !== 1 ? "s" : ""} found
+                {data.meta.total} transaction
+                {data.meta.total !== 1 ? "s" : ""} found
               </p>
             </div>
           </div>
@@ -303,9 +244,9 @@ export function BotTransactionsTable({
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
                   </TableHead>
                 ))}
               </TableRow>

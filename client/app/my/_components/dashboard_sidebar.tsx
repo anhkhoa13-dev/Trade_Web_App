@@ -9,12 +9,12 @@ import {
 } from "@/app/ui/shadcn/sidebar";
 import React from "react";
 import NavMain, { NavMainProps } from "./nav_main";
-import { Home, LucideLayoutDashboard } from "lucide-react";
+import { Home, ShieldCheck } from "lucide-react";
 import { Wallet } from "lucide-react";
 import { User } from "lucide-react";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/app/ui/shadcn/button";
+import { Session } from "next-auth";
 
 const navData: NavMainProps = {
   items: [
@@ -25,24 +25,20 @@ const navData: NavMainProps = {
       icon: User,
     },
     {
-      title: "Dashboard",
+      title: "Administration",
       url: "/my/dashboard",
-      icon: LucideLayoutDashboard,
+      icon: ShieldCheck,
       isActive: true,
+      adminOnly: true,
+
       items: [
         {
           title: "Coins",
           url: "/coins",
-          adminOnly: true,
-        },
-        {
-          title: "Saas",
-          url: "/saas",
         },
         {
           title: "AI bots",
           url: "/ai-bots/overview",
-          adminOnly: true,
         },
       ],
     },
@@ -54,10 +50,6 @@ const navData: NavMainProps = {
         {
           title: "Overview",
           url: "/overview",
-        },
-        {
-          title: "Trade",
-          url: "/trade",
         },
         {
           title: "My Bots",
@@ -72,11 +64,15 @@ const navData: NavMainProps = {
   ],
 };
 
+interface DashboardSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  session: Session;
+}
+
 export default function DashboardSidebar({
+  session,
   ...props
-}: React.ComponentProps<typeof Sidebar>) {
-  const { data: session } = useSession();
-  const isAdmin = session?.user?.roles?.includes("ADMIN");
+}: DashboardSidebarProps) {
+  const isAdmin = session.user.roles.includes("ADMIN");
 
   const filteredNavItems = navData.items
     .map((item) => {
@@ -95,7 +91,20 @@ export default function DashboardSidebar({
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader></SidebarHeader>
+      <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
+        <Link
+          href="/"
+          className="flex flex-col transition-all hover:opacity-80"
+        >
+          <span className="text-xl font-black tracking-tight">
+            <span className="text-primary">COIN</span>
+            <span className="text-foreground">SANTRA</span>
+          </span>
+          <span className="text-[11px] text-muted-foreground font-semibold tracking-widest uppercase mt-0.5">
+            Dashboard
+          </span>
+        </Link>
+      </SidebarHeader>
 
       <SidebarContent>
         <NavMain items={filteredNavItems} />

@@ -1,32 +1,26 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-option";
-import { redirect } from "next/navigation";
 import { HistoryDashboard } from "./_components/HistoryDashboard";
-import { historyService } from "@/services/historyService";
-import { getAllSubscriptionsSSR } from "@/services/botSubService";
-import type { BotSubscription } from "@/services/interfaces/botSubInterfaces";
+import {
+  getBotTransactions,
+  getManualTransactions,
+  getDepositTransactions,
+} from "@/actions/history.actions";
+import { getUserSubscriptions } from "@/actions/botSub.actions";
+import { BotSubscription } from "@/backend/bot/botSub.types";
 
 export default async function HistoryPage({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.accessToken) {
-    redirect("/login");
-  }
-
-  // 1. Parse URL Parameters - await searchParams in Next.js 15+
   const params = await searchParams;
-  const activeTab = (params.tab as "manual" | "bot") || "manual";
+  const activeTab = (params.tab as "manual" | "bot" | "deposit") || "manual";
   const page = Number(params.page) || 0;
   const size = Number(params.size) || 10;
   const sort = (params.sort as string) || "createdAt,desc";
   const coinFilter = (params.coinSymbol as string) || "all";
   const sideFilter = (params.side as string) || "all";
   const timeRange = (params.timeRange as string) || "all";
-  const botId = (params.botId as string) || undefined;
+  const botIdParam = (params.botId as string) || undefined;
 
   // Calculate fromDate and toDate based on timeRange
   let fromDate: string | undefined;
@@ -48,16 +42,18 @@ export default async function HistoryPage({
         break;
       case "7d":
         fromDate = new Date(
-          now.getTime() - 7 * 24 * 60 * 60 * 1000,
+          now.getTime() - 7 * 24 * 60 * 60 * 1000
         ).toISOString();
         break;
     }
   }
 
   // 2. Data Fetching Logic (Conditional SSR)
-  let manualData = null;
-  let botData = null;
+  let manualData = undefined;
+  let botData = undefined;
+  let depositData = undefined;
   let botSubscriptions: BotSubscription[] = [];
+  let activeBotId = botIdParam;
 
   // Common filters object
   const commonFilters = {
@@ -72,39 +68,54 @@ export default async function HistoryPage({
   };
 
   if (activeTab === "manual") {
-    // Only fetch manual data if on manual tab
-    manualData = await historyService.getManualTransactions(
-      commonFilters,
-      session.accessToken,
-    );
+    const manualResponse = await getManualTransactions(commonFilters);
+    if (manualResponse.status === "error")
+      throw new Error(manualResponse.message);
+
+    manualData = manualResponse.data;
   } else if (activeTab === "bot") {
-    // 1. Fetch Subscriptions (needed for the list)
-    const subscriptionsResponse = await getAllSubscriptionsSSR(
-      {
-        page: 1,
-        size: 100, // Fetch all subscriptions for the list
-        sortBy: "equity",
-      },
-      session.accessToken,
-    );
-    botSubscriptions = subscriptionsResponse.result;
+    const subResponse = await getUserSubscriptions({
+      page: 1,
+      size: 100,
+      sortBy: "equity",
+    });
 
-    // 2. Determine which bot is selected (URL param or default to first)
-    const activeBotId = botId || botSubscriptions[0]?.subscriptionId;
+    if (subResponse.status === "error") throw new Error(subResponse.message);
 
-    // 3. Fetch Transactions for that specific bot
-    if (activeBotId) {
-      botData = await historyService.getBotTransactions(
-        {
-          ...commonFilters,
-          botSubId: activeBotId,
-        },
-        session.accessToken, // Assuming this API needs auth
-      );
+    botSubscriptions = subResponse.data.result;
+
+    // botId URL param -> First bot at list-> undefined
+    if (!activeBotId && botSubscriptions.length > 0) {
+      activeBotId = botSubscriptions[0].subscriptionId;
     }
+
+    // Fetch Transactions for Bot
+    if (activeBotId) {
+      const botResponse = await getBotTransactions({
+        ...commonFilters,
+        botSubId: activeBotId,
+      });
+
+      if (botResponse.status === "error") throw new Error(botResponse.message);
+
+      botData = botResponse.data;
+    }
+  } else if (activeTab === "deposit") {
+    const depositResponse = await getDepositTransactions({
+      page,
+      size,
+      sort,
+      ...(sideFilter !== "all" && {
+        status: sideFilter as "SUCCESS" | "PENDING" | "FAILED",
+      }),
+    });
+
+    if (depositResponse.status === "error")
+      throw new Error(depositResponse.message);
+
+    depositData = depositResponse.data;
   }
 
-  // 3. Fetch Available Coins (for filter dropdown)
   const availableCoins = [
     "Bitcoin",
     "Ethereum",
@@ -119,8 +130,8 @@ export default async function HistoryPage({
       activeTab={activeTab}
       manualData={manualData}
       botData={botData}
+      depositData={depositData}
       botSubscriptions={botSubscriptions}
-      accessToken={session.accessToken}
       availableCoins={availableCoins}
       currentFilters={{
         coinSymbol: coinFilter,
@@ -128,7 +139,7 @@ export default async function HistoryPage({
         timeRange,
         page,
         size,
-        botId: botId || botSubscriptions[0]?.subscriptionId,
+        botId: activeBotId,
       }}
     />
   );

@@ -1,6 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { copyright, legalLinks } from "./footerData";
+import Link from "next/link";
 
 export default function Copyright({ className }: { className?: string }) {
     return (
@@ -16,7 +17,7 @@ export default function Copyright({ className }: { className?: string }) {
             <ul className="order-1 flex flex-col gap-2 md:order-2 md:flex-row">
                 {legalLinks.map((link, idx) => (
                     <li key={idx} className="hover:text-primary">
-                        <a href={link.href}>{link.name}</a>
+                        <Link href={link.href}>{link.name}</Link>
                     </li>
                 ))}
             </ul>

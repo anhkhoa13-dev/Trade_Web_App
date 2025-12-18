@@ -7,21 +7,25 @@ import {
   UserPortfolioCoin,
 } from "./UserPortfolioColumns";
 import { Button } from "@/app/ui/shadcn/button";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useWallet } from "@/hooks/useWallet";
 import { COIN_LOGOS } from "@/services/constants/coinConstant";
 import { useLiveMarketStream } from "@/hooks/ws/useLiveMarketStream-v1";
+import { AssetDTO } from "@/backend/wallet/wallet.types";
+import { Card, CardHeader } from "@/app/ui/shadcn/card";
 
 const TOP_NUMBER = 5;
 
-export default function PortfolioAssetTable() {
+export default function PortfolioAssetTable({
+  walletData,
+}: {
+  walletData: AssetDTO;
+}) {
   const router = useRouter();
-  const { data: walletData, isLoading } = useWallet();
 
   // Extract coin symbols from wallet holdings
   const symbols = useMemo(() => {
-    if (!walletData?.coinHoldings) return [];
+    if (!walletData.coinHoldings) return [];
     return walletData.coinHoldings.map((coin) => coin.coinSymbol);
   }, [walletData]);
 
@@ -30,12 +34,13 @@ export default function PortfolioAssetTable() {
 
   // Calculate portfolio data with real-time prices
   const portfolioData: UserPortfolioCoin[] = useMemo(() => {
-    if (!walletData?.coinHoldings || Object.keys(tickers).length === 0) {
+    if (!walletData.coinHoldings) {
       return [];
     }
 
     // Calculate total portfolio value first
     let totalValue = walletData.balance; // Include USDT balance
+
     walletData.coinHoldings.forEach((coin) => {
       const ticker = tickers[coin.coinSymbol];
       if (ticker) {
@@ -74,28 +79,13 @@ export default function PortfolioAssetTable() {
     router.push("/my/wallet/portfolio");
   };
 
-  if (isLoading) {
-    return (
-      <div
-        className="flex flex-col gap-4 w-full h-full border border-border
-          bg-card rounded-xl overflow-hidden p-6"
-      >
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div
+    <Card
       className="flex flex-col gap-4 w-full h-full border border-border bg-card
         rounded-xl overflow-hidden p-6"
     >
       {/* Header Section */}
-      <div
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between"
-      >
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-0">
         <div>
           <h2 className="text-2xl font-semibold tracking-tight">
             My Portfolio
@@ -114,9 +104,8 @@ export default function PortfolioAssetTable() {
           View More
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
-      </div>
+      </CardHeader>
 
-      {/* Table (overview only) */}
       <DataTable
         columns={userPortfolioColumns}
         data={topFive}
@@ -124,6 +113,6 @@ export default function PortfolioAssetTable() {
         enablePagination={false}
         enableSorting={false}
       />
-    </div>
+    </Card>
   );
 }

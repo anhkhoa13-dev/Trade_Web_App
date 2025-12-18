@@ -1,5 +1,6 @@
 package com.web.TradeApp.feature.user.auth.service;
 
+import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -19,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.web.TradeApp.exception.ConflictException;
 import com.web.TradeApp.exception.InvalidTokenException;
 import com.web.TradeApp.exception.UserNotFoundException;
+import com.web.TradeApp.feature.coin.entity.Wallet;
+import com.web.TradeApp.feature.coin.repository.WalletRepository;
 import com.web.TradeApp.feature.email.service.EmailService;
 import com.web.TradeApp.feature.user.auth.constant.AuthProvider;
 import com.web.TradeApp.feature.user.auth.constant.Role;
@@ -46,6 +49,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
+    private final WalletRepository walletRepository;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final EmailService emailService;
     private final UserService userService;
@@ -84,6 +88,17 @@ public class AuthServiceImpl implements AuthService {
                     .build();
         }
         User createdUser = userRepository.save(user);
+
+        // Create wallet for new user
+        if (walletRepository.findByUserId(createdUser.getId()).isEmpty()) {
+            Wallet wallet = Wallet.builder()
+                    .user(createdUser)
+                    .balance(BigDecimal.ZERO)
+                    .netInvestment(BigDecimal.ZERO)
+                    .build();
+            walletRepository.save(wallet);
+        }
+
         String urlToken = generateAndSaveUrlToken(createdUser);
         sendValidationEmail(createdUser, urlToken);
 
@@ -201,8 +216,7 @@ public class AuthServiceImpl implements AuthService {
         res.setUser(userLogin);
 
         // create a token
-        String access_token = this.jwtUtil.generateAccessToken(email, res, roleNames);
-        res.setAccessToken(access_token);
+        this.jwtUtil.generateAccessToken(email, res, roleNames);
 
         return res;
     }

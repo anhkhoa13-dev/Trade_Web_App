@@ -28,8 +28,8 @@ import { Input } from "@/app/ui/shadcn/input";
 import { Button } from "@/app/ui/shadcn/button";
 
 import { botConfigSchema, type BotConfigFormValues } from "./botConfigSchema";
-import { useBotSub } from "@/hooks/bot/useBotSub";
-import { BotCopyRequest } from "@/services/botSubService";
+import { copyBot } from "@/actions/botSub.actions";
+import { BotCopyRequest } from "@/backend/bot/botSub.services";
 
 interface BotConfigDialogProps {
   isOpen: boolean;
@@ -42,7 +42,7 @@ export function BotConfigDialog({
   onClose,
   botId,
 }: BotConfigDialogProps) {
-  const { createMutation, isPending } = useBotSub();
+  const [isPending, startTransition] = useTransition();
 
   const form = useForm({
     resolver: zodResolver(botConfigSchema),
@@ -79,18 +79,29 @@ export function BotConfigDialog({
       maxDailyLossPercentage: values.maxDailyLossPercentage / 100,
     };
 
-    createMutation.mutate(payload, {
-      onSuccess: () => {
-        onClose();
-      },
+    startTransition(async () => {
+      try {
+        const result = await copyBot(payload);
+
+        if (result.status === "success") {
+          toast.success("Bot copied successfully!");
+          onClose();
+          form.reset();
+        } else {
+          toast.error(result.message || "Failed to copy bot");
+        }
+      } catch (error) {
+        console.error("Error copying bot:", error);
+        toast.error(
+          error instanceof Error ? error.message : "Failed to copy bot"
+        );
+      }
     });
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent
-        className="sm:max-w-[500px] bg-card text-card-foreground border-border"
-      >
+      <DialogContent className="sm:max-w-[500px] bg-card text-card-foreground border-border">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-foreground">
             Copy Bot Strategy

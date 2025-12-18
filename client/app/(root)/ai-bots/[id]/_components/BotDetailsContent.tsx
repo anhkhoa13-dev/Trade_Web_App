@@ -1,43 +1,24 @@
-"use client";
-
-import {
-  Users,
-  ArrowLeft,
-  CheckCircle2,
-  XCircle,
-  Shield,
-  Share,
-  Copy,
-} from "lucide-react";
-import { useState } from "react";
-import { Button } from "@/app/ui/shadcn/button";
+import { Users, CheckCircle2, XCircle, Shield } from "lucide-react";
 import { Card } from "@/app/ui/shadcn/card";
 import { Badge } from "@/app/ui/shadcn/badge";
-import { useRouter } from "next/navigation";
-import { useBotDetail } from "@/hooks/bot/useBotDetail";
-import { TimeWindow } from "@/services/interfaces/botInterfaces";
 import { COIN_LOGOS } from "@/services/constants/coinConstant";
-import MetricBox from "@/app/ui/my_components/MetricBox";
-import PnLLineChart from "@/app/ui/my_components/charts/PnLLineChart";
+import { getBotDetailAction } from "@/actions/bot.actions";
+import { TimeWindow } from "@/backend/bot/bot.types";
+import BotDetailsActions from "./BotDetailsActions";
+import PerformanceChartSection from "./PerformanceChartSection";
 
 interface BotDetailsContentProps {
   botId: string;
+  timeframe: TimeWindow;
 }
 
-export default function BotDetailsContent({ botId }: BotDetailsContentProps) {
-  const router = useRouter();
-  const [timeframe, setTimeframe] = useState<TimeWindow>("7d");
-  const { data, isLoading, isError } = useBotDetail(botId, timeframe);
+export default async function BotDetailsContent({
+  botId,
+  timeframe,
+}: BotDetailsContentProps) {
+  const data = await getBotDetailAction(botId, timeframe);
 
-  if (isLoading) {
-    return (
-      <div className="py-20 text-center text-muted-foreground">
-        Loading bot details...
-      </div>
-    );
-  }
-
-  if (isError || !data?.data) {
+  if (!data?.data) {
     return (
       <div className="py-20 text-center text-muted-foreground">
         Bot not found.
@@ -47,17 +28,9 @@ export default function BotDetailsContent({ botId }: BotDetailsContentProps) {
 
   const bot = data.data;
 
-  const handleBack = () => {
-    router.push("/ai-bots");
-  };
-
   return (
     <div className="space-y-4">
-      {/* Back Button */}
-      <Button variant="ghost" onClick={handleBack} className="gap-2">
-        <ArrowLeft className="h-4 w-4" />
-        Back to Marketplace
-      </Button>
+      <BotDetailsActions />
 
       {/* Header Section */}
       <Card className="border border-border bg-card p-6">
@@ -144,77 +117,20 @@ export default function BotDetailsContent({ botId }: BotDetailsContentProps) {
             </div>
           </div>
 
-          <div className="flex gap-3">
-            <Button
-              className="gap-2"
-              onClick={() =>
-                navigator.clipboard.writeText(window.location.href)
-              }
-              variant="outline"
-            >
-              <Share /> Share
-            </Button>
-            <Button className="gap-2">
-              <Copy /> Start Copying
-            </Button>
-          </div>
+          <BotDetailsActions />
         </div>
       </Card>
 
       {/* Performance Chart */}
-      <Card className="border border-border bg-card p-6">
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">PnL Performance</h2>
-            <div className="flex gap-2">
-              <Button
-                variant={timeframe === "1d" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTimeframe("1d")}
-              >
-                1D
-              </Button>
-              <Button
-                variant={timeframe === "7d" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTimeframe("7d")}
-              >
-                7D
-              </Button>
-            </div>
-          </div>
-          <PnLLineChart chartData={bot.chartData} timeframe={timeframe} />
-        </div>
-
-        {/* Metrics Summary Grid */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <MetricBox
-            label={`PnL (${timeframe === "1d" ? "24H" : "7D"})`}
-            value={`${bot.totalPnl >= 0 ? "+" : ""}$${bot.totalPnl.toFixed(2)}`}
-            showTrend={true}
-          />
-          <MetricBox
-            label={`ROI (${timeframe === "1d" ? "24H" : "7D"})`}
-            value={`${bot.averageRoi >= 0 ? "+" : ""}${bot.averageRoi.toFixed(2)}%`}
-            showTrend={true}
-          />
-          <MetricBox
-            label="Max Drawdown"
-            value={`${bot.maxDrawdownPercent.toFixed(2)}%`}
-            showTrend={false}
-          />
-          <MetricBox
-            label="Total Net Investment"
-            value={`$${bot.totalNetInvestment.toFixed(2)}`}
-            showTrend={false}
-          />
-          <MetricBox
-            label="Total Equity"
-            value={`$${bot.totalEquity.toFixed(2)}`}
-            showTrend={false}
-          />
-        </div>
-      </Card>
+      <PerformanceChartSection
+        chartData={bot.chartData}
+        totalPnl={bot.totalPnl}
+        averageRoi={bot.averageRoi}
+        maxDrawdownPercent={bot.maxDrawdownPercent}
+        totalNetInvestment={bot.totalNetInvestment}
+        totalEquity={bot.totalEquity}
+        initialTimeframe={timeframe}
+      />
 
       {/* Strategy Section */}
       <Card className="border border-border bg-card p-6">

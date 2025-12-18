@@ -37,6 +37,7 @@ public class AssetResponse {
         private String coinSymbol;
         private String coinName;
         private BigDecimal amount;
+        private BigDecimal fee;
     }
 
     @Data

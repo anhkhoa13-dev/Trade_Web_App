@@ -9,19 +9,13 @@ import {
   SelectValue,
 } from "@/app/ui/shadcn/select";
 import { Button } from "@/app/ui/shadcn/button";
-
-import { useRouter } from "next/navigation";
-import { BotStatus } from "@/services/constants/botConstant";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface BotFilterBarProps {
   uniqueCoins: string[];
   coinFilter: string;
-  statusFilter: BotStatus;
+  statusFilter: string;
   sortBy: string;
-
-  onCoinChange: (coin: string) => void;
-  onStatusChange: (status: BotStatus) => void;
-  onSortChange: (sort: string) => void;
 }
 
 export function BotFilterBar({
@@ -29,21 +23,32 @@ export function BotFilterBar({
   coinFilter,
   statusFilter,
   sortBy,
-  onCoinChange,
-  onStatusChange,
-  onSortChange,
 }: BotFilterBarProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const updateParam = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value && value !== "all") {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
+    router.push(`?${params.toString()}`);
+  };
+
   const handleCreateBot = () => {
     router.push("/my/dashboard/ai-bots/create");
   };
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 w-full">
-      {/* Left Side: Filters */}
       <div className="flex flex-wrap gap-3">
         {/* Coin Filter */}
-        <Select value={coinFilter} onValueChange={onCoinChange}>
+        <Select
+          value={coinFilter}
+          onValueChange={(val) => updateParam("coin", val)}
+        >
           <SelectTrigger className="w-[130px]">
             <SelectValue placeholder="Coin" />
           </SelectTrigger>
@@ -60,21 +65,24 @@ export function BotFilterBar({
         {/* Status Filter */}
         <Select
           value={statusFilter}
-          onValueChange={(v) => onStatusChange(v as BotStatus)}
+          onValueChange={(val) => updateParam("status", val)}
         >
           <SelectTrigger className="w-[150px]">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="healthy">Healthy</SelectItem>
-            <SelectItem value="warning">Warning</SelectItem>
-            <SelectItem value="critical">Critical</SelectItem>
+            <SelectItem value="ACTIVE">Healthy (Active)</SelectItem>
+            <SelectItem value="PAUSED">Warning (Paused)</SelectItem>
+            <SelectItem value="ERROR">Critical (Error)</SelectItem>
           </SelectContent>
         </Select>
 
         {/* Sort Menu */}
-        <Select value={sortBy} onValueChange={onSortChange}>
+        <Select
+          value={sortBy}
+          onValueChange={(val) => updateParam("sort", val)}
+        >
           <SelectTrigger className="w-[180px]">
             <SlidersHorizontal className="mr-2 h-4 w-4" />
             <SelectValue placeholder="Sort" />
@@ -88,7 +96,6 @@ export function BotFilterBar({
         </Select>
       </div>
 
-      {/* Right Side: Create Bot Button */}
       <Button onClick={handleCreateBot} className="flex items-center gap-2">
         <Plus className="w-4 h-4" />
         Create Bot

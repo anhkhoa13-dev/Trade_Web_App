@@ -1,9 +1,7 @@
 "use client";
 
-import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useSignUp } from "@/hooks/useSignUp";
 import {
   Form,
   FormControl,
@@ -14,29 +12,16 @@ import {
 } from "../../../ui/shadcn/form";
 import { Input, PasswordInput } from "../../../ui/shadcn/input";
 import { Button } from "../../../ui/shadcn/button";
-
-export const registerSchema = z
-  .object({
-    username: z.string().trim().min(1, { message: "Username is required" }),
-    email: z.email({ message: "Invalid email" }),
-    password: z
-      .string()
-      .min(6, { message: "Password must be at least 6 characters" }),
-    confirm: z.string().min(6, { message: "Please confirm your password" }),
-  })
-  .refine((data) => data.password === data.confirm, {
-    message: "Passwords do not match",
-    path: ["confirm"],
-  });
-
-const verificationSchema = z.object({
-  code: z.string().length(6, { message: "Code must be 6 digits" }),
-});
+import { RegisterInput, registerSchema } from "@/schema/registerSchema";
+import { register } from "@/actions/auth.actions";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { Spinner } from "@/app/ui/shadcn/spinner";
 
 export default function RegisterForm() {
-  const registerMutation = useSignUp();
+  const router = useRouter();
 
-  const form = useForm<z.infer<typeof registerSchema>>({
+  const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       username: "",
@@ -45,29 +30,47 @@ export default function RegisterForm() {
       confirm: "",
     },
   });
-  const verifyForm = useForm<z.infer<typeof verificationSchema>>({
-    resolver: zodResolver(verificationSchema),
-    defaultValues: { code: "" },
-  });
 
-  const handleRegister = async (values: z.infer<typeof registerSchema>) => {
-    registerMutation.mutate(values);
+  const { isSubmitting } = form.formState;
+
+  const handleRegister = async (values: RegisterInput) => {
+    const res = await register(values);
+
+    if (res.status === "success") {
+      toast.success(res.message);
+
+      const params = new URLSearchParams();
+      if (res.data?.urlToken) {
+        params.set("token", res.data.urlToken);
+      }
+
+      params.set("email", values.email);
+      router.push(`/verify?${params.toString()}`);
+    } else {
+      toast.error(res.message);
+    }
   };
-  const { isPending } = registerMutation;
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleRegister)} className="space-y-4">
+      <form
+        onSubmit={form.handleSubmit(handleRegister)}
+        className="space-y-3 sm:space-y-4"
+      >
         <FormField
           control={form.control}
           name="username"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Username</FormLabel>
               <FormControl>
-                <Input placeholder="johnPaul123" {...field}></Input>
+                <Input
+                  placeholder="johnPaul123"
+                  className="h-10 sm:h-11"
+                  {...field}
+                ></Input>
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
@@ -76,15 +79,16 @@ export default function RegisterForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Email</FormLabel>
               <FormControl>
                 <Input
                   placeholder="you@example.com"
                   type="email"
+                  className="h-10 sm:h-11"
                   {...field}
                 ></Input>
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
@@ -93,11 +97,14 @@ export default function RegisterForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Password</FormLabel>
               <FormControl>
-                <PasswordInput {...field}></PasswordInput>
+                <PasswordInput
+                  className="h-10 sm:h-11"
+                  {...field}
+                ></PasswordInput>
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
@@ -106,20 +113,25 @@ export default function RegisterForm() {
           name="confirm"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Confirm password</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">
+                Confirm password
+              </FormLabel>
               <FormControl>
-                <PasswordInput {...field}></PasswordInput>
+                <PasswordInput
+                  className="h-10 sm:h-11"
+                  {...field}
+                ></PasswordInput>
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
         <Button
           type="submit"
-          className="w-full cursor-pointer"
-          disabled={isPending}
+          className="w-full cursor-pointer h-10 sm:h-11 text-sm sm:text-base"
+          disabled={isSubmitting}
         >
-          {isPending ? "Processing..." : "Register"}
+          {isSubmitting ? <Spinner /> : "Register"}
         </Button>
       </form>
     </Form>
