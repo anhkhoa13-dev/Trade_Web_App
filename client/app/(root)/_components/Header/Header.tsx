@@ -53,21 +53,20 @@ export default function SiteHeader({ user }: HeaderProps) {
       </div>
 
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        {/* LEFT: Logo & Main Menu */}
         <div className="flex items-center gap-8">
           <Link
             href="/"
             className="flex items-center gap-2 transition-opacity hover:opacity-90 font-bold text-lg"
           >
-            {/* <Image
-              src="/next.svg"
+            <Image
+              src="/logo.jpg"
               alt="Logo"
               width={100}
-              height={24}
+              height={48}
               className="dark:invert h-6 w-auto"
               priority
-            /> */}
-            COINSANTRA
+            />
+            {/* COINSANTRA */}
           </Link>
 
           {/* Desktop Menu */}

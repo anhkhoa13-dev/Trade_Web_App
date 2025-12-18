@@ -29,7 +29,11 @@ export default async function ProfilePage() {
               alt={profile.username}
             />
             <AvatarFallback>
-              {profile.username.slice(0, 2).toUpperCase()}
+              {profile.username
+                ? profile.username.slice(0, 2).toUpperCase()
+                : profile.firstName
+                  ? profile.firstName.slice(0, 2).toUpperCase()
+                  : ""}
             </AvatarFallback>
           </Avatar>
 

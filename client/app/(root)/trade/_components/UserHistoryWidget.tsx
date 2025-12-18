@@ -9,6 +9,7 @@ import { TransactionHistoryDTO } from "@/backend/history/history.types";
 
 interface UserHistoryWidgetProps {
   symbol: string;
+  refreshTrigger?: number;
 }
 
 // Mapping from coin symbol to coin name for API filtering
@@ -25,7 +26,10 @@ const SYMBOL_TO_NAME_MAP: Record<string, string> = {
   LTC: "Litecoin",
 };
 
-export default function UserHistoryWidget({ symbol }: UserHistoryWidgetProps) {
+export default function UserHistoryWidget({
+  symbol,
+  refreshTrigger,
+}: UserHistoryWidgetProps) {
   const parentRef = useRef<HTMLDivElement>(null);
   const [allData, setAllData] = useState<TransactionHistoryDTO[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -79,6 +83,16 @@ export default function UserHistoryWidget({ symbol }: UserHistoryWidgetProps) {
     setHasMore(true);
     fetchMoreData(0);
   }, [symbol]);
+
+  // Refresh when refreshTrigger changes
+  useEffect(() => {
+    if (refreshTrigger) {
+      setAllData([]);
+      setCurrentPage(0);
+      setHasMore(true);
+      fetchMoreData(0);
+    }
+  }, [refreshTrigger]);
 
   // --- VIRTUALIZER SETUP ---
   const rowVirtualizer = useVirtualizer({
