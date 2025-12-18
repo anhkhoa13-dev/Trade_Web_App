@@ -19,7 +19,7 @@ import toast from "react-hot-toast";
 import { Spinner } from "@/app/ui/shadcn/spinner";
 
 export default function RegisterForm() {
-  const router = useRouter()
+  const router = useRouter();
 
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
@@ -29,42 +29,48 @@ export default function RegisterForm() {
       password: "",
       confirm: "",
     },
-  })
+  });
 
-  const { isSubmitting } = form.formState
+  const { isSubmitting } = form.formState;
 
   const handleRegister = async (values: RegisterInput) => {
-    const res = await register(values)
+    const res = await register(values);
 
     if (res.status === "success") {
-      toast.success(res.message)
+      toast.success(res.message);
 
       const params = new URLSearchParams();
       if (res.data?.urlToken) {
         params.set("token", res.data.urlToken);
       }
 
-      params.set("email", values.email)
-      router.push(`/verify?${params.toString()}`)
-
+      params.set("email", values.email);
+      router.push(`/verify?${params.toString()}`);
     } else {
-      toast.error(res.message)
+      toast.error(res.message);
     }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleRegister)} className="space-y-4">
+      <form
+        onSubmit={form.handleSubmit(handleRegister)}
+        className="space-y-3 sm:space-y-4"
+      >
         <FormField
           control={form.control}
           name="username"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Username</FormLabel>
               <FormControl>
-                <Input placeholder="johnPaul123" {...field}></Input>
+                <Input
+                  placeholder="johnPaul123"
+                  className="h-10 sm:h-11"
+                  {...field}
+                ></Input>
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
@@ -73,15 +79,16 @@ export default function RegisterForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Email</FormLabel>
               <FormControl>
                 <Input
                   placeholder="you@example.com"
                   type="email"
+                  className="h-10 sm:h-11"
                   {...field}
                 ></Input>
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
@@ -90,11 +97,14 @@ export default function RegisterForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Password</FormLabel>
               <FormControl>
-                <PasswordInput {...field}></PasswordInput>
+                <PasswordInput
+                  className="h-10 sm:h-11"
+                  {...field}
+                ></PasswordInput>
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
@@ -103,24 +113,25 @@ export default function RegisterForm() {
           name="confirm"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Confirm password</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">
+                Confirm password
+              </FormLabel>
               <FormControl>
-                <PasswordInput {...field}></PasswordInput>
+                <PasswordInput
+                  className="h-10 sm:h-11"
+                  {...field}
+                ></PasswordInput>
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
         <Button
           type="submit"
-          className="w-full cursor-pointer"
+          className="w-full cursor-pointer h-10 sm:h-11 text-sm sm:text-base"
           disabled={isSubmitting}
         >
-          {isSubmitting ? (
-            <Spinner />
-          ) :
-            "Register"
-          }
+          {isSubmitting ? <Spinner /> : "Register"}
         </Button>
       </form>
     </Form>

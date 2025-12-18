@@ -120,16 +120,18 @@ export default function SiteHeader({ user }: HeaderProps) {
       {mobileOpen && (
         <div className="border-b bg-background p-4 md:hidden animate-in slide-in-from-top-2">
           <nav className="grid gap-2">
-            {menuData.map((item, index) => (
-              <Link
-                key={index}
-                href={item.path || "#"}
-                className="flex w-full items-center rounded-md p-2 text-sm font-medium hover:bg-accent"
-                onClick={() => setMobileOpen(false)}
-              >
-                {item.title}
-              </Link>
-            ))}
+            {menuData
+              .filter((item) => item.path)
+              .map((item, index) => (
+                <Link
+                  key={index}
+                  href={item.path || "#"}
+                  className="flex w-full items-center rounded-md p-2 text-sm font-medium hover:bg-accent"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {item.title}
+                </Link>
+              ))}
             {!isAuthenticated && (
               <div className="mt-4 grid gap-2">
                 <Button w-full variant="outline" asChild>

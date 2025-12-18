@@ -16,12 +16,15 @@ import { Card, CardHeader } from "@/app/ui/shadcn/card";
 
 const TOP_NUMBER = 5;
 
-export default function PortfolioAssetTable({ walletData }: { walletData: AssetDTO }) {
+export default function PortfolioAssetTable({
+  walletData,
+}: {
+  walletData: AssetDTO;
+}) {
   const router = useRouter();
 
   // Extract coin symbols from wallet holdings
   const symbols = useMemo(() => {
-
     if (!walletData.coinHoldings) return [];
     return walletData.coinHoldings.map((coin) => coin.coinSymbol);
   }, [walletData]);
@@ -78,13 +81,11 @@ export default function PortfolioAssetTable({ walletData }: { walletData: AssetD
 
   return (
     <Card
-      className="flex flex-col gap-4 justify-between w-full h-full border border-border bg-card
+      className="flex flex-col gap-4 w-full h-full border border-border bg-card
         rounded-xl overflow-hidden p-6"
     >
       {/* Header Section */}
-      <CardHeader
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-0"
-      >
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-0">
         <div>
           <h2 className="text-2xl font-semibold tracking-tight">
             My Portfolio

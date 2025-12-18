@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/app/ui/shadcn/dropdown-menu";
-import { LogOut, User, Settings } from "lucide-react";
+import { LogOut, User, Wallet } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 
@@ -64,9 +64,9 @@ export function UserNav({ user }: UserNavProps) {
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/my/settings" className="cursor-pointer">
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Settings</span>
+            <Link href="/my/wallet/overview" className="cursor-pointer">
+              <Wallet className="mr-2 h-4 w-4" />
+              <span>Wallet</span>
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>

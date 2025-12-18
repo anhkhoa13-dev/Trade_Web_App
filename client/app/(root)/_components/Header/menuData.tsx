@@ -14,6 +14,7 @@ export const menuData: Menu[] = [
   {
     id: 3,
     title: "Trade",
+    path: "/trade",
     subMenu: [
       {
         id: 31,

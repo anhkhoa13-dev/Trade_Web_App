@@ -16,17 +16,15 @@ import { getManualTransactions } from "@/actions/history.actions";
 import { getBotSubOverview } from "@/actions/botSub.actions";
 
 export default async function page() {
-
   const historyFilter = { page: 0, size: 5, sort: "createdAt,desc" };
 
-  const [initialCoins, walletResponse, historyResponse, botOverviewResponse] = await Promise.all([
-    getCachedMarketData(5),
-    getWallet(),
-    getManualTransactions(
-      historyFilter,
-    ),
-    getBotSubOverview()
-  ]);
+  const [initialCoins, walletResponse, historyResponse, botOverviewResponse] =
+    await Promise.all([
+      getCachedMarketData(5),
+      getWallet(),
+      getManualTransactions(historyFilter),
+      getBotSubOverview(),
+    ]);
 
   if (walletResponse.status == "error") {
     throw new Error(walletResponse.message);
@@ -39,10 +37,9 @@ export default async function page() {
     throw new Error(botOverviewResponse.message);
   }
 
-  const walletData = walletResponse.data
-  const recentHistory = historyResponse.data
-  const botOverview = botOverviewResponse.data
-
+  const walletData = walletResponse.data;
+  const recentHistory = historyResponse.data;
+  const botOverview = botOverviewResponse.data;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
@@ -69,12 +66,13 @@ export default async function page() {
         <MarketTable
           initialData={initialCoins}
           defaultPageSize={5}
-        // symbols={SYMBOLS}
-        // showLimit={6}
-        // enableActions={true}
-        // enablePagination={false}
-        // enableSearch={false}
-        // enableSorting={false}
+          isOverview={true}
+          // symbols={SYMBOLS}
+          // showLimit={6}
+          // enableActions={true}
+          // enablePagination={false}
+          // enableSearch={false}
+          // enableSorting={false}
         />
       </div>
       <div className="col-span-1 md:col-span-4 w-full">

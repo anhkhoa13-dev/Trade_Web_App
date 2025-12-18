@@ -96,7 +96,12 @@ export default function PortfolioAllocationChart({
 
   // Colors
   const colors = [
-    "#2563EB", "#10B981", "#F59E0B", "#8B5CF6", "#EF4444", "#6B7280",
+    "#2563EB",
+    "#10B981",
+    "#F59E0B",
+    "#8B5CF6",
+    "#EF4444",
+    "#6B7280",
   ];
 
   const { labels, series, legendData, totalPortfolioValue } = useMemo(() => {
@@ -159,7 +164,10 @@ export default function PortfolioAllocationChart({
         animations: { enabled: false },
         events: {
           dataPointMouseEnter: (event, chartContext, config) => {
-            if (config.dataPointIndex !== undefined && config.dataPointIndex !== null) {
+            if (
+              config.dataPointIndex !== undefined &&
+              config.dataPointIndex !== null
+            ) {
               setActiveIndex(config.dataPointIndex);
             }
           },
@@ -213,7 +221,7 @@ export default function PortfolioAllocationChart({
                 label:
                   activeIndex !== null && legendData[activeIndex]
                     ? legendData[activeIndex].label
-                    : "Total Assets",
+                    : "Total Coin Value",
                 fontSize: "14px",
                 fontWeight: 500,
                 color: isDark ? "#94a3b8" : "#64748b",
@@ -238,7 +246,8 @@ export default function PortfolioAllocationChart({
   );
 
   // Determine State
-  const hasHoldings = walletData.coinHoldings && walletData.coinHoldings.length > 0;
+  const hasHoldings =
+    walletData.coinHoldings && walletData.coinHoldings.length > 0;
   const hasSeries = series.length > 0;
 
   return (
@@ -264,8 +273,8 @@ export default function PortfolioAllocationChart({
           </div>
         ) : (
           // Case 3: Hiển thị Chart
-          <div className="grid grid-cols-1 md:grid-cols-[40%_60%] gap-4 items-center h-[280px]">
-            <div className="relative w-full flex items-center justify-center h-[300px] md:h-[200px]">
+          <div className="flex items-center justify-center h-[280px] w-full">
+            <div className="w-full max-w-[280px] h-full">
               <ReactApexChart
                 options={options}
                 series={series}
@@ -273,36 +282,6 @@ export default function PortfolioAllocationChart({
                 height={"100%"}
                 width={"100%"}
               />
-            </div>
-
-            <div className="hidden md:flex flex-col h-full overflow-y-auto pr-2 custom-scrollbar">
-              <div className="flex flex-col space-y-1">
-                {legendData.map((item) => (
-                  <div
-                    key={item.label}
-                    className="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-muted/50 transition-colors text-sm border border-transparent shrink-0 cursor-default"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <span
-                        className="h-2.5 w-2.5 rounded-full shrink-0"
-                        style={{ backgroundColor: item.color }}
-                      />
-                      <span className="font-medium truncate max-w-[80px]">
-                        {item.label}
-                      </span>
-                    </div>
-
-                    <div className="text-right">
-                      <div className="font-semibold tabular-nums text-foreground text-xs">
-                        {item.percent.toFixed(2)}%
-                      </div>
-                      <div className="text-[10px] text-muted-foreground">
-                        ${item.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         )}

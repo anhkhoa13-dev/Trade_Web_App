@@ -9,7 +9,7 @@ import {
 } from "@/app/ui/shadcn/sidebar";
 import React from "react";
 import NavMain, { NavMainProps } from "./nav_main";
-import { Home, LucideLayoutDashboard } from "lucide-react";
+import { Home, ShieldCheck } from "lucide-react";
 import { Wallet } from "lucide-react";
 import { User } from "lucide-react";
 import Link from "next/link";
@@ -25,24 +25,20 @@ const navData: NavMainProps = {
       icon: User,
     },
     {
-      title: "Dashboard",
+      title: "Administration",
       url: "/my/dashboard",
-      icon: LucideLayoutDashboard,
+      icon: ShieldCheck,
       isActive: true,
+      adminOnly: true,
+
       items: [
         {
           title: "Coins",
           url: "/coins",
-          adminOnly: true,
-        },
-        {
-          title: "Saas",
-          url: "/saas",
         },
         {
           title: "AI bots",
           url: "/ai-bots/overview",
-          adminOnly: true,
         },
       ],
     },

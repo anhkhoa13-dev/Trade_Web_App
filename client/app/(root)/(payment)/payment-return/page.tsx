@@ -3,8 +3,15 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 import toast from "react-hot-toast";
-import { Loader2, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import {
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  LogIn,
+} from "lucide-react";
 import {
   Card,
   CardHeader,
@@ -19,7 +26,7 @@ import { verifyVnPayCallback } from "@/actions/payment.action";
 export default function PaymentReturnPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   // const paymentService = usePaymentService();
   const hasProcessed = useRef(false);
 
@@ -123,14 +130,70 @@ export default function PaymentReturnPage() {
     router.push("/my/wallet/overview");
   };
 
+  // Loading state while checking session
+  if (status === "loading") {
+    return (
+      <div className="w-full min-h-[60vh] sm:min-h-screen flex items-center justify-center p-4 sm:p-6">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex flex-col items-center justify-center py-10 sm:py-12">
+            <Loader2 className="w-12 h-12 sm:w-16 sm:h-16 animate-spin text-primary mb-4" />
+            <p className="text-base sm:text-lg font-medium">Loading...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Not authenticated - show login prompt
+  if (!session?.user) {
+    return (
+      <div className="w-full min-h-[60vh] sm:min-h-screen flex items-center justify-center p-4 sm:p-6">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center p-4 sm:p-6">
+            <div className="flex justify-center mb-4">
+              <div className="p-3 bg-amber-500/10 rounded-full">
+                <AlertCircle className="w-12 h-12 sm:w-16 sm:h-16 text-amber-500" />
+              </div>
+            </div>
+            <CardTitle className="text-xl sm:text-2xl">
+              Authentication Required
+            </CardTitle>
+            <CardDescription className="text-sm sm:text-base mt-2">
+              You need to log in to view payment status.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 p-4 sm:p-6">
+            <Button asChild className="w-full h-11 sm:h-12 text-base font-bold">
+              <Link href="/login">
+                <LogIn className="w-5 h-5 mr-2" />
+                Log in to Continue
+              </Link>
+            </Button>
+            <p className="text-xs sm:text-sm text-muted-foreground text-center">
+              Don&apos;t have an account?{" "}
+              <Link
+                href="/register"
+                className="text-primary hover:underline font-medium"
+              >
+                Sign up
+              </Link>
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (isProcessing) {
     return (
-      <div className="w-full min-h-screen flex items-center justify-center p-6">
+      <div className="w-full min-h-[60vh] sm:min-h-screen flex items-center justify-center p-4 sm:p-6">
         <Card className="w-full max-w-md">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Loader2 className="w-16 h-16 animate-spin text-primary mb-4" />
-            <p className="text-lg font-medium">Processing payment...</p>
-            <p className="text-sm text-muted-foreground mt-2">
+          <CardContent className="flex flex-col items-center justify-center py-10 sm:py-12">
+            <Loader2 className="w-12 h-12 sm:w-16 sm:h-16 animate-spin text-primary mb-4" />
+            <p className="text-base sm:text-lg font-medium">
+              Processing payment...
+            </p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-2 text-center">
               Please wait while we verify your transaction
             </p>
           </CardContent>
@@ -140,44 +203,46 @@ export default function PaymentReturnPage() {
   }
 
   return (
-    <div className="w-full min-h-screen flex items-center justify-center p-6">
+    <div className="w-full min-h-[60vh] sm:min-h-screen flex items-center justify-center p-4 sm:p-6">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
+        <CardHeader className="text-center p-4 sm:p-6">
           <div className="flex justify-center mb-4">
             {paymentStatus === "success" ? (
               <div className="p-3 bg-green-500/10 rounded-full">
-                <CheckCircle2 className="w-16 h-16 text-green-500" />
+                <CheckCircle2 className="w-12 h-12 sm:w-16 sm:h-16 text-green-500" />
               </div>
             ) : paymentStatus === "failed" ? (
               <div className="p-3 bg-amber-500/10 rounded-full">
-                <AlertCircle className="w-16 h-16 text-amber-500" />
+                <AlertCircle className="w-12 h-12 sm:w-16 sm:h-16 text-amber-500" />
               </div>
             ) : (
               <div className="p-3 bg-destructive/10 rounded-full">
-                <XCircle className="w-16 h-16 text-destructive" />
+                <XCircle className="w-12 h-12 sm:w-16 sm:h-16 text-destructive" />
               </div>
             )}
           </div>
-          <CardTitle className="text-2xl">
+          <CardTitle className="text-xl sm:text-2xl">
             {paymentStatus === "success"
               ? "Payment Successful"
               : paymentStatus === "failed"
                 ? "Payment Cancelled"
                 : "Payment Failed"}
           </CardTitle>
-          <CardDescription className="text-base mt-2">
+          <CardDescription className="text-sm sm:text-base mt-2">
             {message}
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
           {/* Transaction Details */}
           {(transactionDetails.amount ||
             transactionDetails.convertedAmount) && (
-            <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-              <h3 className="font-semibold text-sm">Transaction Details</h3>
+            <div className="bg-muted/50 rounded-lg p-3 sm:p-4 space-y-2 sm:space-y-3">
+              <h3 className="font-semibold text-xs sm:text-sm">
+                Transaction Details
+              </h3>
               {transactionDetails.amount && (
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-muted-foreground">Amount:</span>
                   <span className="font-medium">
                     {transactionDetails.amount.toLocaleString()} VND
@@ -185,7 +250,7 @@ export default function PaymentReturnPage() {
                 </div>
               )}
               {transactionDetails.convertedAmount && (
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-muted-foreground">
                     Converted Amount:
                   </span>
@@ -195,7 +260,7 @@ export default function PaymentReturnPage() {
                 </div>
               )}
               {transactionDetails.exchangeRate && (
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-muted-foreground">Exchange Rate:</span>
                   <span className="font-medium">
                     {transactionDetails.exchangeRate.toLocaleString()} VND/USD
@@ -203,7 +268,7 @@ export default function PaymentReturnPage() {
                 </div>
               )}
               {transactionDetails.description && (
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-muted-foreground">Description:</span>
                   <span className="font-medium text-right max-w-[60%]">
                     {transactionDetails.description}
@@ -214,16 +279,20 @@ export default function PaymentReturnPage() {
           )}
 
           {/* Action Buttons */}
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {paymentStatus === "success" ? (
               <>
-                <Button onClick={handleGoToWallet} className="w-full" size="lg">
+                <Button
+                  onClick={handleGoToWallet}
+                  className="w-full h-10 sm:h-11"
+                  size="lg"
+                >
                   Go to Wallet
                 </Button>
                 <Button
                   onClick={handleReturnToDeposit}
                   variant="outline"
-                  className="w-full"
+                  className="w-full h-10 sm:h-11"
                   size="lg"
                 >
                   Make Another Deposit
@@ -233,7 +302,7 @@ export default function PaymentReturnPage() {
               <>
                 <Button
                   onClick={handleReturnToDeposit}
-                  className="w-full"
+                  className="w-full h-10 sm:h-11"
                   size="lg"
                 >
                   Try Again
@@ -241,7 +310,7 @@ export default function PaymentReturnPage() {
                 <Button
                   onClick={handleGoToWallet}
                   variant="outline"
-                  className="w-full"
+                  className="w-full h-10 sm:h-11"
                   size="lg"
                 >
                   Back to Wallet

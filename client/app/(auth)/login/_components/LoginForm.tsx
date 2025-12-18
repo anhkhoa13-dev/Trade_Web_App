@@ -21,14 +21,14 @@ export default function LoginForm() {
   const router = useRouter();
 
   const handleLogin = async (values: LoginInput) => {
-    const res = await login(values)
+    const res = await login(values);
 
     if (res.status === "success") {
       router.push("/");
       router.refresh();
       toast.success(res.message);
     } else {
-      toast.error(res.message)
+      toast.error(res.message);
     }
   };
 
@@ -42,21 +42,25 @@ export default function LoginForm() {
   const { isSubmitting } = form.formState;
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-4">
+      <form
+        onSubmit={form.handleSubmit(handleLogin)}
+        className="space-y-3 sm:space-y-4"
+      >
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Email</FormLabel>
               <FormControl>
                 <Input
                   placeholder="you@example.com"
                   type="email"
+                  className="h-10 sm:h-11"
                   {...field}
                 ></Input>
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
@@ -65,20 +69,21 @@ export default function LoginForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Password</FormLabel>
               <FormControl>
                 <PasswordInput
                   placeholder="••••••••"
+                  className="h-10 sm:h-11"
                   {...field}
                 ></PasswordInput>
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
         <Button
           type="submit"
-          className="w-full cursor-pointer"
+          className="w-full cursor-pointer h-10 sm:h-11 text-sm sm:text-base"
           disabled={isSubmitting}
         >
           {isSubmitting ? "Processing..." : "Login"}

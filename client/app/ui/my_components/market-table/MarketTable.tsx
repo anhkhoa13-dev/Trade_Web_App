@@ -32,7 +32,7 @@ import {
   TooltipTrigger,
 } from "../../shadcn/tooltip";
 import Link from "next/link";
-import { Info, TrendingUp } from "lucide-react";
+import { ArrowRight, Info, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import {
@@ -47,11 +47,13 @@ import {
 interface MarketTableProps {
   initialData: MarketCoin[];
   defaultPageSize?: number;
+  isOverview?: boolean;
 }
 
 export default function MarketTable({
   initialData,
   defaultPageSize = 20,
+  isOverview = false,
 }: MarketTableProps) {
   const data = useLiveMarket(initialData);
 
@@ -75,14 +77,44 @@ export default function MarketTable({
     );
   }, [data, globalFilter]);
 
+  // LOGIC SORTING
+  const sortedData = useMemo(() => {
+    if (!sorting.length) return filteredData;
+
+    const sorted = [...filteredData];
+    sorting.forEach((sort) => {
+      sorted.sort((a, b) => {
+        const aValue = a[sort.id as keyof MarketCoin];
+        const bValue = b[sort.id as keyof MarketCoin];
+
+        if (aValue == null) return 1;
+        if (bValue == null) return -1;
+
+        if (typeof aValue === "string" && typeof bValue === "string") {
+          return sort.desc
+            ? bValue.localeCompare(aValue)
+            : aValue.localeCompare(bValue);
+        }
+
+        if (typeof aValue === "number" && typeof bValue === "number") {
+          return sort.desc ? bValue - aValue : aValue - bValue;
+        }
+
+        return 0;
+      });
+    });
+
+    return sorted;
+  }, [filteredData, sorting]);
+
   // LOGIC PAGINATION
   const currentData = useMemo(() => {
     const start = pagination.pageIndex * pagination.pageSize;
     const end = start + pagination.pageSize;
-    return filteredData.slice(start, end);
-  }, [filteredData, pagination]);
+    return sortedData.slice(start, end);
+  }, [sortedData, pagination]);
 
-  const pageCount = Math.ceil(filteredData.length / pagination.pageSize);
+  const pageCount = Math.ceil(sortedData.length / pagination.pageSize);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setGlobalFilter(e.target.value);
@@ -112,7 +144,7 @@ export default function MarketTable({
               width={32}
               className="w-8 h-8 rounded-full"
             />
-            <div className="flex flex-col">
+            <div className="hidden md:flex flex-col">
               <span className="font-bold">{info.row.original.symbol}</span>
               <span
                 className="text-xs text-foreground truncate max-w-[80px] sm:max-w-[140px]"
@@ -221,10 +253,10 @@ export default function MarketTable({
       pagination,
     },
     manualPagination: true,
+    manualSorting: true,
     onSortingChange: setSorting,
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     autoResetPageIndex: false,
   });
@@ -234,146 +266,171 @@ export default function MarketTable({
       <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <CardTitle>Live Crypto Market</CardTitle>
         <div>
-          <Input
-            type="text"
-            placeholder="Search coin..."
-            value={globalFilter}
-            onChange={handleSearchChange}
-            className="relative w-full sm:w-64"
-          />
+          {!isOverview ? (
+            <Input
+              type="text"
+              placeholder="Search coin..."
+              value={globalFilter}
+              onChange={handleSearchChange}
+              className="relative w-full sm:w-64"
+            />
+          ) : (
+            <Link href="/market">
+              <Button variant="outline" className="p-2">
+                View Full Market List
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          )}
         </div>
       </CardHeader>
 
       <CardContent>
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    onClick={header.column.getToggleSortingHandler()}
-                    className={cn(
-                      "cursor-pointer select-none",
-                      (header.column.id === "history" ||
-                        header.column.id === "actions") &&
-                        "hidden md:table-cell"
-                    )}
-                  >
-                    <div className="flex items-center gap-1">
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
+        <div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead
+                      key={header.id}
+                      onClick={header.column.getToggleSortingHandler()}
+                      className={cn(
+                        "cursor-pointer select-none",
+                        (header.column.id === "market_cap_rank" ||
+                          header.column.id === "history") &&
+                          "hidden md:table-cell"
                       )}
-                      {{
-                        asc: " ▲",
-                        desc: " ▼",
-                      }[header.column.getIsSorted() as string] ?? null}
-                    </div>
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
+                    >
+                      <div className="flex items-center gap-1">
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                        {{
+                          asc: " ▲",
+                          desc: " ▼",
+                        }[header.column.getIsSorted() as string] ?? null}
+                      </div>
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
 
-          <TableBody>
-            {currentData.length > 0 ? (
-              table
-                .getRowModel()
-                .rows.map((row) => (
-                  <RowWithMotion key={row.original.id} row={row} />
-                ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No coins found matching "{globalFilter}"
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            <TableBody>
+              {currentData.length > 0 ? (
+                table
+                  .getRowModel()
+                  .rows.map((row) => (
+                    <RowWithMotion key={row.original.id} row={row} />
+                  ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    No coins found matching "{globalFilter}"
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
         {/* Pagination Controls */}
-        <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-4 px-2">
-          {/* Left: Rows per page Selector */}
-          <div className="hidden md:flex items-center gap-2 text-sm text-card-foreground">
-            <span>Show</span>
-            <Select
-              value={`${table.getState().pagination.pageSize}`}
-              onValueChange={(value) => {
-                table.setPageSize(Number(value));
-                table.setPageIndex(0);
-              }}
-            >
-              <SelectTrigger className="h-8">
-                <SelectValue
-                  placeholder={table.getState().pagination.pageSize}
-                />
-              </SelectTrigger>
-              <SelectContent side="top">
-                {[5, 10, 20, 30, 40, 50].map((pageSize) => (
-                  <SelectItem key={pageSize} value={`${pageSize}`}>
-                    {pageSize}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <span>rows</span>
+        {!isOverview && (
+          <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-4 px-2">
+            {/* Left: Rows per page Selector */}
+            <div className="hidden md:flex items-center gap-2 text-sm text-card-foreground">
+              <span>Show</span>
+              <Select
+                value={`${table.getState().pagination.pageSize}`}
+                onValueChange={(value) => {
+                  table.setPageSize(Number(value));
+                  table.setPageIndex(0);
+                }}
+              >
+                <SelectTrigger className="h-8">
+                  <SelectValue
+                    placeholder={table.getState().pagination.pageSize}
+                  />
+                </SelectTrigger>
+                <SelectContent side="top">
+                  {[5, 10, 20, 30, 40, 50].map((pageSize) => (
+                    <SelectItem key={pageSize} value={`${pageSize}`}>
+                      {pageSize}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span>rows</span>
+            </div>
+
+            {/* Right: Navigation Buttons */}
+            <div className="flex items-center gap-1 sm:gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.setPageIndex(0)}
+                disabled={!table.getCanPreviousPage()}
+                title="Go to first page"
+                className="hidden sm:flex"
+              >
+                {"<<"} First
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+                className="px-2 sm:px-4"
+              >
+                <span className="hidden sm:inline">Previous</span>
+                <span className="sm:hidden">Prev</span>
+              </Button>
+
+              <span className="text-xs sm:text-sm mx-1 sm:mx-2 text-foreground whitespace-nowrap">
+                {pageCount > 0 ? (
+                  <>
+                    <span className="hidden sm:inline">Page </span>
+                    {table.getState().pagination.pageIndex + 1}
+                    <span className="hidden sm:inline"> of </span>
+                    <span className="sm:hidden">/</span>
+                    {pageCount}
+                  </>
+                ) : (
+                  <>
+                    <span className="hidden sm:inline">Page </span>0
+                    <span className="hidden sm:inline"> of </span>
+                    <span className="sm:hidden">/</span>0
+                  </>
+                )}
+              </span>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+                className="px-2 sm:px-4"
+              >
+                Next
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                disabled={!table.getCanNextPage()}
+                title="Go to last page"
+                className="hidden sm:flex"
+              >
+                Last {">>"}
+              </Button>
+            </div>
           </div>
-
-          {/* Right: Navigation Buttons */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.setPageIndex(0)}
-              disabled={!table.getCanPreviousPage()}
-              title="Go to first page"
-            >
-              {"<<"} First
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              Previous
-            </Button>
-
-            <span className="text-sm mx-2 text-foreground">
-              {pageCount > 0 ? (
-                <>
-                  Page {table.getState().pagination.pageIndex + 1} of{" "}
-                  {pageCount}
-                </>
-              ) : (
-                <>Page 0 of 0</>
-              )}
-            </span>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              Next
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-              disabled={!table.getCanNextPage()}
-              title="Go to last page"
-            >
-              Last {">>"}
-            </Button>
-          </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -398,7 +455,8 @@ const RowWithMotion = ({ row }: { row: any }) => {
         <TableCell
           key={cell.id}
           className={cn(
-            (cell.column.id === "history" || cell.column.id === "actions") &&
+            (cell.column.id === "market_cap_rank" ||
+              cell.column.id === "history") &&
               "hidden md:table-cell"
           )}
         >

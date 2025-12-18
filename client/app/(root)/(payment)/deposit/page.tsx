@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import toast from "react-hot-toast";
 import {
   ArrowRight,
@@ -11,6 +12,7 @@ import {
   Loader2,
   Info,
   AlertCircle,
+  LogIn,
 } from "lucide-react";
 import {
   Card,
@@ -42,7 +44,7 @@ interface ExchangeRateResponse {
 }
 
 export default function DepositPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   // const paymentService = usePaymentService();
@@ -157,24 +159,80 @@ export default function DepositPage() {
     }
   };
 
+  // Loading state while checking session
+  if (status === "loading") {
+    return (
+      <div className="w-full min-h-[60vh] flex items-center justify-center p-4 sm:p-6">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
+            <p className="text-base font-medium">Loading...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Not authenticated - show login prompt
+  if (!session?.user) {
+    return (
+      <div className="w-full min-h-[60vh] flex items-center justify-center p-4 sm:p-6">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <div className="p-3 bg-amber-500/10 rounded-full">
+                <AlertCircle className="w-12 h-12 sm:w-16 sm:h-16 text-amber-500" />
+              </div>
+            </div>
+            <CardTitle className="text-xl sm:text-2xl">
+              Authentication Required
+            </CardTitle>
+            <CardDescription className="text-sm sm:text-base mt-2">
+              You need to log in to deposit funds to your wallet.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button asChild className="w-full h-11 sm:h-12 text-base font-bold">
+              <Link href="/login">
+                <LogIn className="w-5 h-5 mr-2" />
+                Log in to Continue
+              </Link>
+            </Button>
+            <p className="text-xs sm:text-sm text-muted-foreground text-center">
+              Don&apos;t have an account?{" "}
+              <Link
+                href="/register"
+                className="text-primary hover:underline font-medium"
+              >
+                Sign up
+              </Link>
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full p-6 px-20">
-      <Card className="w-full">
-        <CardHeader className="border-b">
+    <div className="w-full p-4 sm:p-6 md:px-20">
+      <Card className="w-full max-w-2xl mx-auto">
+        <CardHeader className="border-b p-4 sm:p-6">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary text-primary-foreground rounded-lg">
-              <Wallet className="w-6 h-6" />
+              <Wallet className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <CardTitle className="text-2xl">Deposit Funds</CardTitle>
-              <CardDescription className="mt-1">
+              <CardTitle className="text-xl sm:text-2xl">
+                Deposit Funds
+              </CardTitle>
+              <CardDescription className="mt-1 text-xs sm:text-sm">
                 Add funds to your secure wallet instantly via VNPay.
               </CardDescription>
             </div>
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
           <div
             className="flex items-center justify-between px-3 py-2
               bg-secondary/50 rounded-lg text-xs font-medium border"
@@ -201,13 +259,13 @@ export default function DepositPage() {
                   setError(null);
                 }}
                 placeholder={currency === "VND" ? "Min 10,000" : "Min 1.00"}
-                className="h-12 text-lg font-semibold"
+                className="h-11 sm:h-12 text-base sm:text-lg font-semibold"
               />
               <Select
                 value={currency}
                 onValueChange={(value) => setCurrency(value as "VND" | "USD")}
               >
-                <SelectTrigger className="w-24 h-12">
+                <SelectTrigger className="w-20 sm:w-24 h-11 sm:h-12">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -218,19 +276,19 @@ export default function DepositPage() {
             </div>
           </div>
 
-          <div className="bg-muted/30 rounded-lg p-4 border">
-            <p className="text-sm text-muted-foreground mb-2">
+          <div className="bg-muted/30 rounded-lg p-3 sm:p-4 border">
+            <p className="text-xs sm:text-sm text-muted-foreground mb-2">
               You will receive approximately:
             </p>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-primary tracking-tight">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+              <span className="text-xl sm:text-2xl font-bold text-primary tracking-tight">
                 {conversionResult
                   ? currency === "VND"
                     ? `$${parseFloat(conversionResult.value).toLocaleString("en-US", { minimumFractionDigits: 2 })}`
                     : `${parseFloat(conversionResult.value).toLocaleString("vi-VN")} VND`
                   : "---"}
               </span>
-              <span className="text-sm font-medium text-muted-foreground mt-1">
+              <span className="text-xs sm:text-sm font-medium text-muted-foreground">
                 {currency === "VND" ? "(USD)" : "(Paying in VND)"}
               </span>
             </div>
@@ -251,31 +309,33 @@ export default function DepositPage() {
                 border-destructive/20 flex items-start gap-2"
             >
               <AlertCircle className="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" />
-              <p className="text-sm text-destructive font-medium">{error}</p>
+              <p className="text-xs sm:text-sm text-destructive font-medium">
+                {error}
+              </p>
             </div>
           )}
 
           <Button
             onClick={handleDeposit}
-            disabled={isSubmitting || isLoadingRate || !session?.user}
-            className="w-full h-12 text-base font-bold"
+            disabled={isSubmitting || isLoadingRate}
+            className="w-full h-11 sm:h-12 text-sm sm:text-base font-bold"
             size="lg"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mr-2" />
                 Processing...
               </>
             ) : (
               <>
                 Proceed to Payment
-                <ArrowRight className="w-5 h-5 ml-2" />
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
               </>
             )}
           </Button>
         </CardContent>
 
-        <CardFooter className="bg-secondary/20 border-t justify-center">
+        <CardFooter className="bg-secondary/20 border-t justify-center p-4 sm:p-6">
           <p className="text-xs text-muted-foreground text-center">
             Secured by VNPay. Your balance will be updated automatically.
           </p>
