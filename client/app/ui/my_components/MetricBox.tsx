@@ -20,8 +20,8 @@ export default function MetricBox({
       className={cn(
         "rounded-xl p-4 flex flex-col items-center justify-center border",
         isPositive
-          ? "border-emerald-300/40 bg-emerald-100/10"
-          : "border-rose-300/40 bg-rose-100/10",
+          ? "border-trade-up/40 bg-trade-up/10"
+          : "border-trade-down/40 bg-trade-down/10",
       )}
     >
       <div className="flex items-center gap-2">
@@ -29,14 +29,14 @@ export default function MetricBox({
           <Icon
             className={cn(
               "w-4 h-4",
-              isPositive ? "text-emerald-500" : "text-rose-500",
+              isPositive ? "text-trade-up" : "text-trade-down",
             )}
           />
         )}
         <span
           className={cn(
             "font-semibold text-lg",
-            isPositive ? "text-emerald-500" : "text-rose-500",
+            isPositive ? "text-trade-up" : "text-trade-down",
           )}
         >
           {value}

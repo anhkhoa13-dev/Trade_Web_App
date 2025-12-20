@@ -1,27 +1,26 @@
-import { NetworkError } from "@/lib/errors";
-import { ApiResponse } from "@/backend/constants/ApiResponse";
-import { isRedirectError } from "next/dist/client/components/redirect-error";
+import { NetworkError } from "@/lib/errors"
+import { ApiResponse } from "@/backend/constants/ApiResponse"
+import { isRedirectError } from "next/dist/client/components/redirect-error"
 
 // no argument
 export function withAuthError<R>(
     action: () => Promise<R>
-): () => Promise<R | ApiResponse<any>>;
+): () => Promise<R | ApiResponse<any>>
 
 // with argument
 export function withAuthError<T, R>(
     action: (params: T) => Promise<R>
-): (params: T) => Promise<R | ApiResponse<any>>;
+): (params: T) => Promise<R | ApiResponse<any>>
 
 
 export function withAuthError(action: any) {
-
     return async (...args: any[]) => {
         try {
-            return await action(...args);
+            return await action(...args)
         } catch (error) {
             // Redirect error (Next.js logic)
             if (isRedirectError(error)) {
-                throw error;
+                throw error
             }
 
             // Network Error
@@ -32,7 +31,7 @@ export function withAuthError(action: any) {
                     message: error.message,
                     data: null,
                     statusCode: 503
-                };
+                }
             }
 
             // Server error
@@ -43,7 +42,7 @@ export function withAuthError(action: any) {
                 message: "Internal Server Error",
                 data: null,
                 statusCode: 500
-            };
+            }
         }
     };
 }

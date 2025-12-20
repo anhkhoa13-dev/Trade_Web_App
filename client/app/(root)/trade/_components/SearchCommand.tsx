@@ -1,12 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useDebouncedCallback } from "use-debounce";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { searchCoins } from "@/actions/gecko.actions";
 import { Coin } from "@/entities/Coin/Coin";
 import { useRouter } from "next/navigation";
-import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/app/ui/shadcn/command";
+import Image from "next/image";
+import {
+    CommandDialog,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from "@/app/ui/shadcn/command";
 
 interface SearchCommandProps {
     initial: Coin[];
@@ -19,29 +27,31 @@ export default function SearchCommand({ initial }: SearchCommandProps) {
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(false);
     const [cryptos, setCryptos] = useState<Coin[]>(initial);
-    const [shortcut, setShortcut] = useState("Ctrl + K");
+    const [shortcut, setShortcut] = useState("Ctrl K");
 
     const isSearchMode = !!searchTerm.trim();
     const displayList = isSearchMode ? cryptos : initial.slice(0, 10);
 
+    // Keyboard shortcut handler
     useEffect(() => {
         const down = (e: KeyboardEvent) => {
             if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-                e.preventDefault()
-                setOpen((open) => !open)
+                e.preventDefault();
+                setOpen((prev) => !prev);
             }
-        }
+        };
 
-        document.addEventListener("keydown", down)
-        return () => document.removeEventListener("keydown", down)
-    }, [])
+        document.addEventListener("keydown", down);
+        return () => document.removeEventListener("keydown", down);
+    }, []);
 
+    // Detect OS for shortcut display
     useEffect(() => {
         const isMac =
             typeof window !== "undefined" &&
             window.navigator.platform.toUpperCase().includes("MAC");
 
-        setShortcut(isMac ? "⌘ + K" : "Ctrl + K");
+        setShortcut(isMac ? "⌘K" : "Ctrl K");
     }, []);
 
     const handleSearch = useDebouncedCallback(async (value: string) => {
@@ -54,41 +64,54 @@ export default function SearchCommand({ initial }: SearchCommandProps) {
         setLoading(true);
         try {
             const results = await searchCoins(trimmed);
-
             setCryptos(results);
         } catch {
             setCryptos([]);
         } finally {
             setLoading(false);
         }
-    }, 500);
+    }, 400);
 
-    const handleSelectCrypto = (coin: Coin) => {
-        router.push(`/trade/${coin.symbol.toUpperCase()}`);
-        setOpen(false);
-        setSearchTerm("");
-        setCryptos(initial);
-    };
+    const handleSelectCrypto = useCallback(
+        (coin: Coin) => {
+            router.push(`/trade/${coin.symbol.toUpperCase()}`);
+            setOpen(false);
+            setSearchTerm("");
+            setCryptos(initial);
+        },
+        [router, initial]
+    );
+
+    // Reset state when dialog closes
+    const handleOpenChange = useCallback(
+        (isOpen: boolean) => {
+            setOpen(isOpen);
+            if (!isOpen) {
+                setSearchTerm("");
+                setCryptos(initial);
+            }
+        },
+        [initial]
+    );
 
     return (
-        <div>
-            {/* SEARCH BUTTON */}
+        <>
+            {/* Search Trigger Button */}
             <button
                 onClick={() => setOpen(true)}
-                className="flex items-center gap-2 rounded-lg px-3 py-2 bg-muted hover:bg-muted/70 transition w-[260px]"
+                className="flex items-center gap-2 rounded-lg border border-border/60 bg-secondary/50 px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring w-full sm:w-[240px]"
             >
-                <Search className="w-4 h-4 opacity-70" />
-                <span className="text-sm">Search crypto...</span>
-                <kbd className="ml-auto text-xs text-muted-foreground px-1.5 py-0.5 bg-gray-200 rounded">
+                <Search className="h-4 w-4 shrink-0" />
+                <span className="flex-1 text-left">Search crypto...</span>
+                <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground sm:flex">
                     {shortcut}
                 </kbd>
             </button>
 
-            {/* COMMAND DIALOG */}
-            <CommandDialog open={open} onOpenChange={setOpen}>
-                {/* INPUT */}
+            {/* Command Dialog */}
+            <CommandDialog open={open} onOpenChange={handleOpenChange}>
                 <CommandInput
-                    placeholder="Search cryptos ..."
+                    placeholder="Search by name or symbol..."
                     value={searchTerm}
                     onValueChange={(v) => {
                         setSearchTerm(v);
@@ -96,51 +119,57 @@ export default function SearchCommand({ initial }: SearchCommandProps) {
                     }}
                 />
 
-                {/* LIST */}
-                <CommandList >
-                    {!loading && (
-                        <CommandEmpty>No results found.</CommandEmpty>
+                <CommandList className="max-h-[300px]">
+                    {/* Loading State */}
+                    {loading && (
+                        <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Searching...</span>
+                        </div>
                     )}
-                    <CommandGroup heading="Cryptocurrencies">
 
-                        {/* Loading state */}
-                        {loading && (
-                            <div className="p-3 text-sm text-muted-foreground">
-                                Searching...
-                            </div>
-                        )}
+                    {/* Empty State */}
+                    {!loading && displayList.length === 0 && (
+                        <CommandEmpty>No cryptocurrencies found.</CommandEmpty>
+                    )}
 
-                        {!loading &&
-                            displayList.map((coin) => (
+                    {/* Results */}
+                    {!loading && displayList.length > 0 && (
+                        <CommandGroup heading={isSearchMode ? "Search Results" : "Popular"}>
+                            {displayList.map((coin) => (
                                 <CommandItem
                                     key={coin.id}
-                                    value={coin.name}
+                                    value={`${coin.name} ${coin.symbol}`}
                                     onSelect={() => handleSelectCrypto(coin)}
-                                    className="flex items-center gap-3 cursor-pointer"
+                                    className="flex items-center gap-3 px-3 py-2.5"
                                 >
-                                    <img
+                                    <Image
                                         src={coin.image}
-                                        className="w-6 h-6 rounded-full"
+                                        width={24}
+                                        height={24}
+                                        className="rounded-full"
                                         alt={coin.name}
+                                        unoptimized
                                     />
 
-                                    <div className="flex flex-col">
-                                        <span>{coin.name}</span>
+                                    <div className="flex flex-1 flex-col min-w-0">
+                                        <span className="font-medium truncate">{coin.name}</span>
                                         <span className="text-xs text-muted-foreground">
                                             {coin.symbol.toUpperCase()}
                                         </span>
                                     </div>
 
                                     {coin.market_cap_rank && (
-                                        <span className="text-xs ml-auto text-muted-foreground">
+                                        <span className="shrink-0 rounded bg-secondary px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                                             #{coin.market_cap_rank}
                                         </span>
                                     )}
                                 </CommandItem>
                             ))}
-                    </CommandGroup>
+                        </CommandGroup>
+                    )}
                 </CommandList>
             </CommandDialog>
-        </div>
+        </>
     );
 }

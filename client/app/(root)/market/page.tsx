@@ -1,12 +1,22 @@
-import React from "react";
+import React, { Suspense } from "react";
 
 import MarketTable from "@/app/ui/my_components/market-table/MarketTable";
+import MarketTableSkeleton from "@/app/ui/my_components/market-table/MarketTableSkeleton";
 import { getCachedMarketData } from "@/actions/gecko.actions";
 import MarketStats from "./_components/MarketStats";
+import MarketStatsSkeleton from "./_components/MarketStatsSkeleton";
 
-export default async function MarketPage() {
+async function MarketStatsLoader() {
   const initialCoins = await getCachedMarketData(500);
+  return <MarketStats initialData={initialCoins} />;
+}
 
+async function MarketTableLoader() {
+  const initialCoins = await getCachedMarketData(500);
+  return <MarketTable initialData={initialCoins} defaultPageSize={10} />;
+}
+
+export default function MarketPage() {
   return (
     <main className="flex flex-col items-center w-full bg-background">
       {/* Centered content wrapper */}
@@ -15,12 +25,16 @@ export default async function MarketPage() {
       >
         {/* --- Top coin boxes --- */}
         <section>
-          <MarketStats initialData={initialCoins} />
+          <Suspense fallback={<MarketStatsSkeleton />}>
+            <MarketStatsLoader />
+          </Suspense>
         </section>
 
         {/* --- Market Table --- */}
         <section>
-          <MarketTable initialData={initialCoins} defaultPageSize={10} />
+          <Suspense fallback={<MarketTableSkeleton />}>
+            <MarketTableLoader />
+          </Suspense>
         </section>
 
       </div>

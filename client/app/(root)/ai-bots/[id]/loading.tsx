@@ -1,5 +1,5 @@
-import { Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils"; // (ShadCN utility helper)
+import { cn } from "@/lib/utils";
+import { Spinner } from "@/app/ui/shadcn/spinner";
 
 export default function Loading() {
   return (
@@ -9,7 +9,7 @@ export default function Loading() {
         "bg-background/70 backdrop-blur-sm",
       )}
     >
-      <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      <Spinner />
     </div>
   );
 }

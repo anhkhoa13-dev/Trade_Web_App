@@ -91,16 +91,16 @@ export default function DashboardSidebar({
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
+      <SidebarHeader>
         <Link
           href="/"
           className="flex flex-col transition-all hover:opacity-80"
         >
-          <span className="text-xl font-black tracking-tight">
-            <span className="text-primary">COIN</span>
-            <span className="text-foreground">SANTRA</span>
+          <span className="text-xl font-black tracking-tight group-data-[state=collapsed]:text-lg">
+            <span className="text-primary group-data-[state=collapsed]:hidden">COIN</span>
+            <span className="text-foreground group-data-[state=collapsed]:hidden">SANTRA</span>
           </span>
-          <span className="text-[11px] text-muted-foreground font-semibold tracking-widest uppercase mt-0.5">
+          <span className="text-[11px] text-muted-foreground font-semibold tracking-widest uppercase mt-0.5 group-data-[state=collapsed]:hidden">
             Dashboard
           </span>
         </Link>
@@ -111,12 +111,19 @@ export default function DashboardSidebar({
       </SidebarContent>
 
       <SidebarFooter>
-        <Link href="/" className="w-full">
-          <Button variant="outline" className="w-full justify-start">
-            <Home className="mr-2 h-4 w-4" />
-            Home
-          </Button>
-        </Link>
+        <Button
+          variant="outline"
+          className="w-full justify-start group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:justify-center"
+          title="Home"
+          asChild
+        >
+          <Link href="/" className="w-full">
+
+            <Home className="h-4 w-4 group-data-[collapsible=icon]:mr-0" />
+            <span className="group-data-[collapsible=icon]:hidden">Home</span>
+
+          </Link>
+        </Button>
       </SidebarFooter>
 
       <SidebarRail />

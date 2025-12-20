@@ -1,36 +1,36 @@
-"use server";
+"use server"
 
-import { auth, signIn, signOut } from "@/auth";
-import { AuthService } from "@/backend/auth/auth.services";
-import { LoginResponse, RegisterResponse } from "@/backend/auth/auth.types";
-import { ApiResponse } from "@/backend/constants/ApiResponse";
-import { ErrorResponse } from "@/backend/errorResponse";
-import { LoginInput } from "@/schema/loginSchema";
-import { RegisterInput } from "@/schema/registerSchema";
-import { VerificationInput } from "@/schema/verificationSchema";
-import { cookies } from "next/headers";
-import * as setCookieParser from "set-cookie-parser";
-import { withAuthError } from "./utils/action.wrapper";
+import { auth, signIn, signOut } from "@/auth"
+import { AuthService } from "@/backend/auth/auth.services"
+import { LoginResponse, RegisterResponse } from "@/backend/auth/auth.types"
+import { ApiResponse } from "@/backend/constants/ApiResponse"
+import { ErrorResponse } from "@/backend/errorResponse"
+import { LoginInput } from "@/schema/loginSchema"
+import { RegisterInput } from "@/schema/registerSchema"
+import { VerificationInput } from "@/schema/verificationSchema"
+import { cookies } from "next/headers"
+import * as setCookieParser from "set-cookie-parser"
+import { withAuthError } from "./utils/auth.wrapper"
 
 const loginLogic = async (
   params: LoginInput
 ): Promise<ApiResponse<LoginResponse>> => {
-  const response = await AuthService.login(params);
+  const response = await AuthService.login(params)
 
   // Handle Backend API Error
   if (!response.ok) {
-    const error = (await response.json()) as ErrorResponse;
+    const error = (await response.json()) as ErrorResponse
     return {
       status: "error",
       timestamp: new Date().toISOString(),
       message: error.detail,
       data: null,
       statusCode: error.status,
-    };
+    }
   }
 
   // Success Logic
-  const data = (await response.json()) as ApiResponse<LoginResponse>;
+  const data = (await response.json()) as ApiResponse<LoginResponse>
 
   // Set cookies logic
   const setCookieHeader = response.headers.getSetCookie();
@@ -48,37 +48,37 @@ const loginLogic = async (
         expires: cookie.expires,
         sameSite: cookie.sameSite as "lax" | "strict" | "none",
         domain: cookie.domain,
-      });
-    });
+      })
+    })
   }
 
   // NextAuth SignIn
   await signIn("credentials", {
     loginResponseJson: JSON.stringify(data.data),
     redirect: false,
-  });
+  })
 
-  return data;
+  return data
 };
 
 const registerLogic = async (
   params: RegisterInput
 ): Promise<ApiResponse<RegisterResponse>> => {
-  const response = await AuthService.register(params);
+  const response = await AuthService.register(params)
 
   if (!response.ok) {
-    const error = (await response.json()) as ErrorResponse;
+    const error = (await response.json()) as ErrorResponse
     return {
       status: "error",
       timestamp: new Date().toISOString(),
       message: error.detail,
       data: null,
       statusCode: error.status,
-    };
+    }
   }
 
-  return (await response.json()) as ApiResponse<RegisterResponse>;
-};
+  return (await response.json()) as ApiResponse<RegisterResponse>
+}
 
 const activateLogic = async ({
   urlToken,
@@ -87,7 +87,7 @@ const activateLogic = async ({
   urlToken: string;
   params: VerificationInput;
 }): Promise<ApiResponse<void>> => {
-  const response = await AuthService.active({ urlToken, ...params });
+  const response = await AuthService.active({ urlToken, ...params })
 
   if (!response.ok) {
     const error = (await response.json()) as ErrorResponse;
@@ -97,11 +97,11 @@ const activateLogic = async ({
       message: error.detail,
       data: null,
       statusCode: error.status,
-    };
+    }
   }
 
   return (await response.json()) as ApiResponse<void>;
-};
+}
 
 const logoutLogic = async () => {
   // remove refresh token at backend
@@ -131,20 +131,20 @@ const logoutLogic = async () => {
     }
 
     // Manually delete refresh_token cookie
-    cookieStore.delete("refresh_token");
+    cookieStore.delete("refresh_token")
   }
 
-  await signOut({ redirectTo: "/" });
+  await signOut({ redirectTo: "/" })
 };
 
 export const googleLogin = async () => {
-  await signIn("google", { redirectTo: "/" });
-};
+  await signIn("google", { redirectTo: "/" })
+}
 
-export const login = withAuthError(loginLogic);
+export const login = withAuthError(loginLogic)
 
-export const register = withAuthError(registerLogic);
+export const register = withAuthError(registerLogic)
 
-export const activate = withAuthError(activateLogic);
+export const activate = withAuthError(activateLogic)
 
-export const logout = withAuthError(logoutLogic);
+export const logout = withAuthError(logoutLogic)

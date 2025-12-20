@@ -11,35 +11,20 @@ interface BotDetailsActionsProps {
 export default function BotDetailsActions({
   showCopyButton = true,
 }: BotDetailsActionsProps) {
-  const router = useRouter();
-
-  const handleBack = () => {
-    router.push("/ai-bots");
-  };
-
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
   };
 
   return (
-    <>
-      {/* Back Button */}
-      <Button variant="ghost" onClick={handleBack} className="gap-2">
-        <ArrowLeft className="h-4 w-4" />
-        Back to Marketplace
+    <div className="flex gap-3">
+      <Button className="gap-2" onClick={handleShare} variant="outline">
+        <Share /> Share
       </Button>
-
-      {/* Action Buttons for Header */}
-      <div className="flex gap-3">
-        <Button className="gap-2" onClick={handleShare} variant="outline">
-          <Share /> Share
+      {showCopyButton && (
+        <Button className="gap-2">
+          <Copy /> Start Copying
         </Button>
-        {showCopyButton && (
-          <Button className="gap-2">
-            <Copy /> Start Copying
-          </Button>
-        )}
-      </div>
-    </>
+      )}
+    </div>
   );
 }

@@ -20,7 +20,7 @@ export const AuthService = {
         const refreshToken = cookies.get("refresh_token")?.value
         const accessToken = session?.accessToken
 
-        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        const response = await fetch(`${API_BASE_URL}/auth/logout`, {
             method: "POST",
             headers: {
                 Cookie: `refresh_token=${refreshToken}`,

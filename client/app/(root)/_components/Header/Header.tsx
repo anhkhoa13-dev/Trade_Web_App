@@ -1,19 +1,17 @@
 "use client";
 
-import { useState, useEffect, memo } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { Menu, X, Hexagon } from "lucide-react";
-
-import { cn } from "@/lib/utils";
-import { Button } from "@/app/ui/shadcn/button";
 import { ModeToggle } from "@/app/ui/my_components/Theme/ModeToggle";
 import NavMenu from "./NavMenu";
 import { menuData } from "./menuData";
 import { UserNav } from "./UserNav";
+import { MobileNav } from "./MobileNav";
+import { DesktopAuthActions } from "./DesktopAuthActions";
+import { useHeaderScroll, getHeaderStyles } from "./header.hooks";
+import TickerTapeWidget from "@/app/ui/widgets/TickerTapeWidget";
+import { memo } from "react";
 
-import TickerTape from "@/app/ui/widgets/TicketTape";
-const TickerTapeMemo = memo(TickerTape);
+const TickerTapeMemo = memo(TickerTapeWidget);
 
 interface HeaderProps {
   user?: {
@@ -24,124 +22,77 @@ interface HeaderProps {
   };
 }
 
+const LOGO_TEXT = {
+  primary: "COIN",
+  secondary: "SANTRA",
+} as const;
+
 export default function SiteHeader({ user }: HeaderProps) {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 40);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
+  const isScrolled = useHeaderScroll();
   const isAuthenticated = !!user;
 
+  const mappedUser = user
+    ? {
+      name: user.fullname,
+      username: user.username,
+      email: user.email,
+      image: user.avatarUrl,
+    }
+    : undefined;
+
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-50 w-full transition-all duration-300 ease-in-out",
-        isScrolled
-          ? "bg-background/80 backdrop-blur-md shadow-sm border-b"
-          : "bg-transparent border-b border-transparent"
-      )}
-    >
-      <div className="hidden md:block">
+    <header className={getHeaderStyles({ isScrolled })}>
+      {/* Desktop Ticker Tape */}
+      <div className="hidden lg:block border-b">
         <TickerTapeMemo />
       </div>
 
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-8">
+      {/* Main Header Content */}
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        {/* Logo & Desktop Menu */}
+        <div className="flex items-center gap-8 min-w-0">
+          {/* Logo */}
           <Link
             href="/"
-            className="flex items-center gap-2 transition-all hover:opacity-90 group"
+            className="flex-shrink-0 inline-flex items-center transition-opacity duration-200 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
+            aria-label="Coinsantra home"
           >
-            <div className="flex flex-col leading-none">
-              <span className="text-base sm:text-lg font-extrabold tracking-tight">
-                <span className="text-primary">COIN</span>
-                <span className="text-foreground">SANTRA</span>
-              </span>
-            </div>
+            <span className="text-lg font-extrabold tracking-tight">
+              <span className="text-primary">{LOGO_TEXT.primary}</span>
+              <span className="text-foreground">{LOGO_TEXT.secondary}</span>
+            </span>
           </Link>
 
-          {/* Desktop Menu */}
-          <div className="hidden md:block">
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:block">
             <NavMenu menu={menuData} />
-          </div>
+          </nav>
         </div>
 
-        {/* RIGHT: Actions */}
-        <div className="flex items-center gap-1">
+        {/* Right Section: Actions */}
+        <div className="flex items-center gap-2 sm:gap-3">
           {/* Theme Toggle */}
           <ModeToggle />
 
-          {/* Auth State */}
-          {isAuthenticated ? (
-            <UserNav
-              user={{
-                name: user.fullname,
-                username: user.username,
-                email: user.email,
-                image: user.avatarUrl,
-              }}
-            />
-          ) : (
-            <div className="hidden items-center gap-2 md:flex">
-              <Button variant="ghost" asChild className="text-sm font-medium">
-                <Link href="/login">Log in</Link>
-              </Button>
-              <Button asChild className="text-sm font-medium">
-                <Link href="/register">Sign up</Link>
-              </Button>
-            </div>
-          )}
+          {/* Desktop Auth Actions */}
+          <div className="hidden lg:block">
+            <DesktopAuthActions
+              isAuthenticated={isAuthenticated}
+              user={mappedUser || null}
+            >
+              {isAuthenticated && mappedUser && <UserNav user={mappedUser} />}
+            </DesktopAuthActions>
+          </div>
 
-          {/* Mobile Menu Toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={() => setMobileOpen(!mobileOpen)}
-          >
-            {mobileOpen ? (
-              <X className="h-5 w-5" />
-            ) : (
-              <Menu className="h-5 w-5" />
-            )}
-          </Button>
+          {/* Mobile Navigation */}
+          <div className="lg:hidden">
+            <MobileNav
+              isAuthenticated={isAuthenticated}
+              user={mappedUser || null}
+            />
+          </div>
         </div>
       </div>
-
-      {mobileOpen && (
-        <div className="border-b bg-background p-4 md:hidden animate-in slide-in-from-top-2">
-          <nav className="grid gap-2">
-            {menuData
-              .filter((item) => item.path)
-              .map((item, index) => (
-                <Link
-                  key={index}
-                  href={item.path || "#"}
-                  className="flex w-full items-center rounded-md p-2 text-sm font-medium hover:bg-accent"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {item.title}
-                </Link>
-              ))}
-            {!isAuthenticated && (
-              <div className="mt-4 grid gap-2">
-                <Button w-full variant="outline" asChild>
-                  <Link href="/login">Log in</Link>
-                </Button>
-                <Button w-full asChild>
-                  <Link href="/register">Sign up</Link>
-                </Button>
-              </div>
-            )}
-          </nav>
-        </div>
-      )}
     </header>
   );
 }

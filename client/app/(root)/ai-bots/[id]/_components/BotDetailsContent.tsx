@@ -1,11 +1,12 @@
 import { Users, CheckCircle2, XCircle, Shield } from "lucide-react";
-import { Card } from "@/app/ui/shadcn/card";
+import { Card, CardContent, CardDescription, CardHeader } from "@/app/ui/shadcn/card";
 import { Badge } from "@/app/ui/shadcn/badge";
 import { COIN_LOGOS } from "@/services/constants/coinConstant";
 import { getBotDetailAction } from "@/actions/bot.actions";
 import { TimeWindow } from "@/backend/bot/bot.types";
 import BotDetailsActions from "./BotDetailsActions";
 import PerformanceChartSection from "./PerformanceChartSection";
+import BotHeaderActions from "./BotHeaderActions";
 
 interface BotDetailsContentProps {
   botId: string;
@@ -16,9 +17,9 @@ export default async function BotDetailsContent({
   botId,
   timeframe,
 }: BotDetailsContentProps) {
-  const data = await getBotDetailAction(botId, timeframe);
+  const response = await getBotDetailAction(botId, timeframe);
 
-  if (!data?.data) {
+  if (response.status === "error") {
     return (
       <div className="py-20 text-center text-muted-foreground">
         Bot not found.
@@ -26,11 +27,11 @@ export default async function BotDetailsContent({
     );
   }
 
-  const bot = data.data;
+  const bot = response.data;
 
   return (
     <div className="space-y-4">
-      <BotDetailsActions />
+      <BotHeaderActions />
 
       {/* Header Section */}
       <Card className="border border-border bg-card p-6">
@@ -60,14 +61,11 @@ export default async function BotDetailsContent({
                     }
                     className={
                       bot.status === "ACTIVE"
-                        ? `bg-green-500/10 text-green-500 border-green-500/20
-                          hover:bg-green-500/20`
+                        ? `bg-success/10 text-success border-success/20 hover:bg-success/20`
                         : bot.status === "PAUSED"
-                          ? `bg-yellow-500/10 text-yellow-500
-                            border-yellow-500/20 hover:bg-yellow-500/20`
+                          ? `bg-warning/10 text-warning border-warning/20 hover:bg-warning/20`
                           : bot.status === "MAINTENANCE"
-                            ? `bg-orange-500/10 text-orange-500
-                              border-orange-500/20 hover:bg-orange-500/20`
+                            ? `bg-primary/10 text-primary border-primary/20 hover:bg-primary/20`
                             : ""
                     }
                   >
@@ -93,11 +91,10 @@ export default async function BotDetailsContent({
                     variant="outline"
                     className={
                       bot.riskLevel === "LOW"
-                        ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                        ? "bg-info/10 text-info border-info/20"
                         : bot.riskLevel === "MEDIUM"
-                          ? `bg-yellow-500/10 text-yellow-500
-                            border-yellow-500/20`
-                          : "bg-red-500/10 text-red-500 border-red-500/20"
+                          ? "bg-warning/10 text-warning border-warning/20"
+                          : "bg-destructive/10 text-destructive border-destructive/20"
                     }
                   >
                     {bot.riskLevel} RISK
@@ -133,56 +130,62 @@ export default async function BotDetailsContent({
       />
 
       {/* Strategy Section */}
-      <Card className="border border-border bg-card p-6">
-        <h2 className="mb-4 text-xl font-semibold">Bot Strategy Overview</h2>
-        <p className="mb-6 text-muted-foreground text-sm leading-relaxed">
-          Trading bot for {bot.coinSymbol} with automated entry and exit
-          signals.
-        </p>
+      <Card >
+        <CardHeader>
+          <h2 className="text-xl font-semibold">Bot Strategy Overview</h2>
+          <CardDescription>
+            <span>
+              Trading bot for {bot.coinSymbol} with automated entry and exit
+              signals.
+            </span>
+          </CardDescription>
+        </CardHeader>
 
-        <div className="space-y-6">
-          {/* Entry Conditions */}
-          <div>
-            <h3 className="mb-2 flex items-center gap-2 text-lg font-medium">
-              <CheckCircle2 className="h-5 w-5 text-[var(--chart-3)]" />
-              Entry Conditions
-            </h3>
-            <ul className="ml-7 space-y-2 text-muted-foreground text-sm">
-              <li>• Multi-timeframe trend confirmation (1H, 4H, 1D)</li>
-              <li>• Volume analysis to measure trend strength</li>
-              <li>• RSI & MACD alignment with momentum bias</li>
-              <li>• Breakout confirmation near key support/resistance</li>
-            </ul>
-          </div>
+        <CardContent>
+          <div className="space-y-6">
+            {/* Entry Conditions */}
+            <div>
+              <h3 className="mb-2 flex items-center gap-2 text-lg font-medium">
+                <CheckCircle2 className="h-5 w-5 text-[var(--chart-3)]" />
+                Entry Conditions
+              </h3>
+              <ul className="ml-7 space-y-2 text-muted-foreground text-sm">
+                <li>• Multi-timeframe trend confirmation (1H, 4H, 1D)</li>
+                <li>• Volume analysis to measure trend strength</li>
+                <li>• RSI & MACD alignment with momentum bias</li>
+                <li>• Breakout confirmation near key support/resistance</li>
+              </ul>
+            </div>
 
-          {/* Exit Conditions */}
-          <div>
-            <h3 className="mb-2 flex items-center gap-2 text-lg font-medium">
-              <XCircle className="h-5 w-5 text-[var(--destructive)]" />
-              Exit Conditions
-            </h3>
-            <ul className="ml-7 space-y-2 text-muted-foreground text-sm">
-              <li>• Trend reversal signals</li>
-              <li>• Dynamic trailing stop-loss triggered</li>
-              <li>• Multi-tier profit-taking targets achieved</li>
-              <li>• Volume divergence or loss of trend momentum</li>
-            </ul>
-          </div>
+            {/* Exit Conditions */}
+            <div>
+              <h3 className="mb-2 flex items-center gap-2 text-lg font-medium">
+                <XCircle className="h-5 w-5 text-[var(--destructive)]" />
+                Exit Conditions
+              </h3>
+              <ul className="ml-7 space-y-2 text-muted-foreground text-sm">
+                <li>• Trend reversal signals</li>
+                <li>• Dynamic trailing stop-loss triggered</li>
+                <li>• Multi-tier profit-taking targets achieved</li>
+                <li>• Volume divergence or loss of trend momentum</li>
+              </ul>
+            </div>
 
-          {/* Risk Logic */}
-          <div>
-            <h3 className="mb-2 flex items-center gap-2 text-lg font-medium">
-              <Shield className="h-5 w-5 text-[var(--chart-2)]" />
-              Risk Control Logic
-            </h3>
-            <ul className="ml-7 space-y-2 text-muted-foreground text-sm">
-              <li>• Max 2% risk per trade</li>
-              <li>• Daily stop-loss limit of 5%</li>
-              <li>• ATR-based volatility position sizing</li>
-              <li>• Correlation-adjusted position exposure</li>
-            </ul>
+            {/* Risk Logic */}
+            <div>
+              <h3 className="mb-2 flex items-center gap-2 text-lg font-medium">
+                <Shield className="h-5 w-5 text-[var(--chart-2)]" />
+                Risk Control Logic
+              </h3>
+              <ul className="ml-7 space-y-2 text-muted-foreground text-sm">
+                <li>• Max 2% risk per trade</li>
+                <li>• Daily stop-loss limit of 5%</li>
+                <li>• ATR-based volatility position sizing</li>
+                <li>• Correlation-adjusted position exposure</li>
+              </ul>
+            </div>
           </div>
-        </div>
+        </CardContent>
       </Card>
     </div>
   );

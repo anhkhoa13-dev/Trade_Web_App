@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/ui/shadcn/card";
 import { MarketCoin } from "@/entities/Coin/MarketCoin";
 import { LucideIcon } from "lucide-react";
+import { Spinner } from "@/app/ui/shadcn/spinner";
 
 interface TopBoxProps {
   title: string,
@@ -49,7 +50,7 @@ export default function TopBox({ title, coins }: TopBoxProps) {
 
                 {/* Right: % Change */}
                 <span
-                  className={`font-semibold ${c.changePercent >= 0 ? "text-green-500" : "text-red-500"
+                  className={`font-semibold ${c.changePercent >= 0 ? "text-trade-up" : "text-trade-down"
                     }`}
                 >
                   {c.changePercent.toFixed(2)}%
@@ -58,7 +59,7 @@ export default function TopBox({ title, coins }: TopBoxProps) {
             );
           })
         ) : (
-          <div className="text-muted-foreground text-sm">Loading...</div>
+          <Spinner />
         )}
       </CardContent>
     </Card>

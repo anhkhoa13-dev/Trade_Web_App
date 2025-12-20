@@ -1,9 +1,12 @@
-"use client"
+"use client";
 
-import { useEffect } from "react"
-import { AlertCircle, RotateCcw, Home } from "lucide-react"
-import Link from "next/link"
-import { Button } from "./ui/shadcn/button";
+import { useEffect } from "react";
+import { AlertTriangle, Home, RotateCcw } from "lucide-react";
+import Link from "next/link";
+import { motion } from "framer-motion";
+
+import { SectionCard } from "@/app/ui/my_components/Card/SectionCard";
+import { Button } from "@/app/ui/shadcn/button";
 
 export default function Error({
     error,
@@ -13,48 +16,55 @@ export default function Error({
     reset: () => void;
 }) {
     useEffect(() => {
-        console.error("Critical Error caught by error.tsx:", error);
+        // Log the error to an error reporting service
+        console.error(error);
     }, [error]);
 
     return (
-        <div className="flex min-h-[60vh] flex-col items-center justify-center p-6 text-center animate-in fade-in zoom-in duration-300">
+        <div className="flex min-h-[80vh] items-center justify-center bg-background p-4">
+            <motion.div
+                className="w-full max-w-lg"
+                initial={{ opacity: 0, scale: 0.95, y: -20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+            >
+                <SectionCard title="An Unexpected Error Occurred">
+                    <div className="flex flex-col items-center space-y-6 text-center">
+                        <div className="rounded-full bg-destructive/10 p-4">
+                            <AlertTriangle className="h-10 w-10 text-destructive" />
+                        </div>
 
-            <div className="bg-red-100 p-4 rounded-full mb-6">
-                <AlertCircle className="w-12 h-12 text-red-600" />
-            </div>
+                        <div className="space-y-2">
+                            <p className="text-muted-foreground">
+                                We've encountered a problem and our team has been notified.
+                                Please try again in a few moments.
+                            </p>
+                            {error.digest && (
+                                <p className="font-mono text-xs text-muted-foreground/80">
+                                    Error ID: {error.digest}
+                                </p>
+                            )}
+                        </div>
 
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 mb-2">
-                Something went wrong
-            </h2>
-
-
-            <p className="text-gray-500 max-w-md mb-8">
-                {error.message || "System error"}
-                {error.digest && (
-                    <span className="block mt-2 text-xs text-gray-400 font-mono">
-                        Error ID: {error.digest}
-                    </span>
-                )}
-            </p>
-
-
-            <div className="flex flex-col sm:flex-row gap-4">
-                <Button
-                    onClick={() => reset()}
-                >
-                    <RotateCcw className="w-4 h-4" />
-                    Try again
-                </Button>
-
-                <Button asChild>
-                    <Link
-                        href="/"
-                    >
-                        <Home className="w-4 h-4" />
-                        Home page
-                    </Link>
-                </Button>
-            </div>
+                        <div className="flex w-full flex-col gap-4 sm:flex-row sm:justify-center">
+                            <Button
+                                variant="outline"
+                                onClick={() => reset()}
+                                className="w-full sm:w-auto"
+                            >
+                                <RotateCcw className="mr-2 h-4 w-4" />
+                                Try Again
+                            </Button>
+                            <Button asChild className="w-full sm:w-auto">
+                                <Link href="/">
+                                    <Home className="mr-2 h-4 w-4" />
+                                    Go to Homepage
+                                </Link>
+                            </Button>
+                        </div>
+                    </div>
+                </SectionCard>
+            </motion.div>
         </div>
     );
 }

@@ -7,7 +7,6 @@ export const Sparkline = React.memo(({ data, color }: { data: number[]; color: s
     const width = 100;
     const height = 40;
 
-    // Tạo SVG path
     const points = data
         .map((val, i) => {
             const x = (i / (data.length - 1)) * width;

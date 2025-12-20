@@ -3,11 +3,11 @@ import { z } from "zod";
 // Fixed schema: Removed the arguments from z.coerce.number() to resolve the TS error.
 // Validation logic is handled by the chained methods (.positive, .min, .max).
 export const botConfigSchema = z.object({
-  botId: z.string().uuid(),
+  botId: z.uuid(),
 
   allocatedAmount: z.coerce
     .number()
-    .positive({ message: "Allocated amount must be greater than 0" }),
+    .positive({ message: "Allocated amount must sbe greater than 0" }),
 
   allocatedCoin: z.coerce
     .number()

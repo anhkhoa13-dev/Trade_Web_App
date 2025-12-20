@@ -27,9 +27,12 @@ interface UserNavProps {
 
 export function UserNav({ user }: UserNavProps) {
   const handleLogout = async () => {
-    toast.success("Logout ... ");
-    await logout();
-  };
+    const result = await logout()
+
+    if (result && result.status === "error") {
+      toast.error(result.message)
+    }
+  }
 
   return (
     <DropdownMenu>
