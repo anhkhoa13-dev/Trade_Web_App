@@ -53,8 +53,7 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
-    @ExceptionHandler({ MethodArgumentNotValidException.class, InsufficientBalanceException.class,
-            InsufficientCoinException.class })
+    @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidationException(MethodArgumentNotValidException ex) {
         ex.printStackTrace();
 
@@ -68,6 +67,18 @@ public class GlobalExceptionHandler {
                 .orElse("Invalid request payload");
 
         problem.setDetail(errorSummary);
+        problem.setType(URI.create(""));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler({ InsufficientBalanceException.class, InsufficientCoinException.class })
+    public ProblemDetail handleInsufficientBalanceException(Exception ex) {
+        ex.printStackTrace();
+
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        problem.setTitle("Insufficient Balance");
+        problem.setDetail(ex.getMessage());
         problem.setType(URI.create(""));
         problem.setProperty("timestamp", Instant.now());
         return problem;

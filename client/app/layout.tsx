@@ -2,6 +2,7 @@ import "./globals.css";
 
 import { ThemeProvider } from "./providers/ThemeProvider";
 import AuthProvider from "./providers/AuthProvider";
+import { SessionErrorHandler } from "./providers/SessionErrorHandler";
 import { Toaster } from "react-hot-toast";
 
 export default function RootLayout({
@@ -13,6 +14,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body>
         <AuthProvider>
+          <SessionErrorHandler />
           <ThemeProvider
             attribute="class"
             defaultTheme="system"

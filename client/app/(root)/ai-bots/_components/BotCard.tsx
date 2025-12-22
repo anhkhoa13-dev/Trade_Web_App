@@ -41,18 +41,30 @@ export function BotCard({
   priority = "roi",
 }: BotCardProps) {
   const router = useRouter();
-  const { status } = useSession();
+  const { status, data } = useSession();
   const [copyingBotId, setCopyingBotId] = useState<string | null>(null);
 
   const handleCopy = (botId: string) => {
-    if (status === "unauthenticated") {
-      toast.error("Please log in to copy this strategy");
-      router.push("/login");
-      return;
-    }
-    if (status === "loading") {
-      return;
-    }
+    // Check loading state first
+    // if (status === "loading") {
+    //   return;
+    // }
+
+    // // Debug: Log session data
+    // console.log("🔍 Debug handleCopy:");
+    // console.log("  Status:", status);
+    // console.log("  Session data:", data);
+    // console.log("  Has user:", !!data?.user);
+    // console.log("  Has accessToken:", !!data?.accessToken);
+
+    // // Check authentication status and session validity
+    // // During logout, status might still be "authenticated" but data will be missing
+    // if (status === "unauthenticated" || !data?.user || !data?.accessToken) {
+    //   toast.error("Please log in to copy this strategy");
+    //   router.push("/login");
+    //   return;
+    // }
+
     setCopyingBotId(botId);
   };
 
@@ -122,10 +134,11 @@ export function BotCard({
               {mainMetricLabel}
             </p>
             <p
-              className={`text-3xl font-bold ${mainMetric >= 0
-                ? "text-[var(--chart-3)]"
-                : "text-[var(--destructive)]"
-                }`}
+              className={`text-3xl font-bold ${
+                mainMetric >= 0
+                  ? "text-[var(--chart-3)]"
+                  : "text-[var(--destructive)]"
+              }`}
             >
               {mainMetricFormatted}
             </p>
@@ -139,10 +152,11 @@ export function BotCard({
                   PnL ({label})
                 </p>
                 <p
-                  className={`${pnl >= 0
-                    ? "text-[var(--chart-3)]"
-                    : "text-[var(--destructive)]"
-                    }`}
+                  className={`${
+                    pnl >= 0
+                      ? "text-[var(--chart-3)]"
+                      : "text-[var(--destructive)]"
+                  }`}
                 >
                   {pnl >= 0 ? "+" : ""}${pnl.toFixed(2)}
                 </p>
@@ -153,10 +167,11 @@ export function BotCard({
                   ROI ({label})
                 </p>
                 <p
-                  className={`${roi >= 0
-                    ? "text-[var(--chart-3)]"
-                    : "text-[var(--destructive)]"
-                    }`}
+                  className={`${
+                    roi >= 0
+                      ? "text-[var(--chart-3)]"
+                      : "text-[var(--destructive)]"
+                  }`}
                 >
                   {roi >= 0 ? "+" : ""}
                   {roi.toFixed(2)}%
