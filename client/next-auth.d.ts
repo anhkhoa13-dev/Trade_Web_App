@@ -5,6 +5,7 @@ declare module "next-auth" {
   // Extend the built-in session type
   interface Session {
     accessToken?: string;
+    error?: string; // Error field to detect refresh token failures
     user: {
       id: string;
       email: string;
